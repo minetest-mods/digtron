@@ -55,7 +55,7 @@ Digger heads can have a period and offset defined if you want them to punch regu
 Sand Digger Head
 ----------------
 
-This specialized digger head is designed to excavate only loose material such as sand or gravel. It has no period/offset settings; it will always attempt to dig sand when it's present in its target node. It leaves all other types of nodes alone. (in techinical terms, this digger digs nodes belonging to the "falling_node" group)
+This specialized digger head is designed to excavate only loose material such as sand or gravel. It has no period/offset settings; it will always attempt to dig sand when it's present in its target node. It leaves all other types of nodes alone. (in technical terms, this digger digs nodes belonging to the "falling_node" group)
 
 The intended purpose of this digger is to be aimed at the ceiling or walls of a tunnel being dug, making spaces to allow shoring nodes to be inserted into unstable roofs but leaving the wall alone if it's composed of a more stable material.
 
@@ -105,52 +105,52 @@ All machine nodes are constructed from a "Digtron Core" craft item and other mat
 
 Digtron cores are made with the following recipe:
 
-			steel
-steel	mese fragment	steel
-			steel
+[     ,     steel    ,      ]
+[steel, mese fragment, steel]
+[     ,     steel    ,      ]
 			
 Digger heads:
 
-		diamond
-diamond	  core	diamond
-		diamond
+[       , diamond ,        ]
+[diamond,  core   , diamond]
+[       , diamond ,        ]
 
 Sand/gravel digger heads:
 
-		  steel
-	steel core steel
-		  steel
+[     , steel ,      ]
+[steel, core  , steel]
+[     , steel ,      ]
 
 Builder heads:
 
-			mese fragment
-mese fragment	core	mese fragment
-			mese fragment
+[             , mese fragment,              ]
+[mese fragment,     core     , mese fragment]
+[             , mese fragment,              ]
 
 Controller heads:
 		
-				mese crystal
-	mese crystal	core	mese crystal
-				mese crystal
+[            , mese crystal,             ]
+[mese crystal,     core    , mese crystal]
+[            , mese crystal,             ]
 
 Inventory modules:
 
-	chest
-	core
+[chest,]
+[core,]
 	
 Structural modules:
 
-stick	stick
-	core
-stick	stick
+[stick,      , stick]
+[     , core ,      ]
+[stick,      , stick]
 
 Lantern module:
 
-	torch
-	core
+[torch,]
+[core,]
 	
 Pusher controller:
 
-		coal
-coal	core	coal
-		coal
+[    , coal ,     ]
+[coal, core , coal]
+[    , coal ,     ]
