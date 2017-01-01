@@ -52,12 +52,14 @@ Facing of a digger head is significant; it will excavate material from the node 
 
 Digger heads can have a period and offset defined if you want them to punch regularly-spaced holes. Note that diggers aimed forward should generally always have a period of 1, otherwise the digging machine may be unable to move.
 
-Sand Digger Head
+Soft Material Digger Head
 ----------------
 
-This specialized digger head is designed to excavate only loose material such as sand or gravel. It has no period/offset settings; it will always attempt to dig sand when it's present in its target node. It leaves all other types of nodes alone. (in technical terms, this digger digs nodes belonging to the "falling_node" group)
+This specialized digger head is designed to excavate only softer material such as sand or gravel. It has no period/offset settings; it will always attempt to dig sand when it's present in its target node. It leaves all other types of nodes alone. (in technical terms, this digger digs nodes belonging to the "crumbly", "choppy", "snappy", "oddly_diggable_by_hand" and "fleshy" groups)
 
 The intended purpose of this digger is to be aimed at the ceiling or walls of a tunnel being dug, making spaces to allow shoring nodes to be inserted into unstable roofs but leaving the wall alone if it's composed of a more stable material.
+
+It can also serve as part of a lawnmower or tree-harvester.
 
 Builder Head
 ------------
@@ -71,14 +73,18 @@ Inventory Module
 
 Inventory modules have the same capacity as a chest. They're used both for storing the products of the digger heads and as the source of materials used by the builder heads. A digging machine whose builder heads are laying down cobble can automatically self-replenish in this way, but note that an inventory module is still required as buffer space even if the digger heads produced everything needed by the builder heads in a given cycle.
 
-Inventory modules are not required for a digging-only machine. If there's not enough storage space to hold the materials produced by the digging heads, the excess material will be ejected out the back of the control node. They're handy for accumulating ores and other building materials, though.
+Inventory modules are not required for a digging-only machine. If there's not enough storage space to hold the materials produced by the digging heads the excess material will be ejected out the back of the control node. They're handy for accumulating ores and other building materials, though.
 
 Digging machines can have multiple inventory modules added to expand their capacity.
 
 Structural Module
 -----------------
 
-These nodes allow otherwise-disconnected sections of builder machines to be linked together. You can also use them to build a platform to stand on as you ride your mighty mechanical leviathan through the landscape.
+These nodes allow otherwise-disconnected sections of digtron nodes to be linked together. They are not usually necessary for simple diggers but more elaborate builder arrays might have builder nodes that can't be placed directly adjacent to other digtron nodes and these nodes can serve to keep them connected to the controller.
+
+They may also be used for providing additional traction if your digtron array is very tall compared to the terrain surface that it's touching.
+
+You can also use them decoratively, or to build a platform to stand on as you ride your mighty mechanical leviathan through the landscape.
 
 Digtron Lamp
 ------------
@@ -88,11 +94,11 @@ A light source that moves along with the digging machine. Convenient if you're d
 What Do These Noises Mean?
 ==========================
 
-When a digging machine is unable to complete a cycle it will make one of several noises to indicate what the problem is.
+When a digging machine is unable to complete a cycle it will make one of several noises to indicate what the problem is. It will also set its mouseover text to explain what went wrong.
 
-Squealing traction wheels indicates a mobility problem. If the squealing is accompanied by a buzzer, the digging machine has encountered an obstruction it can't dig through. This could be a protected region (the digging machine has only the priviledges of the player triggering it), a chest containing items, or perhaps the digger was incorrectly designed and can't dug the correctly sized and shaped cavity for it to move forward into. There are many possibilities.
+Squealing traction wheels indicates a mobility problem. If the squealing is accompanied by a buzzer, the digging machine has encountered an obstruction it can't dig through. This could be a protected region (the digging machine has only the priviledges of the player triggering it), a chest containing items, or perhaps the digger was incorrectly designed and can't dig the correctly sized and shaped cavity for it to move forward into. There are many possibilities.
 
-Squealing traction wheels with no accompanying buzzer indicates that the digging machine has no solid adjacent nodes to push off of. Tunnel boring machines cannot fly or swim, not even through lava, and they don't dig fast enough to "catch sick air" when they emerge from a cliffside. If you wish to cross a chasm you'll need to ensure that there are builder heads placing a solid surface as you go.
+Squealing traction wheels with no accompanying buzzer indicates that the digging machine doesn't have enough solid adjacent nodes to push off of. Tunnel boring machines cannot fly or swim, not even through lava, and they don't dig fast enough to "catch sick air" when they emerge from a cliffside. If you wish to cross a chasm you'll need to ensure that there are builder heads placing a solid surface as you go. If you've built a very tall digtron with a small surface footprint you may need to improve its traction by adding structural modules that touch the ground.
 
 A ringing bell indicates that there are insufficient materials in inventory to supply all the builder heads for this cycle.
 

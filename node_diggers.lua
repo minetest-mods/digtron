@@ -92,10 +92,10 @@ minetest.register_node("digtron:digger", {
 })
 
 -- A special-purpose digger to deal with stuff like sand and gravel in the ceiling. It always digs (no periodicity or offset), but it only digs falling_block nodes
-minetest.register_node("digtron:sand_digger", {
-	description = "Sand Digger Head",
+minetest.register_node("digtron:soft_digger", {
+	description = "Soft Material Digger Head",
 	groups = {cracky = 3, stone = 1, digtron = 3},
-	drop = 'digtron:sand_digger',
+	drop = 'digtron:soft_digger',
 	paramtype = "light",
 	paramtype2= 'facedir',
 	
@@ -138,7 +138,11 @@ minetest.register_node("digtron:sand_digger", {
 		end
 		
 		local target_node = minetest.get_node(digpos)
-		if minetest.get_item_group(target_node.name, "falling_node") ~= 0 then
+		if  minetest.get_item_group(target_node.name, "crumbly") ~= 0 or
+			minetest.get_item_group(target_node.name, "choppy") ~= 0 or
+			minetest.get_item_group(target_node.name, "snappy") ~= 0 or
+			minetest.get_item_group(target_node.name, "oddly_breakable_by_hand") ~= 0 or
+			minetest.get_item_group(target_node.name, "fleshy") ~= 0 then
 			return digtron.mark_diggable(digpos, nodes_dug)
 		end
 		

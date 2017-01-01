@@ -45,12 +45,14 @@ minetest.register_node("digtron:controller", {
 		if layout.all == nil then
 			-- get_all_digtron_neighbours returns nil if the digtron array touches unloaded nodes, too dangerous to do anything in that situation. Abort.
 			minetest.sound_play("buzzer", {gain=0.5, pos=pos})
+			meta:set_string("infotext", "Digtron is adjacent to unloaded nodes.")
 			return
 		end
 		
-		if layout.traction == false then
+		if layout.traction * digtron.traction_factor < table.getn(layout.all) then
 			-- digtrons can't fly
 			minetest.sound_play("squeal", {gain=1.0, pos=pos})
+			meta:set_string("infotext", string.format("Digtron has %d nodes but only enough traction to move %d nodes.", table.getn(layout.all), layout.traction * digtron.traction_factor))
 			return
 		end
 
@@ -103,6 +105,7 @@ minetest.register_node("digtron:controller", {
 			)
 			minetest.sound_play("squeal", {gain=1.0, pos=pos})
 			minetest.sound_play("buzzer", {gain=0.5, pos=pos})
+			meta:set_string("infotext", "Digtron is obstructed.")
 			return --Abort, don't dig and don't build.
 		end
 
@@ -145,8 +148,10 @@ minetest.register_node("digtron:controller", {
 			)
 			if test_build_return == 1 then
 				minetest.sound_play("honk", {gain=0.5, pos=pos}) -- A builder is not configured
+				meta:set_string("infotext", "Digtron connected to at least one builder node that hasn't had an output material assigned.")
 			elseif test_build_return == 2 then
 				minetest.sound_play("dingding", {gain=1.0, pos=pos}) -- Insufficient inventory
+				meta:set_string("infotext", "Digtron has insufficient materials in inventory to execute all build operations.")
 			end
 			return --Abort, don't dig and don't build.
 		end	
@@ -192,7 +197,7 @@ minetest.register_node("digtron:controller", {
 			local targetdef = minetest.registered_nodes[target.name]
 			if targetdef.execute_build ~= nil then
 				--using the old location of the controller as fallback so that any leftovers land with the rest of the digger output. Not that there should be any.
-				can_build = targetdef.execute_build(location, clicker, layout.inventories, layout.protected, nodes_dug, controlling_coordinate, oldpos)
+				can_build = can_build and targetdef.execute_build(location, clicker, layout.inventories, layout.protected, nodes_dug, controlling_coordinate, oldpos)
 			else
 				minetest.log(string.format("%s has builder group but is missing execute_build method! This is an error in mod programming, file a bug.", targetdef.name))
 			end
@@ -201,6 +206,7 @@ minetest.register_node("digtron:controller", {
 			-- We weren't able to detect this build failure ahead of time, so make a big noise now. This is strange, shouldn't happen often.
 			minetest.sound_play("dingding", {gain=1.0, pos=pos})
 			minetest.sound_play("buzzer", {gain=0.5, pos=pos})
+			meta:set_string("infotext", "Digtron unexpectedly failed to execute a build operation.")
 		end
 		
 		-- finally, dig out any nodes remaining to be dug. Some of these will have had their flag revoked because
@@ -250,12 +256,14 @@ minetest.register_node("digtron:pusher", {
 		if layout.all == nil then
 			-- get_all_digtron_neighbours returns nil if the digtron array touches unloaded nodes, too dangerous to do anything in that situation. Abort.
 			minetest.sound_play("buzzer", {gain=0.5, pos=pos})
+			meta:set_string("infotext", "Digtron is adjacent to unloaded nodes.")
 			return
 		end
 		
-		if layout.traction == false then
+		if layout.traction * digtron.traction_factor < table.getn(layout.all) then
 			-- digtrons can't fly
 			minetest.sound_play("squeal", {gain=1.0, pos=pos})
+			meta:set_string("infotext", string.format("Digtron has %d nodes but only enough traction to move %d nodes.", table.getn(layout.all), layout.traction * digtron.traction_factor))
 			return
 		end
 
@@ -276,7 +284,7 @@ minetest.register_node("digtron:pusher", {
 		
 		if not can_move then
 			-- mark this node as waiting, will clear this flag in digtron.refractory seconds
-			minetest.get_meta(pos):set_string("waiting", "true")
+			meta:set_string("waiting", "true")
 			minetest.after(digtron.refractory,
 				function (pos)
 					minetest.get_meta(pos):set_string("waiting", nil)
@@ -284,6 +292,7 @@ minetest.register_node("digtron:pusher", {
 			)
 			minetest.sound_play("squeal", {gain=1.0, pos=pos})
 			minetest.sound_play("buzzer", {gain=0.5, pos=pos})
+			meta:set_string("infotext", "Digtron is obstructed.")
 			return --Abort
 		end
 

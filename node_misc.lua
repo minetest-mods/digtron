@@ -5,6 +5,8 @@ minetest.register_node("digtron:structure", {
 	drop = 'digtron:structure',
 	tiles = {"digtron_plate.png"},
 	drawtype = "nodebox",
+	climbable = true,
+	walkable = false,
 	paramtype = "light",
 	node_box = {
 		type = "fixed",

@@ -90,13 +90,13 @@ digtron.move_node = function(pos, newpos)
 end
 
 digtron.get_all_digtron_neighbours = function(pos, player)
-	-- returns table containing a list of all digtron node locations, lists of special digtron node types, a table of the coordinate extents of the digtron array, a Pointset of protected nodes, and a bool to determine if the array is adjacent to non-digtron nodes (for traction)
+	-- returns table containing a list of all digtron node locations, lists of special digtron node types, a table of the coordinate extents of the digtron array, a Pointset of protected nodes, and a number to determine how many adjacent solid non-digtron nodes there are (for traction)
 	
 	--minetest.debug(string.format("digtron search started at component %d %d %d", pos.x, pos.y, pos.z))
 
 	local layout = {}
 	--initialize. We're assuming that the start position is a controller digtron, should be a safe assumption since only the controller node should call this
-	layout.traction = false
+	layout.traction = 0
 	layout.all = {}
 	layout.inventories = {}
 	layout.diggers = {}
@@ -176,9 +176,9 @@ digtron.get_all_digtron_neighbours = function(pos, player)
 			to_test:set_if_not_in(tested, testpos.x, testpos.y - 1, testpos.z, true)
 			to_test:set_if_not_in(tested, testpos.x, testpos.y, testpos.z + 1, true)
 			to_test:set_if_not_in(tested, testpos.x, testpos.y, testpos.z - 1, true)
-		elseif not layout.traction and minetest.registered_nodes[node.name].buildable_to ~= true then
-			-- Tracks whether the digtron is hovering in mid-air. If any part of the digtron array touches something solid, it can move.
-			layout.traction = true		
+		elseif minetest.registered_nodes[node.name].buildable_to ~= true then
+			-- Tracks whether the digtron is hovering in mid-air. If any part of the digtron array touches something solid it gains traction.
+			layout.traction = layout.traction + 1
 		end
 		
 		testpos, _ = to_test:pop()
