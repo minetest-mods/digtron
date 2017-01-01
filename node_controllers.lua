@@ -191,18 +191,22 @@ minetest.register_node("digtron:controller", {
 			end, pos
 		)
 		
+		local strange_failure = false
 		-- execute_build on all digtron components that have one
 		for k, location in pairs(layout.builders) do
 			local target = minetest.get_node(location)
 			local targetdef = minetest.registered_nodes[target.name]
 			if targetdef.execute_build ~= nil then
 				--using the old location of the controller as fallback so that any leftovers land with the rest of the digger output. Not that there should be any.
-				can_build = can_build and targetdef.execute_build(location, clicker, layout.inventories, layout.protected, nodes_dug, controlling_coordinate, oldpos)
+				if targetdef.execute_build(location, clicker, layout.inventories, layout.protected, nodes_dug, controlling_coordinate, oldpos) == false then
+					-- Don't interrupt the build cycle as a whole, we've already moved so might as well try to complete as much as possible.
+					strange_failure = true
+				end
 			else
 				minetest.log(string.format("%s has builder group but is missing execute_build method! This is an error in mod programming, file a bug.", targetdef.name))
 			end
 		end
-		if can_build == false then
+		if strange_failure then
 			-- We weren't able to detect this build failure ahead of time, so make a big noise now. This is strange, shouldn't happen often.
 			minetest.sound_play("dingding", {gain=1.0, pos=pos})
 			minetest.sound_play("buzzer", {gain=0.5, pos=pos})
