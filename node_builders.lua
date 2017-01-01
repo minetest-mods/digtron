@@ -99,6 +99,12 @@ minetest.register_node("digtron:builder", {
 	-- return the item you took and the inventory location you took it from so it can be put back after all the other builders have been tested.
 	-- If you couldn't get the item from inventory, return an error code so we can abort the cycle.
 	-- If you're not supposed to build at all, or the location is obstructed, return 0 to let us know you're okay and we shouldn't abort."
+	
+	--return code and accompanying value:
+	-- 0, nil								-- not supposed to build, no error
+	-- 1, {itemstack, source inventory pos} -- can build, took an item from inventory
+	-- 2, itemstack 						-- was supposed to build, but couldn't get the item from inventory
+	-- 3, nil								-- builder configuration error
 	test_build = function(pos, test_pos, inventory_positions, protected_nodes, nodes_dug, controlling_coordinate, controller_pos)
 		local meta = minetest.get_meta(pos)
 		local facing = minetest.get_node(pos).param2
@@ -106,7 +112,7 @@ minetest.register_node("digtron:builder", {
 		
 		if (buildpos[controlling_coordinate] + meta:get_string("offset")) % meta:get_string("period") ~= 0 then
 			--It's not the builder's turn to build right now.
-			return 0
+			return 0, nil
 		end
 		
 		if not digtron.can_move_to(buildpos, protected_nodes, nodes_dug) then
@@ -120,7 +126,7 @@ minetest.register_node("digtron:builder", {
 			--managed one more cycle. That's not a bad outcome for a digtron array that was built stupidly to begin with.
 			--The player should be thanking me for all the error-checking I *do* do, really.
 			--Ungrateful wretch.
-			return 0
+			return 0, nil
 		end
 		
 		local inv = minetest.get_inventory({type="node", pos=pos})
@@ -136,11 +142,11 @@ minetest.register_node("digtron:builder", {
 			end
 			local source_location = digtron.take_from_inventory(item_stack:get_name(), inventory_positions)
 			if source_location ~= nil then
-				return {item=item_stack, location=source_location}
+				return 1, {item=item_stack, location=source_location}
 			end
-			return 2 -- error code for "needed an item but couldn't get it from inventory"
+			return 2, item_stack -- error code for "needed an item but couldn't get it from inventory"
 		else
-			return 1 -- error code for "this builder's item slot is unset"
+			return 3, nil -- error code for "this builder's item slot is unset"
 		end
 	end,
 	

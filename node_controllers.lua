@@ -115,20 +115,21 @@ minetest.register_node("digtron:controller", {
 		-- This is a complicated test because each builder needs to actually *take* the item it'll
 		-- need from inventory, and then we put it all back afterward.
 		local can_build = true
-		local test_build_return = nil
+		local test_build_return_code = nil
+		local test_build_return_item = nil
 		local test_items = {}
 		for k, location in pairs(layout.builders) do
 			local target = minetest.get_node(location)
 			local targetdef = minetest.registered_nodes[target.name]
 			local test_location = digtron.find_new_pos(location, facing)
 			if targetdef.test_build ~= nil then
-				test_build_return = targetdef.test_build(location, test_location, layout.inventories, layout.protected, nodes_dug, controlling_coordinate, layout.controller)
-				if test_build_return == 1 or test_build_return == 2 then
+				test_build_return_code, test_build_return_item = targetdef.test_build(location, test_location, layout.inventories, layout.protected, nodes_dug, controlling_coordinate, layout.controller)
+				if test_build_return_code > 1 then
 					can_build = false
 					break
 				end
-				if test_build_return ~= 0 then
-					table.insert(test_items, test_build_return)
+				if test_build_return_code == 1 then
+					table.insert(test_items, test_build_return_item)
 				end
 			else
 				minetest.log(string.format("%s has builder group but is missing test_build method! This is an error in mod programming, file a bug.", targetdef.name))
@@ -146,12 +147,13 @@ minetest.register_node("digtron:controller", {
 					minetest.get_meta(pos):set_string("waiting", nil)
 				end, pos
 			)
-			if test_build_return == 1 then
+			if test_build_return_code == 3 then
 				minetest.sound_play("honk", {gain=0.5, pos=pos}) -- A builder is not configured
 				meta:set_string("infotext", "Digtron connected to at least one builder node that hasn't had an output material assigned.")
-			elseif test_build_return == 2 then
+			elseif test_build_return_code == 2 then
 				minetest.sound_play("dingding", {gain=1.0, pos=pos}) -- Insufficient inventory
-				meta:set_string("infotext", "Digtron has insufficient materials in inventory to execute all build operations.")
+				meta:set_string("infotext", string.format("Digtron has insufficient materials in inventory to execute all build operations.\nNeeded: %s",
+					test_build_return_item:get_name()))
 			end
 			return --Abort, don't dig and don't build.
 		end	
