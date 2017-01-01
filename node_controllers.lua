@@ -222,6 +222,9 @@ minetest.register_node("digtron:controller", {
 			if whether_to_dig == true then
 				minetest.remove_node(node_to_dig)
 			end
+			-- all of the digtron's nodes wind up in nodes_dug, so this is an ideal place to stick
+			-- a check to make sand fall after the digtron has passed.
+			minetest.check_for_falling({x=node_to_dig.x, y=node_to_dig.y+1, z=node_to_dig.z})
 			node_to_dig, whether_to_dig = nodes_dug:pop()
 		end
 	end,
