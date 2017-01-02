@@ -159,6 +159,11 @@ Inventory modules:
 
 [chest,]
 [core,]
+
+Fuel storage modules:
+
+[furnace,]
+[core,]
 	
 Structural modules:
 
