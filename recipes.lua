@@ -112,6 +112,13 @@ minetest.register_craft({
 minetest.register_craft({
 	output = "digtron:digtron_core",
 	recipe = {
+			{"digtron:fuelstore"},
+			}
+})
+
+minetest.register_craft({
+	output = "digtron:digtron_core",
+	recipe = {
 			{"digtron:light"},
 			}
 })

@@ -34,7 +34,7 @@ Detailed module guide
 Control Module
 --------------
 
-Right-click on this module to make the digging machine go. The digging machine will go in the direction that the control module is oriented, so in theory you could adjust the digging machine's position by reoriented the control module (or building additional ones) and nudging it to the side.
+Right-click on this module to make the digging machine go. The digging machine will go in the direction that the control module is oriented.
 
 A control module can only trigger once per second. Gives you time to enjoy the scenery and smell the flowers (or their mulched remains, at any rate).
 
@@ -67,6 +67,8 @@ Builder Head
 ------------
 
 A builder head is the most complex component of this system. It has period and offset properties, and also an inventory slot where you "program" it by placing an example of the node type that you want it to build. Only a single item is needed here, any additional items in this inventory stack will be shunted into the digger's general inventory (or ejected from the control node if there's no space for it).
+
+The "output" side of a builder is the side with a black crosshair on it.
 
 Builders also have a "facing" setting. If you haven't memorized the meaning of the 24 facing values yet, builder heads have a helpful "Read & Save" button to fill this value in for you. Simply build a temporary instance of the node in the output location in front of the builder, adjust it to the orientation you want using the screwdriver tool, and then when you click the "Read & Save" button the node's facing will be read and saved.
 
@@ -107,6 +109,11 @@ Digtron Lamp
 
 A light source that moves along with the digging machine. Convenient if you're digging a tunnel that you don't intend to outfit with torches or other permanent light fixtures. Not quite as bright as a torch since the protective lens tends to get grimy while burrowing through the earth.
 
+Digtron core
+------------
+
+The only non-node item in this mod is the Digtron core, a crafting item used to manufacture the various Digtron components. Each component recipe has a Digtron core in it.  Some of the cheaper parts of a Digtron can be recycled to get the valuable core back out for use in other Digtron parts.
+
 What Do These Noises Mean?
 ==========================
 
@@ -115,6 +122,8 @@ When a digging machine is unable to complete a cycle it will make one of several
 Squealing traction wheels indicates a mobility problem. If the squealing is accompanied by a buzzer, the digging machine has encountered an obstruction it can't dig through. This could be a protected region (the digging machine has only the priviledges of the player triggering it), a chest containing items, or perhaps the digger was incorrectly designed and can't dig the correctly sized and shaped cavity for it to move forward into. There are many possibilities.
 
 Squealing traction wheels with no accompanying buzzer indicates that the digging machine doesn't have enough solid adjacent nodes to push off of. Tunnel boring machines cannot fly or swim, not even through lava, and they don't dig fast enough to "catch sick air" when they emerge from a cliffside. If you wish to cross a chasm you'll need to ensure that there are builder heads placing a solid surface as you go. If you've built a very tall digtron with a small surface footprint you may need to improve its traction by adding structural modules that touch the ground.
+
+A buzzer by itself indicates that the Digtron has run out of fuel. There may be traces remaining in the hopper, but they're not enough to execute the next dig/build cycle.
 
 A ringing bell indicates that there are insufficient materials in inventory to supply all the builder heads for this cycle.
 
