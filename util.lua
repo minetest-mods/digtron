@@ -19,23 +19,41 @@ digtron.mark_diggable = function(pos, nodes_dug)
 	-- Don't *actually* dig the node yet, though, because if we dig a node with sand over it the sand will start falling
 	-- and then destroy whatever node we place there subsequently (either by a builder head or by moving a digtron node)
 	-- I don't like sand. It's coarse and rough and irritating and it gets everywhere. And it necessitates complicated dig routines.
-	-- returns what will be dropped by digging these nodes.
+	-- returns fuel cost and what will be dropped by digging these nodes.
 
 	local target = minetest.get_node(pos)
 	
 	-- prevent digtrons from being marked for digging.
 	if minetest.get_item_group(target.name, "digtron") ~= 0 then
-		return nil
+		return 0, nil
 	end
 
 	local targetdef = minetest.registered_nodes[target.name]
 	if targetdef.can_dig == nil or targetdef.can_dig(pos, player) then 
 		nodes_dug:set(pos.x, pos.y, pos.z, true)
 		if target.name ~= "air" then
-			return minetest.get_node_drops(target.name, "")
+			local in_known_group = false
+			local material_cost = 0
+			if minetest.get_item_group(target.name, "cracky") ~= 0 then
+				in_known_group = true
+				material_cost = math.max(material_cost, digtron.dig_cost_cracky)
+			end
+			if minetest.get_item_group(target.name, "crumbly") ~= 0 then
+				in_known_group = true
+				material_cost = math.max(material_cost, digtron.dig_cost_crumbly)
+			end
+			if minetest.get_item_group(target.name, "choppy") ~= 0 then
+				in_known_group = true
+				material_cost = math.max(material_cost, digtron.dig_cost_choppy)
+			end
+			if not in_known_group then
+				material_cost = digtron.dig_cost_default
+			end
+	
+			return material_cost, minetest.get_node_drops(target.name, "")
 		end
 	end
-	return nil
+	return 0, nil
 end
 	
 digtron.can_build_to = function(pos, protected_nodes, dug_nodes)
@@ -81,10 +99,12 @@ digtron.move_node = function(pos, newpos)
 	newinv:set_list("main", list)
 	newmeta:set_string("formspec", oldformspec)
 	
-	newmeta:set_string("offset", oldmeta:get_string("offset"))
-	newmeta:set_string("period", oldmeta:get_string("period"))
-	newmeta:set_string("build_facing", oldmeta:get_string("build_facing"))
-	
+	newmeta:set_int("offset", oldmeta:get_int("offset"))
+	newmeta:set_int("period", oldmeta:get_int("period"))
+	newmeta:set_int("build_facing", oldmeta:get_int("build_facing"))
+	newmeta:set_float("fuel_burning", oldmeta:get_float("fuel_burning"))
+	newmeta:set_string("infotext", oldmeta:get_string("infotext"))
+		
 	-- remove node from old position
 	minetest.remove_node(pos)
 end
@@ -92,13 +112,12 @@ end
 digtron.get_all_digtron_neighbours = function(pos, player)
 	-- returns table containing a list of all digtron node locations, lists of special digtron node types, a table of the coordinate extents of the digtron array, a Pointset of protected nodes, and a number to determine how many adjacent solid non-digtron nodes there are (for traction)
 	
-	--minetest.debug(string.format("digtron search started at component %d %d %d", pos.x, pos.y, pos.z))
-
 	local layout = {}
 	--initialize. We're assuming that the start position is a controller digtron, should be a safe assumption since only the controller node should call this
 	layout.traction = 0
 	layout.all = {}
 	layout.inventories = {}
+	layout.fuelstores = {}
 	layout.diggers = {}
 	layout.builders = {}
 	layout.extents = {}
@@ -148,7 +167,6 @@ digtron.get_all_digtron_neighbours = function(pos, player)
 		
 		local group_number = minetest.get_item_group(node.name, "digtron")
 		if group_number > 0 then
-			--minetest.debug(string.format("found digtron component at %d %d %d", testpos.x, testpos.y, testpos.z))
 			--found one. Add it to the digtrons output
 			table.insert(layout.all, testpos)
 		
@@ -167,6 +185,8 @@ digtron.get_all_digtron_neighbours = function(pos, player)
 				table.insert(layout.diggers, testpos)
 			elseif group_number == 4 then
 				table.insert(layout.builders, testpos)
+			elseif group_number == 5 then
+				table.insert(layout.fuelstores, testpos)
 			end
 			
 			--queue up potential new test points adjacent to this digtron node
@@ -309,4 +329,40 @@ digtron.get_controlling_coordinate = function(pos, facedir)
 	else
 		return "y"
 	end
+end
+
+-- Searches fuel store inventories for burnable items and burns them until target is reached or surpassed (or there's nothing left to burn). Returns the total fuel value burned
+-- if the "test" parameter is set to true, doesn't actually take anything out of inventories. We can get away with this sort of thing for fuel but not for builder inventory because there's just one
+-- controller node burning stuff, not multiple build heads drawing from inventories in turn. Much simpler.
+digtron.burn = function(fuelstore_positions, target, test)
+	local current_burned = 0
+	for k, location in pairs(fuelstore_positions) do
+		if current_burned > target then
+			break
+		end
+		local inv = minetest.get_inventory({type="node", pos=location})
+		local invlist = inv:get_list("main")
+		for i, itemstack in pairs(invlist) do
+			local fuel_per_item = minetest.get_craft_result({method="fuel", width=1, items={itemstack:peek_item(1)}}).time
+			if fuel_per_item ~= 0 then
+				local actual_burned = math.min(
+						math.ceil((target - current_burned)/fuel_per_item ), -- burn this many, if we can.
+						itemstack:get_count() -- how many we have at most.
+					)
+				if test ~= true then
+					-- don't bother recording the items if we're just testing, nothing is actually being removed.
+					itemstack:set_count(itemstack:get_count() - actual_burned)
+				end
+				current_burned = current_burned + actual_burned * fuel_per_item
+			end
+			if current_burned > target then
+				break
+			end
+		end
+		if test ~= true then
+			-- only update the list if we're doing this for real.
+			inv:set_list("main", invlist)
+		end
+	end
+	return current_burned
 end

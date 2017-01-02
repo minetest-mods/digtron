@@ -55,8 +55,8 @@ minetest.register_node("digtron:digger", {
 			"button_exit[2.2,0.5;1,0.1;set;Save]" ..
 			"tooltip[set;Saves settings]"
 		)
-		meta:set_string("period", 1) 
-		meta:set_string("offset", 0) 
+		meta:set_int("period", 1) 
+		meta:set_int("offset", 0) 
 				
 		local inv = meta:get_inventory()
 		inv:set_size("main", 1)
@@ -67,24 +67,25 @@ minetest.register_node("digtron:digger", {
 		local period = tonumber(fields.period)
 		local offset = tonumber(fields.offset)
 		if  period and period > 0 then
-			meta:set_string("period", math.floor(tonumber(fields.period)))
+			meta:set_int("period", math.floor(tonumber(fields.period)))
 		end
 		if offset then
-			meta:set_string("offset", math.floor(tonumber(fields.offset)))
+			meta:set_int("offset", math.floor(tonumber(fields.offset)))
 		end
 	end,
 
+	-- returns fuel_cost, item_produced
 	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate)
 		local facing = minetest.get_node(pos).param2
 		local digpos = digtron.find_new_pos(pos, facing)
 
 		if protected_nodes:get(digpos.x, digpos.y, digpos.z) then
-			return nil
+			return 0, nil
 		end
 		
 		local meta = minetest.get_meta(pos)
-		if (digpos[controlling_coordinate] + meta:get_string("offset")) % meta:get_string("period") ~= 0 then
-			return nil
+		if (digpos[controlling_coordinate] + meta:get_int("offset")) % meta:get_int("period") ~= 0 then
+			return 0, nil
 		end
 		
 		return digtron.mark_diggable(digpos, nodes_dug)
@@ -134,7 +135,7 @@ minetest.register_node("digtron:soft_digger", {
 		local digpos = digtron.find_new_pos(pos, facing)
 		
 		if protected_nodes:get(digpos.x, digpos.y, digpos.z) then
-			return nil
+			return 0, nil
 		end
 		
 		local target_node = minetest.get_node(digpos)
@@ -146,6 +147,6 @@ minetest.register_node("digtron:soft_digger", {
 			return digtron.mark_diggable(digpos, nodes_dug)
 		end
 		
-		return nil
+		return 0, nil
 	end,
 })

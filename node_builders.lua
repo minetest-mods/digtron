@@ -63,9 +63,9 @@ minetest.register_node("digtron:builder", {
 			"list[current_player;main;0,2.5;8,3;8]" ..
 			"listring[current_player;main]"
 		)
-		meta:set_string("period", 1) 
-		meta:set_string("offset", 0) 
-		meta:set_string("build_facing", 0)
+		meta:set_int("period", 1) 
+		meta:set_int("offset", 0) 
+		meta:set_int("build_facing", 0)
 				
 		local inv = meta:get_inventory()
 		inv:set_size("main", 1)
@@ -76,21 +76,21 @@ minetest.register_node("digtron:builder", {
 		local period = tonumber(fields.period)
 		local offset = tonumber(fields.offset)
 		if  period and period > 0 then
-			meta:set_string("period", math.floor(tonumber(fields.period)))
+			meta:set_int("period", math.floor(tonumber(fields.period)))
 		end
 		if offset then
-			meta:set_string("offset", math.floor(tonumber(fields.offset)))
+			meta:set_int("offset", math.floor(tonumber(fields.offset)))
 		end
 		
 		if fields.read then
 			local meta = minetest.get_meta(pos)
 			local facing = minetest.get_node(pos).param2
 			local buildpos = digtron.find_new_pos(pos, facing)
-			meta:set_string("build_facing", minetest.get_node(buildpos).param2)
+			meta:set_int("build_facing", minetest.get_node(buildpos).param2)
 		else
 			local build_facing = tonumber(fields.build_facing)
 			if build_facing and build_facing >= 0 and build_facing < 24 then
-				meta:set_string("build_facing", math.floor(build_facing))
+				meta:set_int("build_facing", math.floor(build_facing))
 			end
 		end		
 	end,
@@ -110,7 +110,7 @@ minetest.register_node("digtron:builder", {
 		local facing = minetest.get_node(pos).param2
 		local buildpos = digtron.find_new_pos(test_pos, facing)
 		
-		if (buildpos[controlling_coordinate] + meta:get_string("offset")) % meta:get_string("period") ~= 0 then
+		if (buildpos[controlling_coordinate] + meta:get_int("offset")) % meta:get_int("period") ~= 0 then
 			--It's not the builder's turn to build right now.
 			return 0, nil
 		end
@@ -152,11 +152,11 @@ minetest.register_node("digtron:builder", {
 	
 	execute_build = function(pos, player, inventory_positions, protected_nodes, nodes_dug, controlling_coordinate, controller_pos)
 		local meta = minetest.get_meta(pos)
-		local build_facing = meta:get_string("build_facing")
+		local build_facing = meta:get_int("build_facing")
 		local facing = minetest.get_node(pos).param2
 		local buildpos = digtron.find_new_pos(pos, facing)
 		
-		if (buildpos[controlling_coordinate] + meta:get_string("offset")) % meta:get_string("period") ~= 0 then
+		if (buildpos[controlling_coordinate] + meta:get_int("offset")) % meta:get_int("period") ~= 0 then
 			return nil
 		end
 		
@@ -174,13 +174,14 @@ minetest.register_node("digtron:builder", {
 				if success == true then
 					--flag this node as *not* to be dug.
 					nodes_dug:set(buildpos.x, buildpos.y, buildpos.z, false)
+					return true
 				else
-					--failed to build for some unknown reason. Put the item back in inventory.
+					--failed to build, target node probably obstructed. Put the item back in inventory.
 					digtron.place_in_specific_inventory(item_stack, sourcepos, inventory_positions, controller_pos)
+					return nil
 				end
 			end
 		end
-		return true -- no errors were encountered that we should notify the player about
 	end,
 	
 	can_dig = function(pos,player)

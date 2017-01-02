@@ -45,6 +45,8 @@ Pusher Module
 
 Aka the "can you rebuild it six inches to the left" module. This is a much simplified control module that does not trigger the digger or builder heads when right-clicked, it only moves the digging machine. It's up to you to ensure there's space for it to move into.
 
+Since movement alone does not require fuel, a pusher module has no internal furnace.
+
 Digger Head
 -----------
 
@@ -76,6 +78,20 @@ Inventory modules have the same capacity as a chest. They're used both for stori
 Inventory modules are not required for a digging-only machine. If there's not enough storage space to hold the materials produced by the digging heads the excess material will be ejected out the back of the control node. They're handy for accumulating ores and other building materials, though.
 
 Digging machines can have multiple inventory modules added to expand their capacity.
+
+Fuel Hopper Module
+------------------
+
+Digtrons have an appetite. Build operations and dig operations require a certain amount of fuel, and that fuel comes from fuel hopper modules. Note that movement does not require fuel, only digging and building.
+
+When a control unit is triggered, it will tally up how much fuel is required for the next cycle and then burn items from the fuel hopper until a sufficient amount of heat has been generated to power the operation. Any leftover heat will be retained by the control unit for use in the next cycle; this is the "heat remaining in controller furnace". This means you don't have to worry too much about what kinds of fuel you put in the hopper, none will be wasted (unless you dig away a control unit with some heat remaining in it, that heat does get wasted).
+
+The fuel costs for digging and building can be configured in the init.lua file. By default using one lump of coal as fuel a digtron can:
+
+* Build 40 nodes
+* Dig 40 stone nodes
+* Dig 60 wood nodes
+* Dig 80 dirt or sand nodes
 
 Structural Module
 -----------------

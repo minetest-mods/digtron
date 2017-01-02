@@ -67,6 +67,15 @@ minetest.register_craft({
 })
 
 minetest.register_craft({
+	output = "digtron:fuelstore",
+	recipe = {
+			{"","default:furnace",""},
+			{"","digtron:digtron_core",""},
+			{"","",""}
+			}
+})
+
+minetest.register_craft({
 	output = "digtron:structure",
 	recipe = {
 			{"default:stick","","default:stick"},

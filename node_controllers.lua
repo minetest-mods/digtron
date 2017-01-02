@@ -34,6 +34,12 @@ minetest.register_node("digtron:controller", {
 		fixed = controller_nodebox,
 	},
 	
+	on_construct = function(pos)
+        local meta = minetest.env:get_meta(pos)
+		meta:set_float("fuel_burning", 0.0)
+		meta:set_string("infotext", "Heat remaining in controller furnace: 0")
+	end,
+	
 	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
 		local meta = minetest.get_meta(pos)
 		if meta:get_string("waiting") == "true" then
@@ -63,6 +69,7 @@ minetest.register_node("digtron:controller", {
 		
 		local nodes_dug = Pointset.create()
 		local items_dropped = {}
+		local digging_fuel_cost = 0
 		
 		-- execute the execute_dig method on all digtron components that have one
 		-- This builds a set of nodes that will be dug and returns a list of products that will be generated
@@ -72,12 +79,13 @@ minetest.register_node("digtron:controller", {
 			local target = minetest.get_node(location)
 			local targetdef = minetest.registered_nodes[target.name]
 			if targetdef.execute_dig ~= nil then
-				local dropped = targetdef.execute_dig(location, layout.protected, nodes_dug, controlling_coordinate)
+				local fuel_cost, dropped = targetdef.execute_dig(location, layout.protected, nodes_dug, controlling_coordinate)
 				if dropped ~= nil then
 					for _, itemname in pairs(dropped) do
 						table.insert(items_dropped, itemname)
 					end
 				end
+				digging_fuel_cost = digging_fuel_cost + fuel_cost
 			else
 				minetest.log(string.format("%s has digger group but is missing execute_dig method! This is an error in mod programming, file a bug.", targetdef.name))
 			end
@@ -96,9 +104,9 @@ minetest.register_node("digtron:controller", {
 		end
 		
 		if not can_move then
-			-- mark this node as waiting, will clear this flag in digtron.refractory seconds
+			-- mark this node as waiting, will clear this flag in digtron.cycle_time seconds
 			minetest.get_meta(pos):set_string("waiting", "true")
-			minetest.after(digtron.refractory,
+			minetest.after(digtron.cycle_time,
 				function (pos)
 					minetest.get_meta(pos):set_string("waiting", nil)
 				end, pos
@@ -114,10 +122,13 @@ minetest.register_node("digtron:controller", {
 		-- ask each builder node if it can get what it needs from inventory to build this cycle.
 		-- This is a complicated test because each builder needs to actually *take* the item it'll
 		-- need from inventory, and then we put it all back afterward.
+		-- Note that this test may overestimate the amount of work that will actually need to be done so don't treat its fuel cost as authoritative.
 		local can_build = true
 		local test_build_return_code = nil
 		local test_build_return_item = nil
 		local test_items = {}
+		local test_fuel_items = {}
+		local test_build_fuel_cost = 0		
 		for k, location in pairs(layout.builders) do
 			local target = minetest.get_node(location)
 			local targetdef = minetest.registered_nodes[target.name]
@@ -130,19 +141,34 @@ minetest.register_node("digtron:controller", {
 				end
 				if test_build_return_code == 1 then
 					table.insert(test_items, test_build_return_item)
+					test_build_fuel_cost = test_build_fuel_cost + digtron.build_cost
 				end
 			else
 				minetest.log(string.format("%s has builder group but is missing test_build method! This is an error in mod programming, file a bug.", targetdef.name))
 			end
 		end
+		
+		local fuel_burning = meta:get_float("fuel_burning") -- get amount of burned fuel left over from last cycle
+		local test_fuel_needed = test_build_fuel_cost + digging_fuel_cost - fuel_burning
+		local test_fuel_burned = 0
+		if test_fuel_needed > 0 then
+			test_fuel_burned = digtron.burn(layout.fuelstores, test_fuel_needed, true)
+		end
+		
+		--Put everything back where it came from
 		for k, item_return in pairs(test_items) do
-			--Put everything back where it came from
 			digtron.place_in_specific_inventory(item_return.item, item_return.location, layout.inventories, layout.controller)
+		end
+		
+		if test_fuel_needed > fuel_burning + test_fuel_burned then
+			minetest.sound_play("buzzer", {gain=0.5, pos=pos})
+			meta:set_string("infotext", "Digtron needs more fuel")
+			return -- abort, don't dig and don't build.
 		end
 		
 		if not can_build then
 			minetest.get_meta(pos):set_string("waiting", "true")
-			minetest.after(digtron.refractory,
+			minetest.after(digtron.cycle_time,
 				function (pos)
 					minetest.get_meta(pos):set_string("waiting", nil)
 				end, pos
@@ -181,18 +207,20 @@ minetest.register_node("digtron:controller", {
 		digtron.move_digtron(facing, layout.all, layout.extents, nodes_dug)
 		local oldpos = {x=pos.x, y=pos.y, z=pos.z}
 		pos = digtron.find_new_pos(pos, facing)
+		meta = minetest.get_meta(pos)
 		if move_player then
 			clicker:moveto(digtron.find_new_pos(player_pos, facing), true)
 		end
 		
 		-- Start the delay before digtron can run again. Do this after moving the array or pos will be wrong.
 		minetest.get_meta(pos):set_string("waiting", "true")
-		minetest.after(digtron.refractory,
+		minetest.after(digtron.cycle_time,
 			function (pos)
 				minetest.get_meta(pos):set_string("waiting", nil)
 			end, pos
 		)
 		
+		local building_fuel_cost = 0
 		local strange_failure = false
 		-- execute_build on all digtron components that have one
 		for k, location in pairs(layout.builders) do
@@ -200,19 +228,36 @@ minetest.register_node("digtron:controller", {
 			local targetdef = minetest.registered_nodes[target.name]
 			if targetdef.execute_build ~= nil then
 				--using the old location of the controller as fallback so that any leftovers land with the rest of the digger output. Not that there should be any.
-				if targetdef.execute_build(location, clicker, layout.inventories, layout.protected, nodes_dug, controlling_coordinate, oldpos) == false then
-					-- Don't interrupt the build cycle as a whole, we've already moved so might as well try to complete as much as possible.
+				local build_return = targetdef.execute_build(location, clicker, layout.inventories, layout.protected, nodes_dug, controlling_coordinate, oldpos)
+				if build_return == false then
+					-- This happens if there's insufficient inventory, but we should have confirmed there was sufficient inventory during test phase.
+					-- So this should never happen. However, "should never happens" happen sometimes. So
+					-- don't interrupt the build cycle as a whole, we've already moved so might as well try to complete as much as possible.
 					strange_failure = true
+				elseif build_return == true then
+					building_fuel_cost = building_fuel_cost + digtron.build_cost
 				end
 			else
 				minetest.log(string.format("%s has builder group but is missing execute_build method! This is an error in mod programming, file a bug.", targetdef.name))
 			end
 		end
+		
+		local status_text = ""
 		if strange_failure then
-			-- We weren't able to detect this build failure ahead of time, so make a big noise now. This is strange, shouldn't happen often.
+			-- We weren't able to detect this build failure ahead of time, so make a big noise now. This is strange, shouldn't happen.
 			minetest.sound_play("dingding", {gain=1.0, pos=pos})
 			minetest.sound_play("buzzer", {gain=0.5, pos=pos})
-			meta:set_string("infotext", "Digtron unexpectedly failed to execute a build operation.")
+			status_text = "Digtron unexpectedly failed to execute one or more build operations, likely due to an inventory error.\n"
+		end
+		
+		-- acutally burn the fuel needed
+		fuel_burning = fuel_burning - (digging_fuel_cost + building_fuel_cost)
+		if fuel_burning < 0 then
+			fuel_burning = fuel_burning + digtron.burn(layout.fuelstores, -fuel_burning, false)
+		end
+		meta:set_float("fuel_burning", fuel_burning)
+		if not strange_failure then
+			meta:set_string("infotext", status_text .. string.format("Heat remaining in controller furnace: %d", fuel_burning))
 		end
 		
 		-- finally, dig out any nodes remaining to be dug. Some of these will have had their flag revoked because
@@ -292,9 +337,9 @@ minetest.register_node("digtron:pusher", {
 		end
 		
 		if not can_move then
-			-- mark this node as waiting, will clear this flag in digtron.refractory seconds
+			-- mark this node as waiting, will clear this flag in digtron.cycle_time seconds
 			meta:set_string("waiting", "true")
-			minetest.after(digtron.refractory,
+			minetest.after(digtron.cycle_time,
 				function (pos)
 					minetest.get_meta(pos):set_string("waiting", nil)
 				end, pos
@@ -326,7 +371,7 @@ minetest.register_node("digtron:pusher", {
 		
 		-- Start the delay before digtron can run again. Do this after moving the array or pos will be wrong.
 		minetest.get_meta(pos):set_string("waiting", "true")
-		minetest.after(digtron.refractory,
+		minetest.after(digtron.cycle_time,
 			function (pos)
 				minetest.get_meta(pos):set_string("waiting", nil)
 			end, pos
