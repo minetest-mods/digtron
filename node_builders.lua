@@ -52,7 +52,7 @@ minetest.register_node("digtron:builder", {
 			"tooltip[period;Builder will build once every n steps. These steps are globally aligned, so all builders with the same period and offset will build on the same location.]" ..
 			"field[3.5,0.8;1,0.1;offset;Offset;${offset}]" ..
 			"tooltip[offset;Offsets the start of periodicity counting by this amount. For example, a builder with period 2 and offset 0 builds every even-numbered node and one with period 2 and offset 1 builds every odd-numbered node.]" ..
-			"button_exit[4.2,0.5;1,0.1;set;Save]" ..
+			"button_exit[4.2,0.5;1,0.1;set;Save &\nShow]" ..
 			"tooltip[set;Saves settings]" ..
 			"field[5.7,0.8;1,0.1;build_facing;Facing;${build_facing}]" ..
 			"tooltip[build_facing;Value from 0-23. Not all node types make use of this. Use the 'Read & Save' button to copy the facing of the node currently in the builder output location]" ..
@@ -83,7 +83,37 @@ minetest.register_node("digtron:builder", {
 			meta:set_int("offset", math.floor(tonumber(fields.offset)))
 		end
 		
-		if fields.read then
+		if fields.set then
+			local buildpos = digtron.find_new_pos(pos, minetest.get_node(pos).param2)
+			local offset_mod_period = math.abs(offset%period)
+			local x_pos = math.floor(buildpos.x/period)*period - offset_mod_period
+			minetest.add_entity({x=x_pos, y=buildpos.y, z=buildpos.z}, "digtron:marker")
+			if x_pos >= buildpos.x then
+				minetest.add_entity({x=x_pos - period, y=buildpos.y, z=buildpos.z}, "digtron:marker")
+			end
+			if x_pos <= buildpos.x then
+				minetest.add_entity({x=x_pos + period, y=buildpos.y, z=buildpos.z}, "digtron:marker")
+			end
+
+			local y_pos = math.floor(buildpos.y/period)*period - offset_mod_period
+			minetest.add_entity({x=buildpos.x, y=y_pos, z=buildpos.z}, "digtron:marker_vertical")
+			if y_pos >= buildpos.y then
+				minetest.add_entity({x=buildpos.x, y=y_pos - period, z=buildpos.z}, "digtron:marker_vertical")
+			end
+			if y_pos <= buildpos.y then
+				minetest.add_entity({x=buildpos.x, y=y_pos + period, z=buildpos.z}, "digtron:marker_vertical")
+			end
+
+			local z_pos = math.floor(buildpos.z/period)*period - offset_mod_period
+			minetest.add_entity({x=buildpos.x, y=buildpos.y, z=z_pos}, "digtron:marker"):setyaw(1.5708)
+			if z_pos >= buildpos.z then
+				minetest.add_entity({x=buildpos.x, y=buildpos.y, z=z_pos - period}, "digtron:marker"):setyaw(1.5708)
+			end
+			if z_pos <= buildpos.z then
+				minetest.add_entity({x=buildpos.x, y=buildpos.y, z=z_pos + period}, "digtron:marker"):setyaw(1.5708)
+			end
+
+		elseif fields.read then
 			local meta = minetest.get_meta(pos)
 			local facing = minetest.get_node(pos).param2
 			local buildpos = digtron.find_new_pos(pos, facing)

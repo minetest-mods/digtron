@@ -68,6 +68,8 @@ Builder Head
 
 A builder head is the most complex component of this system. It has period and offset properties, and also an inventory slot where you "program" it by placing an example of the node type that you want it to build. Only a single item is needed here, any additional items in this inventory stack will be shunted into the digger's general inventory (or ejected from the control node if there's no space for it).
 
+When the "Save & Show" button is clicked the properties for period and offset will be saved, and markers will briefly be shown to indicate where the nearest spots corresponding to those values are. The builder will build its output at those locations provided it is moving along the matching axis.
+
 The "output" side of a builder is the side with a black crosshair on it.
 
 Builders also have a "facing" setting. If you haven't memorized the meaning of the 24 facing values yet, builder heads have a helpful "Read & Save" button to fill this value in for you. Simply build a temporary instance of the node in the output location in front of the builder, adjust it to the orientation you want using the screwdriver tool, and then when you click the "Read & Save" button the node's facing will be read and saved.
@@ -190,3 +192,11 @@ Pusher controller:
 [    , coal ,     ]
 [coal, core , coal]
 [    , coal ,     ]
+
+
+Tips and tricks
+===============
+
+If you're building a repeating pattern of nodes, your periodicity should be one larger than your largest offset. For example, if you've laid out builders to create a set of spiral stairs and the offsets are from 0 to 11, you'll want to use periodicity 12.
+
+A good way to program a set of builders is to build a complete example of the structure you want them to create, then place builders against the structure and have them "read" all of its facings. This also lets you more easily visualize the tricks that might be needed to allow the digtron to pass through the structure as it's being built.

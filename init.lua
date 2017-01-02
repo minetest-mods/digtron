@@ -1,5 +1,6 @@
 dofile( minetest.get_modpath( "digtron" ) .. "/util.lua" )
 dofile( minetest.get_modpath( "digtron" ) .. "/pointset.lua" )
+dofile( minetest.get_modpath( "digtron" ) .. "/entities.lua" )
 
 dofile( minetest.get_modpath( "digtron" ) .. "/node_misc.lua" ) -- contains inventory and structure nodes
 dofile( minetest.get_modpath( "digtron" ) .. "/node_diggers.lua" ) -- contains all diggers
