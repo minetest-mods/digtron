@@ -5,6 +5,7 @@ minetest.register_node("digtron:builder", {
 	description = "Builder Unit",
 	groups = {cracky = 3, stone = 1, digtron = 4},
 	drop = "digtron:builder",
+	sounds = default.node_sound_metal_defaults(),
 	paramtype2= 'facedir',
 	tiles = {
 		"digtron_plate.png^[transformR90",

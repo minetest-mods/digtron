@@ -14,6 +14,7 @@ minetest.register_node("digtron:digger", {
 	description = "Digger Head",
 	groups = {cracky = 3, stone = 1, digtron = 3},
 	drop = 'digtron:digger',
+	sounds = default.node_sound_metal_defaults(),
 	paramtype = "light",
 	paramtype2= 'facedir',
 	
@@ -97,6 +98,7 @@ minetest.register_node("digtron:soft_digger", {
 	description = "Soft Material Digger Head",
 	groups = {cracky = 3, stone = 1, digtron = 3},
 	drop = 'digtron:soft_digger',
+	sounds = default.node_sound_metal_defaults(),
 	paramtype = "light",
 	paramtype2= 'facedir',
 	

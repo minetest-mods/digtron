@@ -16,6 +16,7 @@ minetest.register_node("digtron:controller", {
 	description = "Digtron Control Unit",
 	groups = {cracky = 3, stone = 1, digtron = 1},
 	drop = 'digtron:controller',
+	sounds = default.node_sound_metal_defaults(),
 	paramtype2= 'facedir',
 	-- Aims in the +Z direction by default
 	tiles = {
@@ -281,6 +282,7 @@ minetest.register_node("digtron:pusher", {
 	description = "Digtron Pusher Unit",
 	groups = {cracky = 3, stone = 1, digtron = 1},
 	drop = 'digtron:pusher',
+	sounds = default.node_sound_metal_defaults(),
 	paramtype2= 'facedir',
 	-- Aims in the +Z direction by default
 	tiles = {
