@@ -3,7 +3,7 @@
 -- Builds objects in the targeted node. This is a complicated beastie.
 minetest.register_node("digtron:builder", {
 	description = "Builder Unit",
-	groups = {cracky = 3, stone = 1, digtron = 4},
+	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 4},
 	drop = "digtron:builder",
 	sounds = default.node_sound_metal_defaults(),
 	paramtype2= 'facedir',

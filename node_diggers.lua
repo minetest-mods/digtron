@@ -12,7 +12,7 @@ local digger_nodebox = {
 -- Digs out nodes that are "in front" of the digger head.
 minetest.register_node("digtron:digger", {
 	description = "Digger Head",
-	groups = {cracky = 3, stone = 1, digtron = 3},
+	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 3},
 	drop = 'digtron:digger',
 	sounds = default.node_sound_metal_defaults(),
 	paramtype = "light",
@@ -96,7 +96,7 @@ minetest.register_node("digtron:digger", {
 -- A special-purpose digger to deal with stuff like sand and gravel in the ceiling. It always digs (no periodicity or offset), but it only digs falling_block nodes
 minetest.register_node("digtron:soft_digger", {
 	description = "Soft Material Digger Head",
-	groups = {cracky = 3, stone = 1, digtron = 3},
+	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 3},
 	drop = 'digtron:soft_digger',
 	sounds = default.node_sound_metal_defaults(),
 	paramtype = "light",

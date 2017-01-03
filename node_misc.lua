@@ -1,7 +1,7 @@
 -- A do-nothing "structural" node, to ensure all digtron nodes that are supposed to be connected to each other can be connected to each other.
 minetest.register_node("digtron:structure", {
 	description = "Digger Structure",
-	groups = {cracky = 3, stone = 1, digtron = 1},
+	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 1},
 	drop = 'digtron:structure',
 	tiles = {"digtron_plate.png"},
 	drawtype = "nodebox",
@@ -31,7 +31,7 @@ minetest.register_node("digtron:structure", {
 -- A modest light source that will move with the digtron, handy for working in a tunnel you aren't bothering to install permanent lights in.
 minetest.register_node("digtron:light", {
 	description = "Digger Light",
-	groups = {cracky = 3, stone = 1, digtron = 1},
+	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 1},
 	drop = 'digtron:light',
 	tiles = {"digtron_light.png"},
 	drawtype = "nodebox",
@@ -52,7 +52,7 @@ minetest.register_node("digtron:light", {
 minetest.register_node("digtron:inventory",
 {
 	description = "Digtron Inventory Hopper",
-	groups = {cracky = 3, stone = 1, digtron = 2},
+	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 2},
 	drop = 'digtron:inventory',
 	sounds = default.node_sound_metal_defaults(),
 	paramtype2= 'facedir',
@@ -89,7 +89,7 @@ minetest.register_node("digtron:inventory",
 minetest.register_node("digtron:fuelstore",
 {
 	description = "Digtron Fuel Hopper",
-	groups = {cracky = 3, stone = 1, digtron = 5},
+	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 5},
 	drop = 'digtron:fuelstore',
 	sounds = default.node_sound_metal_defaults(),
 	paramtype2= 'facedir',
