@@ -69,7 +69,6 @@ minetest.register_entity("digtron:builder_item", {
 			props.textures = {staticdata}
 			self.object:set_properties(props)
 		elseif digtron.create_builder_item ~= nil then
-			minetest.debug("creating builder item", digtron.create_builder_item)
 			props.textures = {digtron.create_builder_item}
 			self.object:set_properties(props)
 			digtron.create_builder_item = nil

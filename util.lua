@@ -372,7 +372,6 @@ digtron.burn = function(fuelstore_positions, target, test)
 end
 
 digtron.remove_builder_item = function(pos)
-	minetest.debug("removing builder item")
 	local objects = minetest.env:get_objects_inside_radius(pos, 0.5)
 	if objects ~= nil then
 		for _, obj in ipairs(objects) do
