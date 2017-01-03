@@ -104,7 +104,11 @@ digtron.move_node = function(pos, newpos)
 	newmeta:set_int("build_facing", oldmeta:get_int("build_facing"))
 	newmeta:set_float("fuel_burning", oldmeta:get_float("fuel_burning"))
 	newmeta:set_string("infotext", oldmeta:get_string("infotext"))
-		
+	
+	if minetest.get_item_group(node.name, "digtron") == 4 then
+		digtron.update_builder_item(newpos)
+	end
+	
 	-- remove node from old position
 	minetest.remove_node(pos)
 end
@@ -365,4 +369,26 @@ digtron.burn = function(fuelstore_positions, target, test)
 		end
 	end
 	return current_burned
+end
+
+digtron.remove_builder_item = function(pos)
+	minetest.debug("removing builder item")
+	local objects = minetest.env:get_objects_inside_radius(pos, 0.5)
+	if objects ~= nil then
+		for _, obj in ipairs(objects) do
+			if obj and obj:get_luaentity() and obj:get_luaentity().name == "digtron:builder_item" then
+				obj:remove()
+			end
+		end
+	end
+end
+
+digtron.update_builder_item = function(pos)
+	digtron.remove_builder_item(pos)
+	local inv = minetest.get_inventory({type="node", pos=pos})
+	local item_stack = inv:get_stack("main", 1)
+	if not item_stack:is_empty() then
+		digtron.create_builder_item = item_stack:get_name()
+		minetest.add_entity(pos,"digtron:builder_item")
+	end
 end

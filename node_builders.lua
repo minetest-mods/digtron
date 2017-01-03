@@ -123,7 +123,13 @@ minetest.register_node("digtron:builder", {
 			if build_facing and build_facing >= 0 and build_facing < 24 then
 				meta:set_int("build_facing", math.floor(build_facing))
 			end
-		end		
+		end
+
+		digtron.update_builder_item(pos)
+	end,
+	
+	on_destruct = function(pos)
+		digtron.remove_builder_item(pos)
 	end,
 
 	-- "builder at pos, imagine that you're in test_pos. If you're willing and able to build from there, take the item you need from inventory.
