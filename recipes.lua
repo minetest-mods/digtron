@@ -93,6 +93,32 @@ minetest.register_craft({
 			}
 })
 
+-- For swapping digger types
+minetest.register_craft({
+	output = "digtron:digger",
+	recipe = {
+			{"digtron:intermittent_digger"},
+			}
+})
+minetest.register_craft({
+	output = "digtron:intermittent_digger",
+	recipe = {
+			{"digtron:digger"},
+			}
+})
+minetest.register_craft({
+	output = "digtron:soft_digger",
+	recipe = {
+			{"digtron:intermittent_soft_digger"},
+			}
+})
+minetest.register_craft({
+	output = "digtron:intermittent_soft_digger",
+	recipe = {
+			{"digtron:soft_digger"},
+			}
+})
+
 -- And some recycling reactions to get digtron cores out of the "cheap" parts:
 
 minetest.register_craft({

@@ -6,7 +6,7 @@ minetest.register_node("digtron:builder", {
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 4},
 	drop = "digtron:builder",
 	sounds = default.node_sound_metal_defaults(),
-	paramtype2= 'facedir',
+	paramtype2= "facedir",
 	tiles = {
 		"digtron_plate.png^[transformR90",
 		"digtron_plate.png^[transformR270",
@@ -39,7 +39,7 @@ minetest.register_node("digtron:builder", {
 	},
 	
 	on_construct = function(pos)
-        local meta = minetest.env:get_meta(pos)
+        local meta = minetest.get_meta(pos)
         meta:set_string("formspec",
 			"size[8,5.2]" ..
 			default.gui_bg ..

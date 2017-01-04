@@ -52,12 +52,12 @@ Digger Head
 
 Facing of a digger head is significant; it will excavate material from the node on the spinning grinder wheel face of the digger head. Generally speaking, you'll want these to face forward - though having them aimed to the sides can also be useful.
 
-Digger heads can have a period and offset defined if you want them to punch regularly-spaced holes. Note that diggers aimed forward should generally always have a period of 1, otherwise the digging machine may be unable to move.
+Digger heads come in both regular and "intermittent" versions, each of which is craftable from the other. The intermittent version can have a period and offset defined if you want them to punch regularly-spaced holes. Note that diggers aimed forward should generally always be the regular kind (or have a period of 1), otherwise the digging machine may be unable to move.
 
 Soft Material Digger Head
 ----------------
 
-This specialized digger head is designed to excavate only softer material such as sand or gravel. It has no period/offset settings; it will always attempt to dig sand when it's present in its target node. It leaves all other types of nodes alone. (in technical terms, this digger digs nodes belonging to the "crumbly", "choppy", "snappy", "oddly_diggable_by_hand" and "fleshy" groups)
+This specialized digger head is designed to excavate only softer material such as sand or gravel. It has no period/offset settings; it will always attempt to dig sand when it's present in its target node. It leaves all other types of nodes alone. In technical terms, this digger digs nodes belonging to the "crumbly", "choppy", "snappy", "oddly_diggable_by_hand" and "fleshy" groups. It also comes in regular and "intermittent" versions.
 
 The intended purpose of this digger is to be aimed at the ceiling or walls of a tunnel being dug, making spaces to allow shoring nodes to be inserted into unstable roofs but leaving the wall alone if it's composed of a more stable material.
 

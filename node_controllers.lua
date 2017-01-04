@@ -246,9 +246,9 @@ local controller_nodebox ={
 minetest.register_node("digtron:controller", {
 	description = "Digtron Control Unit",
 	groups = {cracky = 3, oddly_breakable_by_hand = 3, digtron = 1},
-	drop = 'digtron:controller',
+	drop = "digtron:controller",
 	sounds = default.node_sound_metal_defaults(),
-	paramtype2= 'facedir',
+	paramtype2= "facedir",
 	-- Aims in the +Z direction by default
 	tiles = {
 		"digtron_plate.png^[transformR90",
@@ -267,7 +267,7 @@ minetest.register_node("digtron:controller", {
 	},
 	
 	on_construct = function(pos)
-        local meta = minetest.env:get_meta(pos)
+        local meta = minetest.get_meta(pos)
 		meta:set_float("fuel_burning", 0.0)
 		meta:set_string("infotext", "Heat remaining in controller furnace: 0")
 	end,
@@ -286,9 +286,9 @@ minetest.register_node("digtron:controller", {
 minetest.register_node("digtron:pusher", {
 	description = "Digtron Pusher Unit",
 	groups = {cracky = 3, oddly_breakable_by_hand=3, digtron = 1},
-	drop = 'digtron:pusher',
+	drop = "digtron:pusher",
 	sounds = default.node_sound_metal_defaults(),
-	paramtype2= 'facedir',
+	paramtype2= "facedir",
 	-- Aims in the +Z direction by default
 	tiles = {
 		"digtron_plate.png^[transformR90^[colorize:#00880030",

@@ -2,7 +2,7 @@
 minetest.register_node("digtron:structure", {
 	description = "Digger Structure",
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 1},
-	drop = 'digtron:structure',
+	drop = "digtron:structure",
 	tiles = {"digtron_plate.png"},
 	drawtype = "nodebox",
 	sounds = default.node_sound_metal_defaults(),
@@ -32,7 +32,7 @@ minetest.register_node("digtron:structure", {
 minetest.register_node("digtron:light", {
 	description = "Digger Light",
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 1},
-	drop = 'digtron:light',
+	drop = "digtron:light",
 	tiles = {"digtron_light.png"},
 	drawtype = "nodebox",
 	paramtype = "light",
@@ -53,9 +53,9 @@ minetest.register_node("digtron:inventory",
 {
 	description = "Digtron Inventory Hopper",
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 2},
-	drop = 'digtron:inventory',
+	drop = "digtron:inventory",
 	sounds = default.node_sound_metal_defaults(),
-	paramtype2= 'facedir',
+	paramtype2= "facedir",
 	tiles = {"digtron_inventory.png"},
 
 	on_construct = function(pos)
@@ -90,9 +90,9 @@ minetest.register_node("digtron:fuelstore",
 {
 	description = "Digtron Fuel Hopper",
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 5},
-	drop = 'digtron:fuelstore',
+	drop = "digtron:fuelstore",
 	sounds = default.node_sound_metal_defaults(),
-	paramtype2= 'facedir',
+	paramtype2= "facedir",
 	tiles = {"digtron_fuelstore.png"},
 
 	on_construct = function(pos)
