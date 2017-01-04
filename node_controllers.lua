@@ -129,10 +129,10 @@ local execute_cycle = function(pos, clicker)
 		local return_string = nil
 		if test_build_return_code == 3 then
 			minetest.sound_play("honk", {gain=0.5, pos=pos}) -- A builder is not configured
-			return_string = "Digtron connected to at least one builder node that hasn't had an output material assigned.\n"
+			return_string = "Digtron connected to at least one builder with no output material assigned.\n"
 		elseif test_build_return_code == 2 then
 			minetest.sound_play("dingding", {gain=1.0, pos=pos}) -- Insufficient inventory
-			return_string = string.format("Digtron has insufficient materials in inventory to execute all build operations.\nNeeded: %s\n",
+			return_string = string.format("Digtron has insufficient building materials. Needed: %s\n",
 				test_build_return_item:get_name())
 		end
 		return pos, return_string .. status_text --Abort, don't dig and don't build.
