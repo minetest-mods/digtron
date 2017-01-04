@@ -4,6 +4,14 @@ digtron = {}
 
 dofile( minetest.get_modpath( "digtron" ) .. "/util_item_place_node.lua" ) -- separated out to avoid potential for license complexity
 
+-- Apparently node_sound_metal_defaults is a newer thing, I ran into games using an older version of the default mod without it.
+if default.node_sound_metal_defaults ~= nil then
+	digtron.metal_sounds = default.node_sound_metal_defaults()
+else
+	digtron.metal_sounds = default.node_sound_stone_defaults()
+end
+
+
 digtron.find_new_pos = function(pos, facing)
 	-- finds the point one node "forward", based on facing
 	local dir = minetest.facedir_to_dir(facing)

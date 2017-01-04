@@ -44,7 +44,7 @@ minetest.register_node("digtron:digger", {
 	description = "Digger Head",
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 3},
 	drop = "digtron:digger",
-	sounds = default.node_sound_metal_defaults(),
+	sounds = digtron.metal_sounds,
 	paramtype = "light",
 	paramtype2= "facedir",
 	
@@ -90,7 +90,7 @@ minetest.register_node("digtron:intermittent_digger", {
 	description = "Intermittent Digger Head",
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 3},
 	drop = "digtron:intermittent_digger",
-	sounds = default.node_sound_metal_defaults(),
+	sounds = digtron.metal_sounds,
 	paramtype = "light",
 	paramtype2= "facedir",
 	
@@ -145,7 +145,7 @@ minetest.register_node("digtron:soft_digger", {
 	description = "Soft Material Digger Head",
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 3},
 	drop = "digtron:soft_digger",
-	sounds = default.node_sound_metal_defaults(),
+	sounds = digtron.metal_sounds,
 	paramtype = "light",
 	paramtype2= "facedir",
 	
@@ -198,7 +198,7 @@ minetest.register_node("digtron:intermittent_soft_digger", {
 	description = "Intermittent Soft Material Digger Head",
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 3},
 	drop = "digtron:intermittent_soft_digger",
-	sounds = default.node_sound_metal_defaults(),
+	sounds = digtron.metal_sounds,
 	paramtype = "light",
 	paramtype2= "facedir",
 	

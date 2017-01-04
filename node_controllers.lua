@@ -238,7 +238,7 @@ minetest.register_node("digtron:controller", {
 	description = "Digtron Control Unit",
 	groups = {cracky = 3, oddly_breakable_by_hand = 3, digtron = 1},
 	drop = "digtron:controller",
-	sounds = default.node_sound_metal_defaults(),
+	sounds = digtron.metal_sounds,
 	paramtype2= "facedir",
 	-- Aims in the +Z direction by default
 	tiles = {
@@ -328,7 +328,7 @@ digtron.auto_cycle = function(pos)
 	meta:set_string("infotext", status)
 	
 	if cycle > 0 then
-		minetest.after(math.max(digtron.cycle_time, meta:get_int("period")), digtron.auto_cycle, newpos)
+		minetest.after(meta:get_int("period"), digtron.auto_cycle, newpos)
 	else
 		meta:set_string("formspec", auto_formspec)
 	end
@@ -339,7 +339,7 @@ minetest.register_node("digtron:auto_controller", {
 	description = "Digtron Automatic Control Unit",
 	groups = {cracky = 3, oddly_breakable_by_hand = 3, digtron = 1},
 	drop = "digtron:auto_controller",
-	sounds = default.node_sound_metal_defaults(),
+	sounds = digtron.metal_sounds,
 	paramtype2= "facedir",
 	-- Aims in the +Z direction by default
 	tiles = {
@@ -364,7 +364,7 @@ minetest.register_node("digtron:auto_controller", {
 		meta:set_string("infotext", "Heat remaining in controller furnace: 0")
 		meta:set_string("formspec", auto_formspec)
 		-- Reusing offset and period to keep the digtron node-moving code simple, and the names still fit well
-		meta:set_int("period", 1)
+		meta:set_int("period", digtron.cycle_time)
 		meta:set_int("offset", 0)
 	end,
 
@@ -374,7 +374,7 @@ minetest.register_node("digtron:auto_controller", {
 		local period = tonumber(fields.period)
 		
 		if period and period > 0 then
-			meta:set_int("period", math.floor(period))
+			meta:set_int("period", math.max(digtron.cycle_time, math.floor(period)))
 		end
 		
 		if offset and offset >= 0 then
@@ -406,7 +406,7 @@ minetest.register_node("digtron:pusher", {
 	description = "Digtron Pusher Unit",
 	groups = {cracky = 3, oddly_breakable_by_hand=3, digtron = 1},
 	drop = "digtron:pusher",
-	sounds = default.node_sound_metal_defaults(),
+	sounds = digtron.metal_sounds,
 	paramtype2= "facedir",
 	-- Aims in the +Z direction by default
 	tiles = {
