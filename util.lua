@@ -99,6 +99,8 @@ digtron.move_node = function(pos, newpos)
 	newinv:set_list("main", list)
 	newmeta:set_string("formspec", oldformspec)
 	
+	newmeta:set_string("triggering_player", oldmeta:get_string("triggering_player")) -- for auto-controllers
+	
 	newmeta:set_int("offset", oldmeta:get_int("offset"))
 	newmeta:set_int("period", oldmeta:get_int("period"))
 	newmeta:set_int("build_facing", oldmeta:get_int("build_facing"))

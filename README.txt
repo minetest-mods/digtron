@@ -34,11 +34,18 @@ Detailed module guide
 Control Module
 --------------
 
-Right-click on this module to make the digging machine go. The digging machine will go in the direction that the control module is oriented.
+Right-click on this module to make the digging machine go one step. The digging machine will go in the direction that the control module is oriented.
 
 A control module can only trigger once per second. Gives you time to enjoy the scenery and smell the flowers (or their mulched remains, at any rate).
 
 If you're standing within the digging machine's volume, or in a node adjacent to it, you will be pulled along with the machine when it moves.
+
+Automatic Control Module
+--------------
+
+An Auto-control module can be set to run for an arbitrary number of cycles. Once it's running, right-click on it again to interrupt its rampage. If anything interrupts it - the player's click, an undiggable obstruction, running out of fuel - it will remember the number of remaining cycles so that you can fix the problem and set it running again to complete the original plan.
+
+The digging machine will go in the direction that the control module is oriented.
 
 Pusher Module
 -------------
@@ -160,11 +167,17 @@ Builder heads:
 [mese fragment,     core     , mese fragment]
 [             , mese fragment,              ]
 
-Controller heads:
+Controller:
 		
 [            , mese crystal,             ]
 [mese crystal,     core    , mese crystal]
 [            , mese crystal,             ]
+
+Automatic Controller:
+		
+[mese crystal, mese crystal, mese crystal]
+[mese crystal,     core    , mese crystal]
+[mese crystal, mese crystal, mese crystal]
 
 Inventory modules:
 

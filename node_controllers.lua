@@ -1,21 +1,21 @@
-digtron.execute_cycle = function(pos, node, clicker)
+-- returns newpos, status string
+local execute_cycle = function(pos, clicker)
 	local meta = minetest.get_meta(pos)
-	if meta:get_string("waiting") == "true" then
-		-- Been too soon since last time the digtron did a cycle.
-		return pos, nil
-	end
-
+	local fuel_burning = meta:get_float("fuel_burning") -- get amount of burned fuel left over from last cycle
+	local status_text = string.format("Heat remaining in controller furnace: %d", fuel_burning)
+	
 	local layout = digtron.get_all_digtron_neighbours(pos, clicker)
 	if layout.all == nil then
 		-- get_all_digtron_neighbours returns nil if the digtron array touches unloaded nodes, too dangerous to do anything in that situation. Abort.
 		minetest.sound_play("buzzer", {gain=0.5, pos=pos})
-		return pos, "Digtron is adjacent to unloaded nodes."
+		return pos, "Digtron is adjacent to unloaded nodes.\n" .. status_text
 	end
 	
 	if layout.traction * digtron.traction_factor < table.getn(layout.all) then
 		-- digtrons can't fly
 		minetest.sound_play("squeal", {gain=1.0, pos=pos})
-		return pos, string.format("Digtron has %d nodes but only enough traction to move %d nodes.", table.getn(layout.all), layout.traction * digtron.traction_factor)
+		return pos, string.format("Digtron has %d nodes but only enough traction to move %d nodes.\n", table.getn(layout.all), layout.traction * digtron.traction_factor)
+			 .. status_text
 	end
 
 	local facing = minetest.get_node(pos).param2
@@ -69,7 +69,7 @@ digtron.execute_cycle = function(pos, node, clicker)
 		)
 		minetest.sound_play("squeal", {gain=1.0, pos=pos})
 		minetest.sound_play("buzzer", {gain=0.5, pos=pos})
-		return pos, "Digtron is obstructed." --Abort, don't dig and don't build.
+		return pos, "Digtron is obstructed.\n" .. status_text --Abort, don't dig and don't build.
 	end
 
 	----------------------------------------------------------------------------------------------------------------------
@@ -103,7 +103,6 @@ digtron.execute_cycle = function(pos, node, clicker)
 		end
 	end
 	
-	local fuel_burning = meta:get_float("fuel_burning") -- get amount of burned fuel left over from last cycle
 	local test_fuel_needed = test_build_fuel_cost + digging_fuel_cost - fuel_burning
 	local test_fuel_burned = 0
 	if test_fuel_needed > 0 then
@@ -117,7 +116,7 @@ digtron.execute_cycle = function(pos, node, clicker)
 	
 	if test_fuel_needed > fuel_burning + test_fuel_burned then
 		minetest.sound_play("buzzer", {gain=0.5, pos=pos})
-		return pos, "Digtron needs more fuel" -- abort, don't dig and don't build.
+		return pos, "Digtron needs more fuel." -- abort, don't dig and don't build.
 	end
 	
 	if not can_build then
@@ -130,13 +129,13 @@ digtron.execute_cycle = function(pos, node, clicker)
 		local return_string = nil
 		if test_build_return_code == 3 then
 			minetest.sound_play("honk", {gain=0.5, pos=pos}) -- A builder is not configured
-			return_string = "Digtron connected to at least one builder node that hasn't had an output material assigned."
+			return_string = "Digtron connected to at least one builder node that hasn't had an output material assigned.\n"
 		elseif test_build_return_code == 2 then
 			minetest.sound_play("dingding", {gain=1.0, pos=pos}) -- Insufficient inventory
-			return_string = string.format("Digtron has insufficient materials in inventory to execute all build operations.\nNeeded: %s",
+			return_string = string.format("Digtron has insufficient materials in inventory to execute all build operations.\nNeeded: %s\n",
 				test_build_return_item:get_name())
 		end
-		return pos, return_string --Abort, don't dig and don't build.
+		return pos, return_string .. status_text --Abort, don't dig and don't build.
 	end	
 
 	----------------------------------------------------------------------------------------------------------------------
@@ -166,15 +165,7 @@ digtron.execute_cycle = function(pos, node, clicker)
 	if move_player then
 		clicker:moveto(digtron.find_new_pos(player_pos, facing), true)
 	end
-	
-	-- Start the delay before digtron can run again. Do this after moving the array or pos will be wrong.
-	minetest.get_meta(pos):set_string("waiting", "true")
-	minetest.after(digtron.cycle_time,
-		function (pos)
-			minetest.get_meta(pos):set_string("waiting", nil)
-		end, pos
-	)
-	
+		
 	local building_fuel_cost = 0
 	local strange_failure = false
 	-- execute_build on all digtron components that have one
@@ -273,13 +264,141 @@ minetest.register_node("digtron:controller", {
 	end,
 	
 	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
-		newpos, status = digtron.execute_cycle(pos, node, clicker)
+		local meta = minetest.get_meta(pos)
+		if meta:get_string("waiting") == "true" then
+			-- Been too soon since last time the digtron did a cycle.
+			return
+		end
+	
+		newpos, status = execute_cycle(pos, clicker)
+		
+		meta = minetest.get_meta(newpos)
 		if status ~= nil then
-			local meta = minetest.get_meta(newpos)
 			meta:set_string("infotext", status)
 		end
+		
+		-- Start the delay before digtron can run again. Do this after moving the array or pos will be wrong.
+		minetest.get_meta(newpos):set_string("waiting", "true")
+		minetest.after(digtron.cycle_time,
+				function (pos)
+					minetest.get_meta(pos):set_string("waiting", nil)
+				end, newpos
+			)
 	end,
 })
+
+---------------------------------------------------------------------------------------------------------------
+
+local auto_formspec = "size[4.5,1]" ..
+	default.gui_bg ..
+	default.gui_bg_img ..
+	default.gui_slots ..
+	"field[0.5,0.8;1,0.1;offset;Cycles;${offset}]" ..
+	"tooltip[offset;When triggered, this controller will try to run for the given number of cycles. The cycle count will decrement as it runs, so if it gets halted by a problem you can fix the problem and restart.]" ..
+	"field[1.5,0.8;1,0.1;period;Period;${period}]" ..
+	"tooltip[period;Number of seconds to wait between each cycle]" ..
+	"button_exit[2.2,0.5;1,0.1;set;Set]" ..
+	"tooltip[set;Saves the cycle setting without starting the controller running]" ..
+	"button_exit[3.2,0.5;1,0.1;execute;Set &\nExecute]" ..
+	"tooltip[execute;Begins executing the given number of cycles]"
+
+-- Needed to make this global so that it could recurse into minetest.after
+digtron.auto_cycle = function(pos)
+	local meta = minetest.get_meta(pos)
+	local player = minetest.get_player_by_name(meta:get_string("triggering_player"))
+	if player == nil or meta:get_string("waiting") == "true" then
+		return
+	end
+	
+	local newpos, status = execute_cycle(pos, player)
+	
+	local cycle = 0
+	if vector.equals(pos, newpos) then
+		cycle = meta:get_int("offset")
+		status = status .. string.format("\nCycles remaining: %d\nHalted!", cycle)
+		meta:set_string("infotext", status)
+		meta:set_string("formspec", auto_formspec)
+		return
+	end
+	
+	meta = minetest.get_meta(newpos)
+	cycle = meta:get_int("offset") - 1
+	meta:set_int("offset", cycle)
+	status = status .. string.format("\nCycles remaining: %d", cycle)
+	meta:set_string("infotext", status)
+	
+	if cycle > 0 then
+		minetest.after(math.max(digtron.cycle_time, meta:get_int("period")), digtron.auto_cycle, newpos)
+	else
+		meta:set_string("formspec", auto_formspec)
+	end
+end
+
+-- Master controller. Most complicated part of the whole system. Determines which direction a digtron moves and triggers all of its component parts.
+minetest.register_node("digtron:auto_controller", {
+	description = "Digtron Automatic Control Unit",
+	groups = {cracky = 3, oddly_breakable_by_hand = 3, digtron = 1},
+	drop = "digtron:auto_controller",
+	sounds = default.node_sound_metal_defaults(),
+	paramtype2= "facedir",
+	-- Aims in the +Z direction by default
+	tiles = {
+		"digtron_plate.png^[transformR90^[colorize:#88000030",
+		"digtron_plate.png^[transformR270^[colorize:#88000030",
+		"digtron_plate.png^[colorize:#88000030",
+		"digtron_plate.png^[transformR180^[colorize:#88000030",
+		"digtron_plate.png^[colorize:#88000030",
+		"digtron_control.png^[colorize:#88000030",
+	},
+	
+	drawtype = "nodebox",
+	paramtype = "light",
+	node_box = {
+		type = "fixed",
+		fixed = controller_nodebox,
+	},
+	
+	on_construct = function(pos)
+        local meta = minetest.get_meta(pos)
+		meta:set_float("fuel_burning", 0.0)
+		meta:set_string("infotext", "Heat remaining in controller furnace: 0")
+		meta:set_string("formspec", auto_formspec)
+		-- Reusing offset and period to keep the digtron node-moving code simple, and the names still fit well
+		meta:set_int("period", 1)
+		meta:set_int("offset", 0)
+	end,
+
+	on_receive_fields = function(pos, formname, fields, sender)
+        local meta = minetest.get_meta(pos)
+		local offset = tonumber(fields.offset)
+		local period = tonumber(fields.period)
+		
+		if period and period > 0 then
+			meta:set_int("period", math.floor(period))
+		end
+		
+		if offset and offset >= 0 then
+			meta:set_int("offset", math.floor(offset))
+			if sender:is_player() and offset > 0 then
+				meta:set_string("triggering_player", sender:get_player_name())
+				if fields.execute then
+					meta:set_string("waiting", nil)
+					meta:set_string("formspec", nil)
+					digtron.auto_cycle(pos)			
+				end
+			end
+		end
+	end,	
+	
+	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
+		local meta = minetest.get_meta(pos)
+		meta:set_string("infotext", meta:get_string("infotext") .. "\nInterrupted!")
+		meta:set_string("waiting", "true")
+		meta:set_string("formspec", auto_formspec)
+	end,
+})
+
+---------------------------------------------------------------------------------------------------------------
 
 -- A much simplified control unit that only moves the digtron, and doesn't trigger the diggers or builders.
 -- Handy for shoving a digtron to the side if it's been built a bit off.

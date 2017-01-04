@@ -66,6 +66,13 @@ minetest.register_entity("digtron:builder_item", {
 	on_activate = function(self, staticdata)
 		local props = self.object:get_properties()
 		if staticdata ~= nil and staticdata ~= "" then
+			local pos = self.object:getpos()
+			local node = minetest.get_node(pos)
+			if minetest.get_node_group(node.name, "digtron") ~= 4 then
+				-- We were reactivated without a builder node on our location, self-destruct
+				self.object:remove()
+				return
+			end
 			props.textures = {staticdata}
 			self.object:set_properties(props)
 		elseif digtron.create_builder_item ~= nil then

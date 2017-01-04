@@ -22,6 +22,15 @@ minetest.register_craft({
 })
 
 minetest.register_craft({
+	output = "digtron:auto_controller",
+	recipe = {
+			{"default:mese_crystal","default:mese_crystal","default:mese_crystal"},
+			{"default:mese_crystal","digtron:digtron_core","default:mese_crystal"},
+			{"default:mese_crystal","default:mese_crystal","default:mese_crystal"}
+			}
+})
+
+minetest.register_craft({
 	output = "digtron:builder",
 	recipe = {
 			{"","default:mese_crystal_fragment",""},

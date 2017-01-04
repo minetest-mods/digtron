@@ -27,6 +27,18 @@ local intermittent_on_construct = function(pos)
 	meta:set_int("offset", 0) 
 end
 
+local intermittent_on_receive_fields = function(pos, formname, fields, sender)
+    local meta = minetest.get_meta(pos)
+	local period = tonumber(fields.period)
+	local offset = tonumber(fields.offset)
+	if  period and period > 0 then
+		meta:set_int("period", math.floor(period))
+	end
+	if offset then
+		meta:set_int("offset", math.floor(offset))
+	end
+end,
+
 -- Digs out nodes that are "in front" of the digger head.
 minetest.register_node("digtron:digger", {
 	description = "Digger Head",
@@ -108,17 +120,7 @@ minetest.register_node("digtron:intermittent_digger", {
 	
 	on_construct = intermittent_on_construct,
 	
-	on_receive_fields = function(pos, formname, fields, sender)
-        local meta = minetest.get_meta(pos)
-		local period = tonumber(fields.period)
-		local offset = tonumber(fields.offset)
-		if  period and period > 0 then
-			meta:set_int("period", math.floor(tonumber(fields.period)))
-		end
-		if offset then
-			meta:set_int("offset", math.floor(tonumber(fields.offset)))
-		end
-	end,
+	on_receive_fields = intermittent_on_receive_fields,
 
 	-- returns fuel_cost, item_produced
 	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate)
@@ -225,7 +227,9 @@ minetest.register_node("digtron:intermittent_soft_digger", {
 	},
 	
 	on_construct = intermittent_on_construct,
-		
+	
+	on_receive_fields = intermittent_on_receive_fields,
+
 	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate)
 		local facing = minetest.get_node(pos).param2
 		local digpos = digtron.find_new_pos(pos, facing)
