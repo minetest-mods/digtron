@@ -1,3 +1,24 @@
+local dig_dust = function(pos, facing)
+	local direction = minetest.facedir_to_dir(facing)
+	return {
+		amount = 10,
+		time = 1.0,
+		minpos = vector.subtract(pos, vector.new(0.5,0.5,0.5)),
+		maxpos = vector.add(pos, vector.new(0.5,0.5,0.5)),
+		minvel = vector.multiply(direction, -10),
+		maxvel = vector.multiply(direction, -20),
+		minacc = {x=0, y=-40, z=0},
+		maxacc = {x=0, y=-40, z=0},
+		minexptime = 0.25,
+		maxexptime = 0.5,
+		minsize = 2,
+		maxsize = 5,
+		collisiondetection = false,
+		vertical = false,
+		texture = "default_item_smoke.png^[colorize:#9F817080",
+	}
+end
+
 -- returns newpos, status string
 local execute_cycle = function(pos, clicker)
 	local meta = minetest.get_meta(pos)
@@ -19,6 +40,7 @@ local execute_cycle = function(pos, clicker)
 	end
 
 	local facing = minetest.get_node(pos).param2
+	local move_dir = minetest.facedir_to_dir(facing)
 	local controlling_coordinate = digtron.get_controlling_coordinate(pos, facing)
 	
 	----------------------------------------------------------------------------------------------------------------------
@@ -26,6 +48,7 @@ local execute_cycle = function(pos, clicker)
 	local nodes_dug = Pointset.create()
 	local items_dropped = {}
 	local digging_fuel_cost = 0
+	local particle_systems = {}
 	
 	-- execute the execute_dig method on all digtron components that have one
 	-- This builds a set of nodes that will be dug and returns a list of products that will be generated
@@ -39,6 +62,9 @@ local execute_cycle = function(pos, clicker)
 			if dropped ~= nil then
 				for _, itemname in pairs(dropped) do
 					table.insert(items_dropped, itemname)
+				end
+				if digtron.particle_effects then
+					table.insert(particle_systems, dig_dust(vector.add(location, move_dir), target.param2))
 				end
 			end
 			digging_fuel_cost = digging_fuel_cost + fuel_cost
@@ -164,6 +190,11 @@ local execute_cycle = function(pos, clicker)
 	meta = minetest.get_meta(pos)
 	if move_player then
 		clicker:moveto(digtron.find_new_pos(player_pos, facing), true)
+	end
+	
+	-- Eyecandy
+	for _, particles in pairs(particle_systems) do
+		minetest.add_particlespawner(particles)
 	end
 		
 	local building_fuel_cost = 0

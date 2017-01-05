@@ -8,6 +8,7 @@ dofile( minetest.get_modpath( "digtron" ) .. "/node_controllers.lua" ) -- contro
 dofile( minetest.get_modpath( "digtron" ) .."/recipes.lua" )
 
 digtron.creative_mode = false
+digtron.particle_effects = true
 
 digtron.cycle_time = 1 -- How many seconds a digtron waits between cycles. Auto-controllers can make this wait longer, but cannot make it shorter.
 digtron.traction_factor = 3.0 -- How many digtron nodes can be moved for each adjacent solid node that the digtron has traction against
