@@ -132,6 +132,16 @@ minetest.register_node("digtron:builder", {
 		digtron.remove_builder_item(pos)
 	end,
 
+	allow_metadata_inventory_put = function(pos, listname, index, stack, player)
+		local inv = minetest.get_inventory({type="node", pos=pos})
+		inv:set_stack(listname, index, stack:take_item(1))
+		return 0
+	end,
+	
+	allow_metadata_inventory_take = function(pos, listname, index, stack, player)
+		return 0
+	end,
+	
 	-- "builder at pos, imagine that you're in test_pos. If you're willing and able to build from there, take the item you need from inventory.
 	-- return the item you took and the inventory location you took it from so it can be put back after all the other builders have been tested.
 	-- If you couldn't get the item from inventory, return an error code so we can abort the cycle.
@@ -168,15 +178,7 @@ minetest.register_node("digtron:builder", {
 		
 		local inv = minetest.get_inventory({type="node", pos=pos})
 		local item_stack = inv:get_stack("main", 1)
-		local count = item_stack:get_count()
-		if count ~= 0 then
-			if count > 1 then
-				-- player has put more than one item in the "program" slot. Wasteful. Move all the rest to the main inventory so it can be used.
-				item_stack:set_count(count - 1)
-				digtron.place_in_inventory(item_stack, inventory_positions, controller_pos)
-				item_stack:set_count(1)
-				inv:set_stack("main", 1, item_stack)
-			end
+		if not item_stack:is_empty() then
 			local source_location = digtron.take_from_inventory(item_stack:get_name(), inventory_positions)
 			if source_location ~= nil then
 				return 1, {item=item_stack, location=source_location}
@@ -200,8 +202,17 @@ minetest.register_node("digtron:builder", {
 		if digtron.can_build_to(buildpos, protected_nodes, nodes_dug) then
 			local inv = minetest.get_inventory({type="node", pos=pos})
 			local item_stack = inv:get_stack("main", 1)
-			local count = item_stack:get_count()
 			if not item_stack:is_empty() then
+			
+				if digtron.creative_mode then
+					local returned_stack, success = digtron.item_place_node(item_stack, player, buildpos, tonumber(build_facing))
+					if success == true then
+						nodes_dug:set(buildpos.x, buildpos.y, buildpos.z, false)
+						return true
+					end
+					return nil
+				end
+			
 				local sourcepos = digtron.take_from_inventory(item_stack:get_name(), inventory_positions)
 				if sourcepos == nil then
 					-- item not in inventory! Need to sound the angry buzzer to let the player know, so return false.
@@ -219,11 +230,5 @@ minetest.register_node("digtron:builder", {
 				end
 			end
 		end
-	end,
-	
-	can_dig = function(pos,player)
-		local meta = minetest.get_meta(pos)
-		local inv = meta:get_inventory()
-		return inv:is_empty("main")
 	end,
 })

@@ -180,7 +180,7 @@ local execute_cycle = function(pos, clicker)
 				-- So this should never happen. However, "should never happens" happen sometimes. So
 				-- don't interrupt the build cycle as a whole, we've already moved so might as well try to complete as much as possible.
 				strange_failure = true
-			elseif build_return == true then
+			elseif build_return == true and not digtron.creative_mode == true then
 				building_fuel_cost = building_fuel_cost + digtron.build_cost
 			end
 		else

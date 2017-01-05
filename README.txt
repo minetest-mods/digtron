@@ -24,8 +24,6 @@ Several general concepts are important when building more sophisticated diggers.
 
 * Offset - The location at which a periodic module triggers is globally uniform. This is handy if you want to line up the nodes you're building (for example, placing pillars and a crosspiece every 4 nodes in a tunnel, or punching alcoves in a wall to place glass windows). If you wish to change how the pattern lines up, modify the "offset" setting.
 
-Note that offset and period are calculated from the location of the *controller* node, which is shared across the whole array of modules, so it's not necessary to line up all of your builder heads in the same row or column.
-
 * Shift-right-clicking - since most of the nodes of the digging machine have control screens associated with right-clicking, building additional nodes on top of them or rotating them with the screwdriver requires the shift key to be held down when right-clicking on them.
 
 Detailed module guide
@@ -73,7 +71,7 @@ It can also serve as part of a lawnmower or tree-harvester.
 Builder Head
 ------------
 
-A builder head is the most complex component of this system. It has period and offset properties, and also an inventory slot where you "program" it by placing an example of the node type that you want it to build. Only a single item is needed here, any additional items in this inventory stack will be shunted into the digger's general inventory (or ejected from the control node if there's no space for it).
+A builder head is the most complex component of this system. It has period and offset properties, and also an inventory slot where you "program" it by placing an example of the node type that you want it to build. The builder doesn't keep a real copy of the item, it just reads what you drop in here.
 
 When the "Save & Show" button is clicked the properties for period and offset will be saved, and markers will briefly be shown to indicate where the nearest spots corresponding to those values are. The builder will build its output at those locations provided it is moving along the matching axis.
 
