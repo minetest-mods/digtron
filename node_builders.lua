@@ -85,8 +85,7 @@ minetest.register_node("digtron:builder", {
 		
 		if fields.set then
 			local buildpos = digtron.find_new_pos(pos, minetest.get_node(pos).param2)
-			local offset_mod_period = math.abs(offset%period)
-			local x_pos = math.floor(buildpos.x/period)*period - offset_mod_period
+			local x_pos = math.floor((buildpos.x+offset)/period)*period - offset
 			minetest.add_entity({x=x_pos, y=buildpos.y, z=buildpos.z}, "digtron:marker")
 			if x_pos >= buildpos.x then
 				minetest.add_entity({x=x_pos - period, y=buildpos.y, z=buildpos.z}, "digtron:marker")
@@ -95,7 +94,7 @@ minetest.register_node("digtron:builder", {
 				minetest.add_entity({x=x_pos + period, y=buildpos.y, z=buildpos.z}, "digtron:marker")
 			end
 
-			local y_pos = math.floor(buildpos.y/period)*period - offset_mod_period
+			local y_pos = math.floor((buildpos.y+offset)/period)*period - offset
 			minetest.add_entity({x=buildpos.x, y=y_pos, z=buildpos.z}, "digtron:marker_vertical")
 			if y_pos >= buildpos.y then
 				minetest.add_entity({x=buildpos.x, y=y_pos - period, z=buildpos.z}, "digtron:marker_vertical")
@@ -104,7 +103,7 @@ minetest.register_node("digtron:builder", {
 				minetest.add_entity({x=buildpos.x, y=y_pos + period, z=buildpos.z}, "digtron:marker_vertical")
 			end
 
-			local z_pos = math.floor(buildpos.z/period)*period - offset_mod_period
+			local z_pos = math.floor((buildpos.z+offset)/period)*period - offset
 			minetest.add_entity({x=buildpos.x, y=buildpos.y, z=z_pos}, "digtron:marker"):setyaw(1.5708)
 			if z_pos >= buildpos.z then
 				minetest.add_entity({x=buildpos.x, y=buildpos.y, z=z_pos - period}, "digtron:marker"):setyaw(1.5708)
