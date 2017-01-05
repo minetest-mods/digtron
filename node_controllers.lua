@@ -301,7 +301,7 @@ minetest.register_node("digtron:controller", {
 			return
 		end
 	
-		newpos, status = execute_cycle(pos, clicker)
+		local newpos, status = execute_cycle(pos, clicker)
 		
 		meta = minetest.get_meta(newpos)
 		if status ~= nil then
