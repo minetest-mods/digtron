@@ -78,9 +78,13 @@ minetest.register_node("digtron:builder", {
 		local offset = tonumber(fields.offset)
 		if  period and period > 0 then
 			meta:set_int("period", math.floor(tonumber(fields.period)))
+		else
+			period = meta:get_int("period")
 		end
 		if offset then
 			meta:set_int("offset", math.floor(tonumber(fields.offset)))
+		else
+			offset = meta:get_int("offset")
 		end
 		
 		if fields.set then
