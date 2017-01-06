@@ -197,6 +197,7 @@ minetest.register_node("digtron:builder", {
 		local build_facing = meta:get_int("build_facing")
 		local facing = minetest.get_node(pos).param2
 		local buildpos = digtron.find_new_pos(pos, facing)
+		local oldnode = minetest.get_node(buildpos)
 		
 		if (buildpos[controlling_coordinate] + meta:get_int("offset")) % meta:get_int("period") ~= 0 then
 			return nil
@@ -210,6 +211,7 @@ minetest.register_node("digtron:builder", {
 				if digtron.creative_mode then
 					local returned_stack, success = digtron.item_place_node(item_stack, player, buildpos, tonumber(build_facing))
 					if success == true then
+						minetest.log("action", string.format("%s uses Digtron to build %s at (%d, %d, %d), displacing %s", player:get_player_name(), item_stack:get_name(), buildpos.x, buildpos.y, buildpos.z, oldnode.name))
 						nodes_dug:set(buildpos.x, buildpos.y, buildpos.z, false)
 						return true
 					end
@@ -223,6 +225,7 @@ minetest.register_node("digtron:builder", {
 				end
 				local returned_stack, success = digtron.item_place_node(item_stack, player, buildpos, tonumber(build_facing))
 				if success == true then
+					minetest.log("action", string.format("%s uses Digtron to build %s at (%d, %d, %d), displacing %s", player:get_player_name(), item_stack:get_name(), buildpos.x, buildpos.y, buildpos.z, oldnode.name))
 					--flag this node as *not* to be dug.
 					nodes_dug:set(buildpos.x, buildpos.y, buildpos.z, false)
 					return true

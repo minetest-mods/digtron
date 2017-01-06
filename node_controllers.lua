@@ -190,7 +190,7 @@ local execute_cycle = function(pos, clicker)
 	end
 		
 	--move the array
-	digtron.move_digtron(facing, layout.all, layout.extents, nodes_dug)
+	digtron.move_digtron(facing, layout.all, layout.extents, nodes_dug, clicker:get_player_name())
 	local oldpos = {x=pos.x, y=pos.y, z=pos.z}
 	pos = digtron.find_new_pos(pos, facing)
 	meta = minetest.get_meta(pos)
@@ -246,6 +246,7 @@ local execute_cycle = function(pos, clicker)
 	local node_to_dig, whether_to_dig = nodes_dug:pop()
 	while node_to_dig ~= nil do
 		if whether_to_dig == true then
+			minetest.log("action", string.format("%s uses Digtron to dig %s at (%d, %d, %d)", clicker:get_player_name(), minetest.get_node(node_to_dig).name, node_to_dig.x, node_to_dig.y, node_to_dig.z))
 			minetest.remove_node(node_to_dig)
 		end
 		-- all of the digtron's nodes wind up in nodes_dug, so this is an ideal place to stick

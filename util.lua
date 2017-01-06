@@ -95,9 +95,11 @@ digtron.can_move_to = function(pos, protected_nodes, dug_nodes)
 	return false
 end
 
-digtron.move_node = function(pos, newpos)
+digtron.move_node = function(pos, newpos, player_name)
 	-- Moves nodes, preserving digtron metadata and inventory
 	local node = minetest.get_node(pos)
+	local oldnode = minetest.get_node(newpos)
+	minetest.log("action", string.format("%s moves %s from (%d, %d, %d) to (%d, %d, %d), displacing %s", player_name, node.name, pos.x, pos.y, pos.z, newpos.x, newpos.y, newpos.z, oldnode.name))
 	minetest.add_node(newpos, { name=node.name, param1=node.param1, param2=node.param2 })
 
 	local oldmeta = minetest.get_meta(pos)
@@ -276,7 +278,7 @@ digtron.take_from_inventory = function(itemname, inventory_positions)
 	return nil
 end
 
-digtron.move_digtron = function(facing, digtrons, extents, nodes_dug)
+digtron.move_digtron = function(facing, digtrons, extents, nodes_dug, player_name)
 	-- move everything. Note! order is important or they'll step on each other, that's why this has complicated loops and filtering.
 	-- Nodes are moved in a "caterpillar" pattern - front plane first, then next plane back, then next plane back, etc.
 	-- positions in the digtron list will be updated when this method executes. Note that the inventories list shares
@@ -334,7 +336,7 @@ digtron.move_digtron = function(facing, digtrons, extents, nodes_dug)
 		for k, location in pairs(digtrons) do
 			if location[filter] == index then
 				local newpos = digtron.find_new_pos(location, facing)
-				digtron.move_node(location, newpos)
+				digtron.move_node(location, newpos, player_name)
 				--By updating the digtron position table in-place we also update all the special node tables as well
 				digtrons[k].x= newpos.x
 				digtrons[k].y= newpos.y
