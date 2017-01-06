@@ -277,7 +277,9 @@ minetest.register_node("digtron:controller", {
 	groups = {cracky = 3, oddly_breakable_by_hand = 3, digtron = 1},
 	drop = "digtron:controller",
 	sounds = digtron.metal_sounds,
+	paramtype = "light",
 	paramtype2= "facedir",
+	is_ground_content = false,
 	-- Aims in the +Z direction by default
 	tiles = {
 		"digtron_plate.png^[transformR90",
@@ -289,7 +291,6 @@ minetest.register_node("digtron:controller", {
 	},
 	
 	drawtype = "nodebox",
-	paramtype = "light",
 	node_box = {
 		type = "fixed",
 		fixed = controller_nodebox,
@@ -378,7 +379,9 @@ minetest.register_node("digtron:auto_controller", {
 	groups = {cracky = 3, oddly_breakable_by_hand = 3, digtron = 1},
 	drop = "digtron:auto_controller",
 	sounds = digtron.metal_sounds,
+	paramtype = "light",
 	paramtype2= "facedir",
+	is_ground_content = false,
 	-- Aims in the +Z direction by default
 	tiles = {
 		"digtron_plate.png^[transformR90^[colorize:#88000030",
@@ -390,7 +393,6 @@ minetest.register_node("digtron:auto_controller", {
 	},
 	
 	drawtype = "nodebox",
-	paramtype = "light",
 	node_box = {
 		type = "fixed",
 		fixed = controller_nodebox,
@@ -445,7 +447,9 @@ minetest.register_node("digtron:pusher", {
 	groups = {cracky = 3, oddly_breakable_by_hand=3, digtron = 1},
 	drop = "digtron:pusher",
 	sounds = digtron.metal_sounds,
+	paramtype = "light",
 	paramtype2= "facedir",
+	is_ground_content = false,
 	-- Aims in the +Z direction by default
 	tiles = {
 		"digtron_plate.png^[transformR90^[colorize:#00880030",
@@ -457,7 +461,6 @@ minetest.register_node("digtron:pusher", {
 	},
 	
 	drawtype = "nodebox",
-	paramtype = "light",
 	node_box = {
 		type = "fixed",
 		fixed = controller_nodebox,

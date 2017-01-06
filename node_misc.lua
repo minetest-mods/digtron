@@ -9,6 +9,7 @@ minetest.register_node("digtron:structure", {
 	climbable = true,
 	walkable = false,
 	paramtype = "light",
+	is_ground_content = false,
 	node_box = {
 		type = "fixed",
 		fixed = {
@@ -36,6 +37,7 @@ minetest.register_node("digtron:light", {
 	tiles = {"digtron_light.png"},
 	drawtype = "nodebox",
 	paramtype = "light",
+	is_ground_content = false,
 	light_source = 10,
 	sounds = default.node_sound_glass_defaults(),
 	paramtype2 = "wallmounted",
@@ -56,6 +58,7 @@ minetest.register_node("digtron:inventory",
 	drop = "digtron:inventory",
 	sounds = digtron.metal_sounds,
 	paramtype2= "facedir",
+	is_ground_content = false,
 	tiles = {"digtron_inventory.png"},
 
 	on_construct = function(pos)
@@ -93,6 +96,7 @@ minetest.register_node("digtron:fuelstore",
 	drop = "digtron:fuelstore",
 	sounds = digtron.metal_sounds,
 	paramtype2= "facedir",
+	is_ground_content = false,
 	tiles = {"digtron_fuelstore.png"},
 
 	on_construct = function(pos)

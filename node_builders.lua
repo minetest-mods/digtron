@@ -6,7 +6,9 @@ minetest.register_node("digtron:builder", {
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 4},
 	drop = "digtron:builder",
 	sounds = digtron.metal_sounds,
+	paramtype = "light",
 	paramtype2= "facedir",
+	is_ground_content = false,
 	tiles = {
 		"digtron_plate.png^[transformR90",
 		"digtron_plate.png^[transformR270",
@@ -17,7 +19,6 @@ minetest.register_node("digtron:builder", {
 	},
 	
 	drawtype = "nodebox",
-	paramtype = "light",
 	node_box = {
 		type = "fixed",
 		fixed = {
