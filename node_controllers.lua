@@ -32,6 +32,12 @@ local execute_cycle = function(pos, clicker)
 		return pos, "Digtron is adjacent to unloaded nodes.\n" .. status_text
 	end
 	
+	if layout.water_touching == true then
+		minetest.sound_play("sploosh", {gain=1.0, pos=pos})
+	end
+	if layout.lava_touching == true then
+		minetest.sound_play("woopwoopwoop", {gain=1.0, pos=pos})
+	end	
 	if layout.traction * digtron.traction_factor < table.getn(layout.all) then
 		-- digtrons can't fly
 		minetest.sound_play("squeal", {gain=1.0, pos=pos})

@@ -136,6 +136,10 @@ A ringing bell indicates that there are insufficient materials in inventory to s
 
 A short high-pitched honk means that one or more of the builder heads don't have an item set. A common oversight, especially with large and elaborate digging machines, that might be hard to notice and annoying to fix if not noticed right away.
 
+Splooshing water sounds means your Digtron is digging adjacent to (or through) water-containing nodes. Digtrons are waterproof, but this might be a useful indication that you should take care when installing doors in the tunnel walls you've placed here.
+
+A triple "voop voop voop!" alarm indicates that there is lava adjacent to your Digtron. Digtrons can't penetrate lava by default, and although they are not destroyed by lava this alarm indicates that a non-lava-proof Digtron operator may wish to exercise caution when backing up.
+
 Crafting recipes
 ================
 

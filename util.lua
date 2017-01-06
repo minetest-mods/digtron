@@ -138,6 +138,8 @@ digtron.get_all_digtron_neighbours = function(pos, player)
 	layout.diggers = {}
 	layout.builders = {}
 	layout.extents = {}
+	layout.water_touching = false
+	layout.lava_touching = false
 	layout.protected = Pointset.create() -- if any nodes we look at are protected, make note of that. That way we don't need to keep re-testing protection state later.
 	layout.controller = {x=pos.x, y=pos.y, z=pos.z} 	--Make a deep copy of the pos parameter just in case the calling code wants to play silly buggers with it
 
@@ -180,6 +182,15 @@ digtron.get_all_digtron_neighbours = function(pos, player)
 
 		if minetest.is_protected(pos, player:get_player_name()) and not minetest.check_player_privs(player, "protection_bypass") then
 			layout.protected:set(testpos.x, testpos.y, testpos.z, true)
+		end
+		
+		if minetest.get_item_group(node.name, "water") ~= 0 then
+			layout.water_touching = true
+		elseif minetest.get_item_group(node.name, "lava") ~= 0 then
+			layout.lava_touching = true
+			if digtron.lava_impassible == true then
+				layout.protected:set(testpos.x, testpos.y, testpos.z, true)
+			end
 		end
 		
 		local group_number = minetest.get_item_group(node.name, "digtron")

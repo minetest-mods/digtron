@@ -6,6 +6,8 @@ dingding.ogg - https://www.freesound.org/people/JohnsonBrandEditing/sounds/17393
 squeal.ogg - https://www.freesound.org/people/RutgerMuller/sounds/104026/ public domain via CC 1.0 by RutgerMuller
 honk.ogg - https://freesound.org/people/bigmanjoe/sounds/349922/ public domain via CC 1.0 by bigmanjoe
 truck.ogg - https://www.freesound.org/people/jberkuta14/sounds/134898/ public domain via CC 1.0 by jberkuta14
+sploosh.ogg - https://www.freesound.org/people/mr_marcello/sounds/257609/ public domain via CC 1.0 by mr_marcello
+woopwoopwoop.ogg - https://www.freesound.org/people/gregconquest/sounds/188012/ public domain via CC 1.0 by gregconquest
 
 
 Creative Commons Attribution 3.0 license:
