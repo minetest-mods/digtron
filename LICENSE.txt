@@ -31,3 +31,5 @@ License for Textures
 ---------------------------------------
 
 CC-BY-SA 3.0 UNPORTED. Created by FaceDeer
+
+digtron_digger.png modified to digtron_digger_yb.png by hajo - https://forum.minetest.net/viewtopic.php?f=9&t=16295#p245531

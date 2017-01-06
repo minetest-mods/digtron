@@ -138,7 +138,7 @@ A short high-pitched honk means that one or more of the builder heads don't have
 
 Splooshing water sounds means your Digtron is digging adjacent to (or through) water-containing nodes. Digtrons are waterproof, but this might be a useful indication that you should take care when installing doors in the tunnel walls you've placed here.
 
-A triple "voop voop voop!" alarm indicates that there is lava adjacent to your Digtron. Digtrons can't penetrate lava by default, and although they are not destroyed by lava this alarm indicates that a non-lava-proof Digtron operator may wish to exercise caution when backing up.
+A triple "voop voop voop!" alarm indicates that there is lava adjacent to your Digtron. Digtrons can't penetrate lava by default, and this alarm indicates that a non-lava-proof Digtron operator may wish to exercise caution when opening the door to clear the obstruction.
 
 Crafting recipes
 ================

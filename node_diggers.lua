@@ -61,7 +61,7 @@ minetest.register_node("digtron:digger", {
 		"digtron_plate.png",
 		"digtron_plate.png^[transformR180",
 		{
-			name = "digtron_digger.png",
+			name = "digtron_digger_yb.png",
 			animation = {
 				type = "vertical_frames",
 				aspect_w = 16,
@@ -107,7 +107,7 @@ minetest.register_node("digtron:intermittent_digger", {
 		"digtron_plate.png",
 		"digtron_plate.png^[transformR180",
 		{
-			name = "digtron_digger.png",
+			name = "digtron_digger_yb.png",
 			animation = {
 				type = "vertical_frames",
 				aspect_w = 16,
@@ -162,7 +162,7 @@ minetest.register_node("digtron:soft_digger", {
 		"digtron_plate.png^[colorize:#88880030",
 		"digtron_plate.png^[transformR180^[colorize:#88880030",
 		{
-			name = "digtron_digger.png^[colorize:#88880030",
+			name = "digtron_digger_yb.png^[colorize:#88880030",
 			animation = {
 				type = "vertical_frames",
 				aspect_w = 16,
@@ -215,7 +215,7 @@ minetest.register_node("digtron:intermittent_soft_digger", {
 		"digtron_plate.png^[colorize:#88880030",
 		"digtron_plate.png^[transformR180^[colorize:#88880030",
 		{
-			name = "digtron_digger.png^[colorize:#88880030",
+			name = "digtron_digger_yb.png^[colorize:#88880030",
 			animation = {
 				type = "vertical_frames",
 				aspect_w = 16,
