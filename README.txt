@@ -102,6 +102,11 @@ The fuel costs for digging and building can be configured in the init.lua file. 
 * Dig 60 wood nodes
 * Dig 80 dirt or sand nodes
 
+Combined Storage Module
+-----------------------
+
+For smaller jobs the two dedicated modules may simply be too much of a good thing, wasting precious Digtron space to give unneeded capacity. The combined storage module is the best of both worlds, splitting its internal space between building material inventory and fuel storage. It has 3/4 building material capacity and 1/4 fuel storage capacity.
+
 Structural Module
 -----------------
 
@@ -190,7 +195,13 @@ Fuel storage modules:
 
 [furnace,]
 [core,]
-	
+
+Combined storage:
+
+[furnace,]
+[core,]
+[chest,]
+
 Structural modules:
 
 [stick,      , stick]

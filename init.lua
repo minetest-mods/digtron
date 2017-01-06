@@ -1,7 +1,8 @@
 dofile( minetest.get_modpath( "digtron" ) .. "/util.lua" )
 dofile( minetest.get_modpath( "digtron" ) .. "/pointset.lua" )
 dofile( minetest.get_modpath( "digtron" ) .. "/entities.lua" )
-dofile( minetest.get_modpath( "digtron" ) .. "/node_misc.lua" ) -- contains inventory and structure nodes
+dofile( minetest.get_modpath( "digtron" ) .. "/node_misc.lua" ) -- contains structure and light nodes
+dofile( minetest.get_modpath( "digtron" ) .. "/node_storage.lua" ) -- contains inventory and fuel storage nodes
 dofile( minetest.get_modpath( "digtron" ) .. "/node_diggers.lua" ) -- contains all diggers
 dofile( minetest.get_modpath( "digtron" ) .. "/node_builders.lua" ) -- contains all builders (there's just one currently)
 dofile( minetest.get_modpath( "digtron" ) .. "/node_controllers.lua" ) -- controllers
@@ -48,5 +49,30 @@ minetest.register_lbm({
 			param2 = node.param2})
 		meta:set_string("offset", offset)
 		meta:set_string("period", period)
+	end
+})
+
+minetest.register_lbm({
+	name = "digtron:fuelstore_upgrade",
+	nodenames = {"digtron:fuelstore"},
+	action = function(pos, node)
+		local meta = minetest.get_meta(pos)
+		local inv = meta:get_inventory()
+		local list = inv:get_list("main")
+		inv:set_list("main", {})
+		inv:set_list("fuel", list)		
+		meta:set_string("formspec",
+			"size[8,9.3]" ..
+			default.gui_bg ..
+			default.gui_bg_img ..
+			default.gui_slots ..
+			"label[0,0;Fuel items]" ..
+			"list[current_name;fuel;0,0.6;8,4;]" ..
+			"list[current_player;main;0,5.15;8,1;]" ..
+			"list[current_player;main;0,6.38;8,3;8]" ..
+			"listring[current_name;fuel]" ..
+			"listring[current_player;main]" ..
+			default.get_hotbar_bg(0,5.15)
+		)		
 	end
 })

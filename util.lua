@@ -105,11 +105,13 @@ digtron.move_node = function(pos, newpos, player_name)
 	local oldmeta = minetest.get_meta(pos)
 	local oldinv = oldmeta:get_inventory()
 	local list = oldinv:get_list("main")
+	local fuel = oldinv:get_list("fuel")
 	local oldformspec = oldmeta:get_string("formspec")
 	
 	local newmeta = minetest.get_meta(newpos)
 	local newinv = newmeta:get_inventory()
 	newinv:set_list("main", list)
+	newinv:set_list("fuel", fuel)
 	newmeta:set_string("formspec", oldformspec)
 	
 	newmeta:set_string("triggering_player", oldmeta:get_string("triggering_player")) -- for auto-controllers
@@ -216,6 +218,9 @@ digtron.get_all_digtron_neighbours = function(pos, player)
 			elseif group_number == 4 then
 				table.insert(layout.builders, testpos)
 			elseif group_number == 5 then
+				table.insert(layout.fuelstores, testpos)
+			elseif group_number == 6 then
+				table.insert(layout.inventories, testpos)
 				table.insert(layout.fuelstores, testpos)
 			end
 			
@@ -371,7 +376,7 @@ digtron.burn = function(fuelstore_positions, target, test)
 			break
 		end
 		local inv = minetest.get_inventory({type="node", pos=location})
-		local invlist = inv:get_list("main")
+		local invlist = inv:get_list("fuel")
 		for i, itemstack in pairs(invlist) do
 			local fuel_per_item = minetest.get_craft_result({method="fuel", width=1, items={itemstack:peek_item(1)}}).time
 			if fuel_per_item ~= 0 then
@@ -391,7 +396,7 @@ digtron.burn = function(fuelstore_positions, target, test)
 		end
 		if test ~= true then
 			-- only update the list if we're doing this for real.
-			inv:set_list("main", invlist)
+			inv:set_list("fuel", invlist)
 		end
 	end
 	return current_burned
