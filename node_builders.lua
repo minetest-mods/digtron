@@ -77,6 +77,7 @@ minetest.register_node("digtron:builder", {
         local meta = minetest.get_meta(pos)
 		local period = tonumber(fields.period)
 		local offset = tonumber(fields.offset)
+		local build_facing = tonumber(fields.build_facing)
 		if  period and period > 0 then
 			meta:set_int("period", math.floor(tonumber(fields.period)))
 		else
@@ -86,6 +87,9 @@ minetest.register_node("digtron:builder", {
 			meta:set_int("offset", math.floor(tonumber(fields.offset)))
 		else
 			offset = meta:get_int("offset")
+		end
+		if build_facing and build_facing >= 0 and build_facing < 24 then
+			meta:set_int("build_facing", math.floor(build_facing))
 		end
 		
 		if fields.set then
@@ -122,11 +126,6 @@ minetest.register_node("digtron:builder", {
 			local facing = minetest.get_node(pos).param2
 			local buildpos = digtron.find_new_pos(pos, facing)
 			meta:set_int("build_facing", minetest.get_node(buildpos).param2)
-		else
-			local build_facing = tonumber(fields.build_facing)
-			if build_facing and build_facing >= 0 and build_facing < 24 then
-				meta:set_int("build_facing", math.floor(build_facing))
-			end
 		end
 
 		digtron.update_builder_item(pos)
