@@ -257,6 +257,7 @@ minetest.register_node("digtron:pusher", {
 			return --Abort
 		end
 
+		meta:set_string("infotext", nil)
 		minetest.sound_play("truck", {gain=1.0, pos=pos})
 	
 		-- if the player is standing within the array or next to it, move him too.
