@@ -135,8 +135,8 @@ minetest.register_craft({
 	output = "digtron:corner_panel",
 	recipe = {
 			{"","",""},
-			{"default:steel_ingot","digtron:digtron_core","default:steel_ingot"},
-			{"","default:steel_ingot",""}
+			{"","digtron:digtron_core","default:steel_ingot"},
+			{"","default:steel_ingot","default:steel_ingot"}
 			}
 })
 
