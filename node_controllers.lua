@@ -19,6 +19,26 @@ local dig_dust = function(pos, facing)
 	}
 end
 
+local burn_smoke = function(pos, amount)
+	return {
+		amount = math.min(amount, 40),
+		time = 1.0,
+		minpos = vector.subtract(pos, vector.new(0.5,0.5,0.5)),
+		maxpos = vector.add(pos, vector.new(0.5,0.5,0.5)),
+		minvel = {x=0, y=2, z=0},
+		maxvel = {x=0, y=5, z=0},
+		minacc = {x=0, y=0, z=0},
+		maxacc = {x=0, y=0, z=0},
+		minexptime = 0.5,
+		maxexptime = 1.5,
+		minsize = 8,
+		maxsize = 12,
+		collisiondetection = false,
+		vertical = false,
+		texture = "default_item_smoke.png^[colorize:#000000DD",
+	}
+end
+
 -- returns newpos, status string
 local execute_cycle = function(pos, clicker)
 	local meta = minetest.get_meta(pos)
@@ -198,11 +218,6 @@ local execute_cycle = function(pos, clicker)
 		clicker:moveto(digtron.find_new_pos(player_pos, facing), true)
 	end
 	
-	-- Eyecandy
-	for _, particles in pairs(particle_systems) do
-		minetest.add_particlespawner(particles)
-	end
-		
 	local building_fuel_cost = 0
 	local strange_failure = false
 	-- execute_build on all digtron components that have one
@@ -224,7 +239,7 @@ local execute_cycle = function(pos, clicker)
 			minetest.log(string.format("%s has builder group but is missing execute_build method! This is an error in mod programming, file a bug.", targetdef.name))
 		end
 	end
-	
+
 	local status_text = ""
 	if strange_failure then
 		-- We weren't able to detect this build failure ahead of time, so make a big noise now. This is strange, shouldn't happen.
@@ -234,12 +249,21 @@ local execute_cycle = function(pos, clicker)
 	end
 	
 	-- acutally burn the fuel needed
-	fuel_burning = fuel_burning - (digging_fuel_cost + building_fuel_cost)
+	local fuel_cost = digging_fuel_cost + building_fuel_cost
+	fuel_burning = fuel_burning - fuel_cost
+	if digtron.particle_effects then
+		table.insert(particle_systems, burn_smoke(pos, fuel_cost))
+	end
 	if fuel_burning < 0 then
 		fuel_burning = fuel_burning + digtron.burn(layout.fuelstores, -fuel_burning, false)
 	end
 	meta:set_float("fuel_burning", fuel_burning)
 	status_text = status_text .. string.format("Heat remaining in controller furnace: %d", fuel_burning)
+
+	-- Eyecandy
+	for _, particles in pairs(particle_systems) do
+		minetest.add_particlespawner(particles)
+	end
 	
 	-- finally, dig out any nodes remaining to be dug. Some of these will have had their flag revoked because
 	-- a builder put something there or because they're another digtron node.

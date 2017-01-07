@@ -223,6 +223,13 @@ Pusher controller:
 Tips and tricks
 ===============
 
+To more easily visualize the operation of a Digtron, imagine that its cycle of operation follows these steps in order:
+
+* Dig
+* Move
+* Build
+* Allow dust to settle (ie, sand and gravel fall)
+
 If you're building a repeating pattern of nodes, your periodicity should be one larger than your largest offset. For example, if you've laid out builders to create a set of spiral stairs and the offsets are from 0 to 11, you'll want to use periodicity 12.
 
 A good way to program a set of builders is to build a complete example of the structure you want them to create, then place builders against the structure and have them "read" all of its facings. This also lets you more easily visualize the tricks that might be needed to allow the digtron to pass through the structure as it's being built.
