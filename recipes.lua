@@ -94,6 +94,17 @@ minetest.register_craft({
 })
 
 minetest.register_craft({
+	output = "digtron:pusher",
+	recipe = {
+			{"","default:coal_lump",""},
+			{"default:coal_lump","digtron:digtron_core","default:coal_lump"},
+			{"","default:coal_lump",""}
+			}
+})
+
+-- Structural
+
+minetest.register_craft({
 	output = "digtron:structure",
 	recipe = {
 			{"default:stick","","default:stick"},
@@ -103,11 +114,29 @@ minetest.register_craft({
 })
 
 minetest.register_craft({
-	output = "digtron:pusher",
+	output = "digtron:panel",
 	recipe = {
-			{"","default:coal_lump",""},
-			{"default:coal_lump","digtron:digtron_core","default:coal_lump"},
-			{"","default:coal_lump",""}
+			{"","",""},
+			{"","digtron:digtron_core",""},
+			{"","default:steel_ingot",""}
+			}
+})
+
+minetest.register_craft({
+	output = "digtron:edge_panel",
+	recipe = {
+			{"","",""},
+			{"","digtron:digtron_core","default:steel_ingot"},
+			{"","default:steel_ingot",""}
+			}
+})
+
+minetest.register_craft({
+	output = "digtron:corner_panel",
+	recipe = {
+			{"","",""},
+			{"default:steel_ingot","digtron:digtron_core","default:steel_ingot"},
+			{"","","default:steel_ingot"}
 			}
 })
 
@@ -145,6 +174,25 @@ minetest.register_craft({
 			{"digtron:structure"},
 			}
 })
+minetest.register_craft({
+	output = "digtron:digtron_core",
+	recipe = {
+			{"digtron:panel"},
+			}
+})
+minetest.register_craft({
+	output = "digtron:digtron_core",
+	recipe = {
+			{"digtron:corner_panel"},
+			}
+})
+minetest.register_craft({
+	output = "digtron:digtron_core",
+	recipe = {
+			{"digtron:edge_panel"},
+			}
+})
+
 
 minetest.register_craft({
 	output = "digtron:digtron_core",
