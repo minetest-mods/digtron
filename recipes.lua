@@ -58,7 +58,7 @@ minetest.register_craft({
 })
 
 minetest.register_craft({
-	output = "digtron:sand_digger",
+	output = "digtron:soft_digger",
 	recipe = {
 			{"","default:steel_ingot",""},
 			{"default:steel_ingot","digtron:digtron_core","default:steel_ingot"},
@@ -136,7 +136,7 @@ minetest.register_craft({
 	recipe = {
 			{"","",""},
 			{"default:steel_ingot","digtron:digtron_core","default:steel_ingot"},
-			{"","","default:steel_ingot"}
+			{"","default:steel_ingot",""}
 			}
 })
 
