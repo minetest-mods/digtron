@@ -9,7 +9,7 @@ dofile( minetest.get_modpath( "digtron" ) .. "/node_controllers.lua" ) -- contro
 dofile( minetest.get_modpath( "digtron" ) .."/recipes.lua" )
 
 digtron.creative_mode = false -- this causes digtrons to operate without consuming fuel or building materials.
-digtron.particle_effects = true -- Enables the spray of particles out the back of a digger head
+digtron.particle_effects = true -- Enables the spray of particles out the back of a digger head and puffs of smoke from the controller
 digtron.lava_impassible = true -- when true, lava counts as protected nodes.
 digtron.diggers_damage_creatures = true -- when true, diggers deal damage to creatures when they trigger.
 
@@ -37,7 +37,8 @@ digtron.build_cost = 1.0 -- how much fuel is required to build a node
 -- 2 - inventory-holding digtron, has a "main" inventory that the digtron can add to and take from.
 -- 3 - digger head, has an "execute_dig" method in its definition
 -- 4 - builder head, has a "test_build" and "execute_build" method in its definition
--- 5 - fuel-holding digtron, has a "main" invetory that the control node can draw fuel items from. Separate from general inventory, nothing gets put here automatically.
+-- 5 - fuel-holding digtron, has a "fuel" invetory that the control node can draw fuel items from. Separate from general inventory, nothing gets put here automatically.
+-- 6 - holds both fuel and main inventories
 
 minetest.register_lbm({
 	name = "digtron:sand_digger_upgrade",
