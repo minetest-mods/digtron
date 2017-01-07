@@ -11,6 +11,7 @@ dofile( minetest.get_modpath( "digtron" ) .."/recipes.lua" )
 digtron.creative_mode = false -- this causes digtrons to operate without consuming fuel or building materials.
 digtron.particle_effects = true -- Enables the spray of particles out the back of a digger head
 digtron.lava_impassible = true -- when true, lava counts as protected nodes.
+digtron.diggers_damage_creatures = true -- when true, diggers deal damage to creatures when they trigger.
 
 digtron.cycle_time = 1 -- How many seconds a digtron waits between cycles. Auto-controllers can make this wait longer, but cannot make it shorter.
 digtron.traction_factor = 3.0 -- How many digtron nodes can be moved for each adjacent solid node that the digtron has traction against

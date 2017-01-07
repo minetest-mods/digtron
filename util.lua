@@ -430,3 +430,18 @@ digtron.update_builder_item = function(pos)
 		minetest.add_entity(pos,"digtron:builder_item")
 	end
 end
+
+digtron.damage_creatures = function(player, pos, amount)
+	local objects = minetest.env:get_objects_inside_radius(pos, 1.0)
+	if objects ~= nil then
+		for _, obj in ipairs(objects) do
+			if obj then
+				obj:punch(player, 1.0, {
+					full_punch_interval = 1.0,
+					damage_groups = {fleshy = amount},
+					}, nil )
+			end
+		end
+	end
+end
+	

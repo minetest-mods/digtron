@@ -208,7 +208,18 @@ local execute_cycle = function(pos, clicker)
 	   player_pos.z >= layout.extents.min_z - 1 and player_pos.z <= layout.extents.max_z + 1 then
 		move_player = true
 	end
-		
+	
+	-- damage the weak flesh
+	if digtron.diggers_damage_creatures then
+		for k, location in pairs(layout.diggers) do
+			local target = minetest.get_node(location)
+			local targetdef = minetest.registered_nodes[target.name]
+			if targetdef.damage_creatures ~= nil then
+				targetdef.damage_creatures(clicker, location, digtron.find_new_pos(location, target.param2), controlling_coordinate)
+			end
+		end
+	end
+	
 	--move the array
 	digtron.move_digtron(facing, layout.all, layout.extents, nodes_dug, clicker:get_player_name())
 	local oldpos = {x=pos.x, y=pos.y, z=pos.z}

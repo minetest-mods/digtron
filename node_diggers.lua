@@ -83,6 +83,10 @@ minetest.register_node("digtron:digger", {
 		
 		return digtron.mark_diggable(digpos, nodes_dug)
 	end,
+	
+	damage_creatures = function(player, pos, targetpos, controlling_coordinate)
+		digtron.damage_creatures(player, targetpos, 8)
+	end,
 })
 
 -- Digs out nodes that are "in front" of the digger head.
@@ -138,6 +142,13 @@ minetest.register_node("digtron:intermittent_digger", {
 		
 		return digtron.mark_diggable(digpos, nodes_dug)
 	end,
+	
+	damage_creatures = function(player, pos, targetpos, controlling_coordinate)
+		local meta = minetest.get_meta(pos)
+		if (targetpos[controlling_coordinate] + meta:get_int("offset")) % meta:get_int("period") == 0 then
+			digtron.damage_creatures(player, targetpos, 8)
+		end
+	end
 })
 
 -- A special-purpose digger to deal with stuff like sand and gravel in the ceiling. It always digs (no periodicity or offset), but it only digs falling_block nodes
@@ -191,6 +202,10 @@ minetest.register_node("digtron:soft_digger", {
 		end
 		
 		return 0, nil
+	end,
+
+	damage_creatures = function(player, pos, targetpos, controlling_coordinate)
+		digtron.damage_creatures(player, targetpos, 4)
 	end,
 })
 
@@ -253,5 +268,12 @@ minetest.register_node("digtron:intermittent_soft_digger", {
 		end
 		
 		return 0, nil
+	end,
+
+	damage_creatures = function(player, pos, targetpos, controlling_coordinate)
+		local meta = minetest.get_meta(pos)
+		if (targetpos[controlling_coordinate] + meta:get_int("offset")) % meta:get_int("period") == 0 then
+			digtron.damage_creatures(player, targetpos, 4)
+		end
 	end,
 })

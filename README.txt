@@ -59,6 +59,8 @@ Facing of a digger head is significant; it will excavate material from the node 
 
 Digger heads come in both regular and "intermittent" versions, each of which is craftable from the other. The intermittent version can have a period and offset defined if you want them to punch regularly-spaced holes. Note that diggers aimed forward should generally always be the regular kind (or have a period of 1), otherwise the digging machine may be unable to move.
 
+Be cautious around active digger heads when damage is enabled - they bite!
+
 Soft Material Digger Head
 ----------------
 
