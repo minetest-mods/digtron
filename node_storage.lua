@@ -3,7 +3,7 @@
 minetest.register_node("digtron:inventory",
 {
 	description = "Digtron Inventory Hopper",
-	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 2},
+	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 2, tubedevice = 1, tubedevice_receiver = 1},
 	drop = "digtron:inventory",
 	sounds = digtron.metal_sounds,
 	paramtype2= "facedir",
@@ -34,6 +34,27 @@ minetest.register_node("digtron:inventory",
 		local inv = meta:get_inventory()
 		return inv:is_empty("main")
 	end,
+	
+	-- Pipeworks compatibility
+	----------------------------------------------------------------
+
+	tube = (function() if minetest.get_modpath("pipeworks") then return {
+		insert_object = function(pos, node, stack, direction)
+			local meta = minetest.get_meta(pos)
+			local inv = meta:get_inventory()
+			return inv:add_item("main", stack)
+		end,
+		can_insert = function(pos, node, stack, direction)
+			local meta = minetest.get_meta(pos)
+			local inv = meta:get_inventory()
+			return inv:room_for_item("main", stack)
+		end,
+		input_inventory = "main",
+		connect_sides = {left = 1, right = 1, back = 1, front = 1, bottom = 1, top = 1}
+	} end end)(),
+	
+	after_place_node = (function() if minetest.get_modpath("pipeworks") then return pipeworks.after_place end end)(),
+	after_dig_node = (function() if minetest.get_modpath("pipeworks") then return pipeworks.after_dig end end)()
 })
 
 -- Fuel storage. Controller node draws fuel from here.
@@ -41,7 +62,7 @@ minetest.register_node("digtron:inventory",
 minetest.register_node("digtron:fuelstore",
 {
 	description = "Digtron Fuel Hopper",
-	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 5},
+	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 5, tubedevice = 1, tubedevice_receiver = 1},
 	drop = "digtron:fuelstore",
 	sounds = digtron.metal_sounds,
 	paramtype2= "facedir",
@@ -87,13 +108,40 @@ minetest.register_node("digtron:fuelstore",
 		local inv = meta:get_inventory()
 		return inv:is_empty("fuel")
 	end,
+	
+	-- Pipeworks compatibility
+	----------------------------------------------------------------
+
+	tube = (function() if minetest.get_modpath("pipeworks") then return {
+		insert_object = function(pos, node, stack, direction)
+			if minetest.get_craft_result({method="fuel", width=1, items={stack}}).time ~= 0 then
+				local meta = minetest.get_meta(pos)
+				local inv = meta:get_inventory()
+				return inv:add_item("fuel", stack)
+			end
+			return stack
+		end,
+		can_insert = function(pos, node, stack, direction)
+			if minetest.get_craft_result({method="fuel", width=1, items={stack}}).time ~= 0 then
+				local meta = minetest.get_meta(pos)
+				local inv = meta:get_inventory()
+				return inv:room_for_item("fuel", stack)
+			end
+			return false
+		end,
+		input_inventory = "fuel",
+		connect_sides = {left = 1, right = 1, back = 1, front = 1, bottom = 1, top = 1}
+	} end end)(),
+	
+	after_place_node = (function() if minetest.get_modpath("pipeworks") then return pipeworks.after_place end end)(),
+	after_dig_node = (function() if minetest.get_modpath("pipeworks")then return pipeworks.after_dig end end)()
 })
 
 -- Combined storage. Group 6 has both an inventory and a fuel store
 minetest.register_node("digtron:combined_storage",
 {
 	description = "Digtron Combined Storage",
-	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 6},
+	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 6, tubedevice = 1, tubedevice_receiver = 1},
 	drop = "digtron:combined_storage",
 	sounds = digtron.metal_sounds,
 	paramtype2= "facedir",
@@ -156,4 +204,31 @@ minetest.register_node("digtron:combined_storage",
 		local inv = meta:get_inventory()
 		return inv:is_empty("fuel") and inv:is_empty("main")
 	end,
+	
+	-- Pipeworks compatibility
+	----------------------------------------------------------------
+	tube = (function() if minetest.get_modpath("pipeworks") then return {
+		insert_object = function(pos, node, stack, direction)
+			local meta = minetest.get_meta(pos)
+			local inv = meta:get_inventory()
+			if minetest.get_craft_result({method="fuel", width=1, items={stack}}).time ~= 0 and direction.y == 1 then
+				return inv:add_item("fuel", stack)
+			end
+			return inv:add_item("main", stack)
+		end,
+		can_insert = function(pos, node, stack, direction)
+			local meta = minetest.get_meta(pos)
+			local inv = meta:get_inventory()
+			if minetest.get_craft_result({method="fuel", width=1, items={stack}}).time ~= 0 and direction.y == 1 then
+				return inv:room_for_item("fuel", stack)
+			end
+			return inv:room_for_item("main", stack)
+		end,
+		input_inventory = "main",
+		connect_sides = {left = 1, right = 1, back = 1, front = 1, bottom = 1, top = 1}
+	} end end)(),
+	
+	after_place_node = (function() if minetest.get_modpath("pipeworks") then return pipeworks.after_place end end)(),
+	after_dig_node = (function() if minetest.get_modpath("pipeworks") then return pipeworks.after_dig end end)()
+	
 })

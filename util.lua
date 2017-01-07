@@ -98,9 +98,13 @@ end
 digtron.move_node = function(pos, newpos, player_name)
 	-- Moves nodes, preserving digtron metadata and inventory
 	local node = minetest.get_node(pos)
+	local node_def = minetest.registered_nodes[node.name]
 	local oldnode = minetest.get_node(newpos)
 	minetest.log("action", string.format("%s moves %s from (%d, %d, %d) to (%d, %d, %d), displacing %s", player_name, node.name, pos.x, pos.y, pos.z, newpos.x, newpos.y, newpos.z, oldnode.name))
 	minetest.add_node(newpos, { name=node.name, param1=node.param1, param2=node.param2 })
+	if node_def.after_place_node then
+		node_def.after_place_node(newpos)
+	end
 
 	local oldmeta = minetest.get_meta(pos)
 	local oldinv = oldmeta:get_inventory()
@@ -122,12 +126,16 @@ digtron.move_node = function(pos, newpos, player_name)
 	newmeta:set_float("fuel_burning", oldmeta:get_float("fuel_burning"))
 	newmeta:set_string("infotext", oldmeta:get_string("infotext"))
 	
+	-- Move the little floaty entity inside the builders
 	if minetest.get_item_group(node.name, "digtron") == 4 then
 		digtron.update_builder_item(newpos)
 	end
 	
 	-- remove node from old position
 	minetest.remove_node(pos)
+	if node_def.after_dig_node then
+		node_def.after_dig_node(pos)
+	end
 end
 
 digtron.get_all_digtron_neighbours = function(pos, player)
