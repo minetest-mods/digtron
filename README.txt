@@ -161,6 +161,8 @@ Fuel modules act like chests, but will reject any non-fuel items that try to ent
 
 Combination modules act like furnances. For the most part, that means they act like chests - items are extracted from the "main" inventory, and items coming into the combination module are inserted into "main". However, a pipe entering the combination module from the underside will attempt to insert items into the "fuel" inventory.
 
+Note that Pipeworks is entirely optional, you don't need to install it.
+
 Crafting recipes
 ================
 
