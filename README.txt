@@ -116,6 +116,11 @@ They may also be used for providing additional traction if your digtron array is
 
 You can also use them decoratively, or to build a platform to stand on as you ride your mighty mechanical leviathan through the landscape.
 
+Panel pieces
+------------
+
+There are also three "panel" pieces; one flat panel, one edge panel, and one corner panel. They're basically decorative, you can use them to build a cabin or cover holes in the Digtron's structure.
+
 Digtron Lamp
 ------------
 
@@ -144,6 +149,17 @@ A short high-pitched honk means that one or more of the builder heads don't have
 Splooshing water sounds means your Digtron is digging adjacent to (or through) water-containing nodes. Digtrons are waterproof, but this might be a useful indication that you should take care when installing doors in the tunnel walls you've placed here.
 
 A triple "voop voop voop!" alarm indicates that there is lava adjacent to your Digtron. Digtrons can't penetrate lava by default, and this alarm indicates that a non-lava-proof Digtron operator may wish to exercise caution when opening the door to clear the obstruction.
+
+Pipeworks Compatible
+====================
+
+If you happen to have the Pipeworks mod installed (https://github.com/minetest-mods/pipeworks), the three inventory modules are Pipeworks-compatible. When a Digtron moves one of the inventory modules adjacent to a pipe it will automatically hook up to it, and disconnect again when it moves on.
+
+Inventory modules act like chests.
+
+Fuel modules act like chests, but will reject any non-fuel items that try to enter them.
+
+Combination modules act like furnances. For the most part, that means they act like chests - items are extracted from the "main" inventory, and items coming into the combination module are inserted into "main". However, a pipe entering the combination module from the underside will attempt to insert items into the "fuel" inventory.
 
 Crafting recipes
 ================
@@ -207,6 +223,25 @@ Structural modules:
 [stick,      , stick]
 [     , core ,      ]
 [stick,      , stick]
+
+Panel:
+
+[     ,      ,      ]
+[     , core ,      ]
+[     , steel,      ]
+
+Edge panel:
+
+[     ,      ,      ]
+[     , core , steel]
+[     , steel,      ]
+
+Corner panel:
+
+[     ,      ,      ]
+[     , core , steel]
+[     , steel, steel]
+
 
 Lantern module:
 
