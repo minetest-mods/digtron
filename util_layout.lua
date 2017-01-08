@@ -197,9 +197,9 @@ local rotate_node_image = function(node_image, origin, axis, direction, old_pos_
 	end
 	
 	if node_image.build_item_paramtype2 == "wallmounted" then
-		node_image.meta.fields.build_facing = wallmounted_rotate[axis][direction][node_image.meta.fields.build_facing]
+		node_image.meta.fields.build_facing = wallmounted_rotate[axis][direction][tonumber(node_image.meta.fields.build_facing)]
 	elseif node_image.build_item_paramtype2 == "facedir" then
-		node_image.meta.fields.build_facing = facedir_rotate[axis][direction][node_image.meta.fields.build_facing]
+		node_image.meta.fields.build_facing = facedir_rotate[axis][direction][tonumber(node_image.meta.fields.build_facing)]
 	end
 	
 	node_image.meta.fields.waiting = nil -- If we're rotating a controller that's in the "waiting" state, clear it. Otherwise it may stick like that.
