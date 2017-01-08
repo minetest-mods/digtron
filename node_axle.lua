@@ -1,7 +1,7 @@
 minetest.register_node("digtron:axle", {
 	description = "Digtron Rotation Unit",
 	groups = {cracky = 3, oddly_breakable_by_hand=3, digtron = 1},
-	drop = "digtron:axel",
+	drop = "digtron:axle",
 	sounds = digtron.metal_sounds,
 	paramtype = "light",
 	paramtype2= "facedir",
