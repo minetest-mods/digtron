@@ -58,11 +58,11 @@ minetest.register_node("digtron:controller", {
 		
 		-- Start the delay before digtron can run again.
 		minetest.get_meta(newpos):set_string("waiting", "true")
-		minetest.after(digtron.cycle_time,
-				function (pos)
-					minetest.get_meta(pos):set_string("waiting", nil)
-				end, newpos
-			)
+		minetest.get_node_timer(newpos):start(digtron.cycle_time)
+	end,
+	
+	on_timer = function(pos, elapsed)
+		minetest.get_meta(pos):set_string("waiting", nil)
 	end,
 })
 
@@ -180,6 +180,11 @@ minetest.register_node("digtron:auto_controller", {
 		meta:set_string("waiting", "true")
 		meta:set_string("formspec", auto_formspec)
 	end,
+	
+	on_timer = function(pos, elapsed)
+		minetest.get_meta(pos):set_string("waiting", nil)
+	end,
+
 })
 
 ---------------------------------------------------------------------------------------------------------------
@@ -250,11 +255,7 @@ minetest.register_node("digtron:pusher", {
 		if not can_move then
 			-- mark this node as waiting, will clear this flag in digtron.cycle_time seconds
 			meta:set_string("waiting", "true")
-			minetest.after(digtron.cycle_time,
-				function (pos)
-					minetest.get_meta(pos):set_string("waiting", nil)
-				end, pos
-			)
+			minetest.get_node_timer(pos):start(digtron.cycle_time)
 			minetest.sound_play("squeal", {gain=1.0, pos=pos})
 			minetest.sound_play("buzzer", {gain=0.5, pos=pos})
 			meta:set_string("infotext", "Digtron is obstructed.")
@@ -283,10 +284,11 @@ minetest.register_node("digtron:pusher", {
 		
 		-- Start the delay before digtron can run again. Do this after moving the array or pos will be wrong.
 		minetest.get_meta(pos):set_string("waiting", "true")
-		minetest.after(digtron.cycle_time,
-			function (pos)
-				minetest.get_meta(pos):set_string("waiting", nil)
-			end, pos
-		)
+		minetest.get_node_timer(pos):start(digtron.cycle_time)
 	end,
+	
+	on_timer = function(pos, elapsed)
+		minetest.get_meta(pos):set_string("waiting", nil)
+	end,
+
 })

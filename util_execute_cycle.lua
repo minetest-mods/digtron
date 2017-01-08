@@ -122,11 +122,7 @@ digtron.execute_cycle = function(pos, clicker)
 	if not can_move then
 		-- mark this node as waiting, will clear this flag in digtron.cycle_time seconds
 		minetest.get_meta(pos):set_string("waiting", "true")
-		minetest.after(digtron.cycle_time,
-			function (pos)
-				minetest.get_meta(pos):set_string("waiting", nil)
-			end, pos
-		)
+		minetest.get_node_timer(pos):start(digtron.cycle_time)
 		minetest.sound_play("squeal", {gain=1.0, pos=pos})
 		minetest.sound_play("buzzer", {gain=0.5, pos=pos})
 		return pos, "Digtron is obstructed.\n" .. status_text, 3 --Abort, don't dig and don't build.
@@ -181,11 +177,7 @@ digtron.execute_cycle = function(pos, clicker)
 	
 	if not can_build then
 		minetest.get_meta(pos):set_string("waiting", "true")
-		minetest.after(digtron.cycle_time,
-			function (pos)
-				minetest.get_meta(pos):set_string("waiting", nil)
-			end, pos
-		)
+		minetest.get_node_timer(pos):start(digtron.cycle_time)
 		local return_string = nil
 		local return_code = 5
 		if test_build_return_code == 3 then

@@ -6,8 +6,10 @@ digtron.move_node = function(pos, newpos, player_name)
 	minetest.log("action", string.format("%s moves %s from (%d, %d, %d) to (%d, %d, %d), displacing %s", player_name, node.name, pos.x, pos.y, pos.z, newpos.x, newpos.y, newpos.z, oldnode.name))
 	minetest.add_node(newpos, { name=node.name, param1=node.param1, param2=node.param2 })
 	-- copy the metadata
-	local oldmeta = minetest.get_meta(pos):to_table()
-	minetest.get_meta(newpos):from_table(oldmeta)
+	local oldmeta_table = minetest.get_meta(pos):to_table()
+	local meta = minetest.get_meta(newpos)
+	meta:from_table(oldmeta_table)
+	meta:set_string("waiting", nil) -- If a controller moves another controller that's in the waiting state, clear the waiting state otherwise it might get stuck like that (we've moved it away from the target of the pending 'clear the waiting state' delegate call). That means you can run a digtron as fast as you want by rapidly clicking between two different controllers, but shhh - don't tell the player that.
 
 	-- Move the little floaty entity inside the builders
 	if minetest.get_item_group(node.name, "digtron") == 4 then

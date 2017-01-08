@@ -102,6 +102,15 @@ minetest.register_craft({
 			}
 })
 
+minetest.register_craft({
+	output = "digtron:axle",
+	recipe = {
+			{"default:coal_lump","default:coal_lump","default:coal_lump"},
+			{"default:coal_lump","digtron:digtron_core","default:coal_lump"},
+			{"default:coal_lump","default:coal_lump","default:coal_lump"}
+			}
+})
+
 -- Structural
 
 minetest.register_craft({
@@ -193,7 +202,6 @@ minetest.register_craft({
 			}
 })
 
-
 minetest.register_craft({
 	output = "digtron:digtron_core",
 	recipe = {
@@ -226,5 +234,12 @@ minetest.register_craft({
 	output = "digtron:digtron_core",
 	recipe = {
 			{"digtron:pusher"},
+			}
+})
+
+minetest.register_craft({
+	output = "digtron:digtron_core",
+	recipe = {
+			{"digtron:axle"},
 			}
 })

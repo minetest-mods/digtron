@@ -89,6 +89,8 @@ minetest.register_node("digtron:builder", {
 			offset = meta:get_int("offset")
 		end
 		if build_facing and build_facing >= 0 and build_facing < 24 then
+			-- TODO: wallmounted facings only run from 0-5, a player could theoretically put a wallmounted item into the builder and then manually set the build facing to an invalid number
+			-- Should prevent that somehow. But not tonight.
 			meta:set_int("build_facing", math.floor(build_facing))
 		end
 		
@@ -133,6 +135,10 @@ minetest.register_node("digtron:builder", {
 	
 	on_destruct = function(pos)
 		digtron.remove_builder_item(pos)
+	end,
+	
+	after_place_node = function(pos)
+		digtron.update_builder_item(pos)
 	end,
 
 	allow_metadata_inventory_put = function(pos, listname, index, stack, player)

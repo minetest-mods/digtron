@@ -6,7 +6,8 @@ dofile( minetest.get_modpath( "digtron" ) .. "/node_storage.lua" ) -- contains i
 dofile( minetest.get_modpath( "digtron" ) .. "/node_diggers.lua" ) -- contains all diggers
 dofile( minetest.get_modpath( "digtron" ) .. "/node_builders.lua" ) -- contains all builders (there's just one currently)
 dofile( minetest.get_modpath( "digtron" ) .. "/node_controllers.lua" ) -- controllers
-dofile( minetest.get_modpath( "digtron" ) .."/recipes.lua" )
+dofile( minetest.get_modpath( "digtron" ) .. "/node_axle.lua" ) -- Rotation controller
+dofile( minetest.get_modpath( "digtron" ) .. "/recipes.lua" )
 
 digtron.creative_mode = false -- this causes digtrons to operate without consuming fuel or building materials.
 digtron.particle_effects = true -- Enables the spray of particles out the back of a digger head and puffs of smoke from the controller
