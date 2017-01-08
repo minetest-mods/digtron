@@ -49,7 +49,7 @@ minetest.register_node("digtron:controller", {
 			return
 		end
 	
-		local newpos, status = digtron.execute_cycle(pos, clicker)
+		local newpos, status, return_code = digtron.execute_cycle(pos, clicker)
 		
 		meta = minetest.get_meta(newpos)
 		if status ~= nil then
@@ -90,14 +90,18 @@ digtron.auto_cycle = function(pos)
 		return
 	end
 	
-	local newpos, status = digtron.execute_cycle(pos, player)
+	local newpos, status, return_code = digtron.execute_cycle(pos, player)
 	
 	local cycle = 0
 	if vector.equals(pos, newpos) then
 		cycle = meta:get_int("offset")
 		status = status .. string.format("\nCycles remaining: %d\nHalted!", cycle)
 		meta:set_string("infotext", status)
-		meta:set_string("formspec", auto_formspec)
+		if return_code == 1 then --return code 1 happens when there's unloaded nodes adjacent, just keep trying.
+			minetest.after(meta:get_int("period"), digtron.auto_cycle, newpos)
+		else
+			meta:set_string("formspec", auto_formspec)
+		end
 		return
 	end
 	

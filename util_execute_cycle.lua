@@ -39,7 +39,15 @@ local burn_smoke = function(pos, amount)
 	}
 end
 
--- returns newpos, status string
+-- returns newpos, status string, and a return code indicating why the method returned (so the auto-controller can keep trying if it's due to unloaded nodes)
+-- 0 - success
+-- 1 - failed due to unloaded nodes
+-- 2 - failed due to insufficient traction
+-- 3 - obstructed by undiggable node
+-- 4 - insufficient fuel
+-- 5 - unknown builder error during testing
+-- 6 - builder with unset output
+-- 7 - insufficient builder materials in inventory
 digtron.execute_cycle = function(pos, clicker)
 	local meta = minetest.get_meta(pos)
 	local fuel_burning = meta:get_float("fuel_burning") -- get amount of burned fuel left over from last cycle
@@ -48,8 +56,8 @@ digtron.execute_cycle = function(pos, clicker)
 	local layout = digtron.get_all_digtron_neighbours(pos, clicker)
 	if layout.all == nil then
 		-- get_all_digtron_neighbours returns nil if the digtron array touches unloaded nodes, too dangerous to do anything in that situation. Abort.
-		minetest.sound_play("buzzer", {gain=0.5, pos=pos})
-		return pos, "Digtron is adjacent to unloaded nodes.\n" .. status_text
+		minetest.sound_play("buzzer", {gain=0.25, pos=pos})
+		return pos, "Digtron is adjacent to unloaded nodes.\n" .. status_text, 1
 	end
 	
 	if layout.water_touching == true then
@@ -62,7 +70,7 @@ digtron.execute_cycle = function(pos, clicker)
 		-- digtrons can't fly
 		minetest.sound_play("squeal", {gain=1.0, pos=pos})
 		return pos, string.format("Digtron has %d nodes but only enough traction to move %d nodes.\n", table.getn(layout.all), layout.traction * digtron.traction_factor)
-			 .. status_text
+			 .. status_text, 2
 	end
 
 	local facing = minetest.get_node(pos).param2
@@ -121,7 +129,7 @@ digtron.execute_cycle = function(pos, clicker)
 		)
 		minetest.sound_play("squeal", {gain=1.0, pos=pos})
 		minetest.sound_play("buzzer", {gain=0.5, pos=pos})
-		return pos, "Digtron is obstructed.\n" .. status_text --Abort, don't dig and don't build.
+		return pos, "Digtron is obstructed.\n" .. status_text, 3 --Abort, don't dig and don't build.
 	end
 
 	----------------------------------------------------------------------------------------------------------------------
@@ -168,7 +176,7 @@ digtron.execute_cycle = function(pos, clicker)
 	
 	if test_fuel_needed > fuel_burning + test_fuel_burned then
 		minetest.sound_play("buzzer", {gain=0.5, pos=pos})
-		return pos, "Digtron needs more fuel." -- abort, don't dig and don't build.
+		return pos, "Digtron needs more fuel.", 4 -- abort, don't dig and don't build.
 	end
 	
 	if not can_build then
@@ -179,15 +187,18 @@ digtron.execute_cycle = function(pos, clicker)
 			end, pos
 		)
 		local return_string = nil
+		local return_code = 5
 		if test_build_return_code == 3 then
 			minetest.sound_play("honk", {gain=0.5, pos=pos}) -- A builder is not configured
 			return_string = "Digtron connected to at least one builder with no output material assigned.\n"
+			return_code = 6
 		elseif test_build_return_code == 2 then
 			minetest.sound_play("dingding", {gain=1.0, pos=pos}) -- Insufficient inventory
 			return_string = string.format("Digtron has insufficient building materials. Needed: %s\n",
 				test_build_return_item:get_name())
+			return_code = 7
 		end
-		return pos, return_string .. status_text --Abort, don't dig and don't build.
+		return pos, return_string .. status_text, return_code --Abort, don't dig and don't build.
 	end	
 
 	----------------------------------------------------------------------------------------------------------------------
@@ -289,5 +300,5 @@ digtron.execute_cycle = function(pos, clicker)
 		minetest.check_for_falling({x=node_to_dig.x, y=node_to_dig.y+1, z=node_to_dig.z})
 		node_to_dig, whether_to_dig = nodes_dug:pop()
 	end
-	return pos, status_text
+	return pos, status_text, 0
 end
