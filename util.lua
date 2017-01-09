@@ -103,7 +103,7 @@ digtron.place_in_inventory = function(itemname, inventory_positions, fallback_po
 	--tries placing the item in each inventory node in turn. If there's no room, drop it at fallback_pos
 	local itemstack = ItemStack(itemname)
 	for k, location in pairs(inventory_positions) do
-		local inv = minetest.get_inventory({type="node", pos=location})
+		local inv = minetest.get_inventory({type="node", pos=location.pos})
 		itemstack = inv:add_item("main", itemstack)
 		if itemstack:is_empty() then
 			return nil
@@ -131,10 +131,10 @@ digtron.take_from_inventory = function(itemname, inventory_positions)
 	--tries to take an item from each inventory node in turn. Returns location of inventory item was taken from on success, nil on failure
 	local itemstack = ItemStack(itemname)
 	for k, location in pairs(inventory_positions) do
-		local inv = minetest.get_inventory({type="node", pos=location})
+		local inv = minetest.get_inventory({type="node", pos=location.pos})
 		local output = inv:remove_item("main", itemstack)
 		if not output:is_empty() then
-			return location
+			return location.pos
 		end
 	end
 	return nil
@@ -162,7 +162,7 @@ digtron.burn = function(fuelstore_positions, target, test)
 		if current_burned > target then
 			break
 		end
-		local inv = minetest.get_inventory({type="node", pos=location})
+		local inv = minetest.get_inventory({type="node", pos=location.pos})
 		local invlist = inv:get_list("fuel")
 		for i, itemstack in pairs(invlist) do
 			local fuel_per_item = minetest.get_craft_result({method="fuel", width=1, items={itemstack:peek_item(1)}}).time
