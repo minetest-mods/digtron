@@ -65,6 +65,17 @@ local function neighbour_test(layout, status_text)
 	return status_text, 0
 end
 
+-- Checks if a player is within a layout's extents.
+local function move_player_test(layout, player)
+	local player_pos = player:getpos()
+	if player_pos.x >= layout.extents.min_x - 1 and player_pos.x <= layout.extents.max_x + 1 and
+	   player_pos.y >= layout.extents.min_y - 1 and player_pos.y <= layout.extents.max_y + 1 and
+	   player_pos.z >= layout.extents.min_z - 1 and player_pos.z <= layout.extents.max_z + 1 then
+		return true
+	end
+	return false
+end
+
 -- returns newpos, status string, and a return code indicating why the method returned (so the auto-controller can keep trying if it's due to unloaded nodes)
 -- 0 - success
 -- 1 - failed due to unloaded nodes
@@ -217,13 +228,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	end
 
 	-- if the player is standing within the array or next to it, move him too.
-	local player_pos = clicker:getpos()
-	local move_player = false
-	if player_pos.x >= layout.extents.min_x - 1 and player_pos.x <= layout.extents.max_x + 1 and
-	   player_pos.y >= layout.extents.min_y - 1 and player_pos.y <= layout.extents.max_y + 1 and
-	   player_pos.z >= layout.extents.min_z - 1 and player_pos.z <= layout.extents.max_z + 1 then
-		move_player = true
-	end
+	local move_player = move_player_test(layout, clicker)
 	
 	-- damage the weak flesh
 	if digtron.diggers_damage_creatures then
@@ -347,13 +352,7 @@ digtron.execute_move_cycle = function(pos, clicker)
 	minetest.sound_play("truck", {gain=1.0, pos=pos})
 
 	-- if the player is standing within the array or next to it, move him too.
-	local player_pos = clicker:getpos()
-	local move_player = false
-	if player_pos.x >= layout.extents.min_x - 1 and player_pos.x <= layout.extents.max_x + 1 and
-	   player_pos.y >= layout.extents.min_y - 1 and player_pos.y <= layout.extents.max_y + 1 and
-	   player_pos.z >= layout.extents.min_z - 1 and player_pos.z <= layout.extents.max_z + 1 then
-		move_player = true
-	end
+	local move_player = move_player_test(layout, clicker)
 		
 	--move the array
 	digtron.move_digtron(facing, layout.all, layout.extents, nodes_dug)
