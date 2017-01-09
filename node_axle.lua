@@ -38,7 +38,7 @@ minetest.register_node("digtron:axle", {
 		end
 		local image = digtron.get_layout_image(pos, clicker)
 		digtron.rotate_layout_image(image, node.param2)
-		if digtron.can_write_layout_image(image, clicker) then
+		if digtron.can_write_layout_image(image) then
 			digtron.write_layout_image(image)
 			
 			minetest.sound_play("whirr", {gain=1.0, pos=pos})

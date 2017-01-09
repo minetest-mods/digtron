@@ -172,12 +172,14 @@ digtron.move_layout_image = function(layout_image, facing, player_name)
 	end
 end
 
-digtron.can_write_layout_image = function(layout_image, player)
+digtron.can_write_layout_image = function(layout_image)
 	for k, node_image in pairs(layout_image.all) do
+		-- check if the target node is buildable_to or is marked as part of the digtron that's moving
 		if not layout_image.old_pos_pointset:get(node_image.pos.x, node_image.pos.y, node_image.pos.z)
 			and not minetest.registered_nodes[minetest.get_node(node_image.pos).name].buildable_to then
 			return false
-		elseif minetest.is_protected(node_image.pos, player:get_player_name()) and not minetest.check_player_privs(player, "protection_bypass") then
+		--check if we're moving into a protected node
+		elseif layout_image.protected:get(node_image.pos) then
 			return false
 		end
 	end
