@@ -39,6 +39,32 @@ local burn_smoke = function(pos, amount)
 	}
 end
 
+--Performs various tests on a layout to play warning noises and see if Digtron can move at all.
+local function neighbour_test(layout, status_text)
+	if layout.all == nil then
+		-- get_all_digtron_neighbours returns nil if the digtron array touches unloaded nodes, too dangerous to do anything in that situation. Abort.
+		minetest.sound_play("buzzer", {gain=0.25, pos=layout.controller})
+		return "Digtron is adjacent to unloaded nodes.\n" .. status_text, 1
+	end
+	
+	if layout.water_touching == true then
+		minetest.sound_play("sploosh", {gain=1.0, pos=layout.controller})
+	end
+	
+	if layout.lava_touching == true then
+		minetest.sound_play("woopwoopwoop", {gain=1.0, pos=layout.controller})
+	end	
+	
+	if layout.traction * digtron.traction_factor < table.getn(layout.all) then
+		-- digtrons can't fly
+		minetest.sound_play("squeal", {gain=1.0, pos=layout.controller})
+		return string.format("Digtron has %d nodes but only enough traction to move %d nodes.\n", table.getn(layout.all), layout.traction * digtron.traction_factor)
+			 .. status_text, 2
+	end
+
+	return status_text, 0
+end
+
 -- returns newpos, status string, and a return code indicating why the method returned (so the auto-controller can keep trying if it's due to unloaded nodes)
 -- 0 - success
 -- 1 - failed due to unloaded nodes
@@ -48,31 +74,18 @@ end
 -- 5 - unknown builder error during testing
 -- 6 - builder with unset output
 -- 7 - insufficient builder materials in inventory
-digtron.execute_cycle = function(pos, clicker)
+digtron.execute_dig_cycle = function(pos, clicker)
 	local meta = minetest.get_meta(pos)
 	local fuel_burning = meta:get_float("fuel_burning") -- get amount of burned fuel left over from last cycle
 	local status_text = string.format("Heat remaining in controller furnace: %d", fuel_burning)
 	
 	local layout = digtron.get_all_digtron_neighbours(pos, clicker)
-	if layout.all == nil then
-		-- get_all_digtron_neighbours returns nil if the digtron array touches unloaded nodes, too dangerous to do anything in that situation. Abort.
-		minetest.sound_play("buzzer", {gain=0.25, pos=pos})
-		return pos, "Digtron is adjacent to unloaded nodes.\n" .. status_text, 1
+
+	local status_text, return_code = neighbour_test(layout, status_text)
+	if return_code ~= 0 then
+		return pos, status_text, return_code
 	end
 	
-	if layout.water_touching == true then
-		minetest.sound_play("sploosh", {gain=1.0, pos=pos})
-	end
-	if layout.lava_touching == true then
-		minetest.sound_play("woopwoopwoop", {gain=1.0, pos=pos})
-	end	
-	if layout.traction * digtron.traction_factor < table.getn(layout.all) then
-		-- digtrons can't fly
-		minetest.sound_play("squeal", {gain=1.0, pos=pos})
-		return pos, string.format("Digtron has %d nodes but only enough traction to move %d nodes.\n", table.getn(layout.all), layout.traction * digtron.traction_factor)
-			 .. status_text, 2
-	end
-
 	local facing = minetest.get_node(pos).param2
 	local move_dir = minetest.facedir_to_dir(facing)
 	local controlling_coordinate = digtron.get_controlling_coordinate(pos, facing)
@@ -293,4 +306,62 @@ digtron.execute_cycle = function(pos, clicker)
 		node_to_dig, whether_to_dig = nodes_dug:pop()
 	end
 	return pos, status_text, 0
+end
+
+
+-- Simplified version of the above method that only moves, and doesn't execute diggers or builders.
+digtron.execute_move_cycle = function(pos, clicker)
+	local meta = minetest.get_meta(pos)
+	local layout = digtron.get_all_digtron_neighbours(pos, clicker)
+
+	local status_text = ""
+	local status_text, return_code = neighbour_test(layout, status_text)
+	if return_code ~= 0 then
+		return pos, status_text, return_code
+	end
+
+	local facing = minetest.get_node(pos).param2
+	local controlling_coordinate = digtron.get_controlling_coordinate(pos, facing)
+	
+	local nodes_dug = Pointset.create() -- empty set, we're not digging anything
+
+	-- test if any digtrons are obstructed by non-digtron nodes that haven't been marked
+	-- as having been dug.
+	local can_move = true
+	for _, location in pairs(layout.all) do
+		local newpos = digtron.find_new_pos(location, facing)
+		if not digtron.can_move_to(newpos, layout.protected, nodes_dug) then
+			can_move = false
+		end
+	end
+	
+	if not can_move then
+		-- mark this node as waiting, will clear this flag in digtron.cycle_time seconds
+		minetest.get_meta(pos):set_string("waiting", "true")
+		minetest.get_node_timer(pos):start(digtron.cycle_time)
+		minetest.sound_play("squeal", {gain=1.0, pos=pos})
+		minetest.sound_play("buzzer", {gain=0.5, pos=pos})
+		return pos, "Digtron is obstructed.\n" .. status_text, 3 --Abort, don't dig and don't build.
+	end
+
+	minetest.sound_play("truck", {gain=1.0, pos=pos})
+
+	-- if the player is standing within the array or next to it, move him too.
+	local player_pos = clicker:getpos()
+	local move_player = false
+	if player_pos.x >= layout.extents.min_x - 1 and player_pos.x <= layout.extents.max_x + 1 and
+	   player_pos.y >= layout.extents.min_y - 1 and player_pos.y <= layout.extents.max_y + 1 and
+	   player_pos.z >= layout.extents.min_z - 1 and player_pos.z <= layout.extents.max_z + 1 then
+		move_player = true
+	end
+		
+	--move the array
+	digtron.move_digtron(facing, layout.all, layout.extents, nodes_dug)
+	local oldpos = {x=pos.x, y=pos.y, z=pos.z}
+	pos = digtron.find_new_pos(pos, facing)
+	if move_player then
+		clicker:moveto(digtron.find_new_pos(player_pos, facing), true)
+	end
+	
+	return pos, "", 0
 end

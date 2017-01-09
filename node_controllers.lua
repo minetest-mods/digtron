@@ -49,7 +49,7 @@ minetest.register_node("digtron:controller", {
 			return
 		end
 	
-		local newpos, status, return_code = digtron.execute_cycle(pos, clicker)
+		local newpos, status, return_code = digtron.execute_dig_cycle(pos, clicker)
 		
 		meta = minetest.get_meta(newpos)
 		if status ~= nil then
@@ -90,7 +90,7 @@ digtron.auto_cycle = function(pos)
 		return
 	end
 	
-	local newpos, status, return_code = digtron.execute_cycle(pos, player)
+	local newpos, status, return_code = digtron.execute_dig_cycle(pos, player)
 	
 	local cycle = 0
 	if vector.equals(pos, newpos) then
@@ -222,69 +222,12 @@ minetest.register_node("digtron:pusher", {
 			return
 		end
 
-		local layout = digtron.get_all_digtron_neighbours(pos, clicker)
-		if layout.all == nil then
-			-- get_all_digtron_neighbours returns nil if the digtron array touches unloaded nodes, too dangerous to do anything in that situation. Abort.
-			minetest.sound_play("buzzer", {gain=0.5, pos=pos})
-			meta:set_string("infotext", "Digtron is adjacent to unloaded nodes.")
-			return
-		end
+		local newpos, status_text, return_code = digtron.execute_move_cycle(pos, clicker)
+		meta:set_string("infotext", status_text)
 		
-		if layout.traction * digtron.traction_factor < table.getn(layout.all) then
-			-- digtrons can't fly
-			minetest.sound_play("squeal", {gain=1.0, pos=pos})
-			meta:set_string("infotext", string.format("Digtron has %d nodes but only enough traction to move %d nodes.", table.getn(layout.all), layout.traction * digtron.traction_factor))
-			return
-		end
-
-		local facing = minetest.get_node(pos).param2
-		local controlling_coordinate = digtron.get_controlling_coordinate(pos, facing)
-		
-		local nodes_dug = Pointset.create() -- empty set, we're not digging anything
-
-		-- test if any digtrons are obstructed by non-digtron nodes that haven't been marked
-		-- as having been dug.
-		local can_move = true
-		for _, location in pairs(layout.all) do
-			local newpos = digtron.find_new_pos(location, facing)
-			if not digtron.can_move_to(newpos, layout.protected, nodes_dug) then
-				can_move = false
-			end
-		end
-		
-		if not can_move then
-			-- mark this node as waiting, will clear this flag in digtron.cycle_time seconds
-			meta:set_string("waiting", "true")
-			minetest.get_node_timer(pos):start(digtron.cycle_time)
-			minetest.sound_play("squeal", {gain=1.0, pos=pos})
-			minetest.sound_play("buzzer", {gain=0.5, pos=pos})
-			meta:set_string("infotext", "Digtron is obstructed.")
-			return --Abort
-		end
-
-		meta:set_string("infotext", nil)
-		minetest.sound_play("truck", {gain=1.0, pos=pos})
-	
-		-- if the player is standing within the array or next to it, move him too.
-		local player_pos = clicker:getpos()
-		local move_player = false
-		if player_pos.x >= layout.extents.min_x - 1 and player_pos.x <= layout.extents.max_x + 1 and
-		   player_pos.y >= layout.extents.min_y - 1 and player_pos.y <= layout.extents.max_y + 1 and
-		   player_pos.z >= layout.extents.min_z - 1 and player_pos.z <= layout.extents.max_z + 1 then
-			move_player = true
-		end
-			
-		--move the array
-		digtron.move_digtron(facing, layout.all, layout.extents, nodes_dug)
-		local oldpos = {x=pos.x, y=pos.y, z=pos.z}
-		pos = digtron.find_new_pos(pos, facing)
-		if move_player then
-			clicker:moveto(digtron.find_new_pos(player_pos, facing), true)
-		end
-		
-		-- Start the delay before digtron can run again. Do this after moving the array or pos will be wrong.
-		minetest.get_meta(pos):set_string("waiting", "true")
-		minetest.get_node_timer(pos):start(digtron.cycle_time)
+		-- Start the delay before digtron can run again.
+		minetest.get_meta(newpos):set_string("waiting", "true")
+		minetest.get_node_timer(newpos):start(digtron.cycle_time)
 	end,
 	
 	on_timer = function(pos, elapsed)
