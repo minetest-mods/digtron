@@ -1,3 +1,147 @@
+DigtronLayout = {}
+DigtronLayout.__index = DigtronLayout
+
+-------------------------------------------------------------------------
+-- Creation
+
+local get_node_image = function(pos, node)
+	local node_image = {node=node, pos={x=pos.x, y=pos.y, z=pos.z}}
+	node_image.paramtype2 = minetest.registered_nodes[node.name].paramtype2
+	local meta = minetest.get_meta(pos)
+	node_image.meta = meta:to_table()
+	
+	-- Record what kind of thing we've got in a builder node so its facing can be rotated properly
+	if minetest.get_item_group(node.name, "digtron") == 4 then
+		local build_item = node_image.meta.inventory.main[1]
+		if build_item ~= "" then
+			local build_item_def = minetest.registered_nodes[ItemStack(build_item):get_name()]
+			node_image.build_item_paramtype2 = build_item_def.paramtype2
+		end
+	end
+	return node_image
+end
+
+function DigtronLayout.create(pos, player)
+	local self = {}
+	setmetatable(self,DigtronLayout)
+
+	--initialize. We're assuming that the start position is a controller digtron, should be a safe assumption since only the controller node should call this
+	self.traction = 0
+	self.all = {}
+	self.inventories = {}
+	self.fuelstores = {}
+	self.diggers = {}
+	self.builders = {}
+	self.extents = {}
+	self.water_touching = false
+	self.lava_touching = false
+	self.protected = Pointset.create() -- if any nodes we look at are protected, make note of that. That way we don't need to keep re-testing protection state later.
+	self.old_pos_pointset = Pointset.create() -- For tracking original location of nodes if we do transformations on the Digtron
+	self.nodes_dug = Pointset.create() -- For tracking adjacent nodes that will have been dug by digger heads in future
+	self.contains_protected_node = false -- used to indicate if at least one node in this digtron array is protected from the player.
+	self.controller = {x=pos.x, y=pos.y, z=pos.z} 	--Make a deep copy of the pos parameter just in case the calling code wants to play silly buggers with it
+
+	table.insert(self.all, get_node_image(pos, minetest.get_node(pos))) -- We never visit the source node, so insert it into the all table a priori. Revisit this if a controller node is created that contains fuel or inventory or whatever.
+
+	self.extents.max_x = pos.x
+	self.extents.min_x = pos.x
+	self.extents.max_y = pos.y
+	self.extents.min_y = pos.y
+	self.extents.max_z = pos.z
+	self.extents.min_z = pos.z
+	
+	-- temporary pointsets used while searching
+	local to_test = Pointset.create()
+	local tested = Pointset.create()
+
+	tested:set(pos.x, pos.y, pos.z, true)
+	to_test:set(pos.x + 1, pos.y, pos.z, true)
+	to_test:set(pos.x - 1, pos.y, pos.z, true)
+	to_test:set(pos.x, pos.y + 1, pos.z, true)
+	to_test:set(pos.x, pos.y - 1, pos.z, true)
+	to_test:set(pos.x, pos.y, pos.z + 1, true)
+	to_test:set(pos.x, pos.y, pos.z - 1, true)
+	
+	if minetest.is_protected(pos, player:get_player_name()) and not minetest.check_player_privs(player, "protection_bypass") then
+		self.protected:set(pos.x, pos.y, pos.z, true)
+		self.contains_protected_node = true
+	end
+	
+	-- Do a loop on to_test positions, adding new to_test positions as we find digtron nodes. This is a flood fill operation
+	-- that follows node faces (no diagonals)
+	local testpos, _ = to_test:pop()
+	while testpos ~= nil do
+		tested:set(testpos.x, testpos.y, testpos.z, true) -- track nodes we've looked at to prevent infinite loops
+		local node = minetest.get_node(testpos)
+
+		if node.name == "ignore" then
+			--buildtron array is next to unloaded nodes, too dangerous to do anything. Abort.
+			return nil
+		end
+		
+		if minetest.get_item_group(node.name, "water") ~= 0 then
+			self.water_touching = true
+		elseif minetest.get_item_group(node.name, "lava") ~= 0 then
+			self.lava_touching = true
+			if digtron.lava_impassible == true then
+				self.protected:set(testpos.x, testpos.y, testpos.z, true)
+			end
+		end
+		
+		local group_number = minetest.get_item_group(node.name, "digtron")
+		if group_number > 0 then
+			--found one. Add it to the digtrons output
+			local node_image = get_node_image(testpos, node)
+			
+			table.insert(self.all, node_image)
+
+			-- add a reference to this node's position to special node lists
+			if group_number == 2 then
+				table.insert(self.inventories, node_image)
+			elseif group_number == 3 then
+				table.insert(self.diggers, node_image)
+			elseif group_number == 4 then
+				table.insert(self.builders, node_image)
+			elseif group_number == 5 then
+				table.insert(self.fuelstores, node_image)
+			elseif group_number == 6 then
+				table.insert(self.inventories, node_image)
+				table.insert(self.fuelstores, node_image)
+			end
+			
+			if minetest.is_protected(pos, player:get_player_name()) and not minetest.check_player_privs(player, "protection_bypass") then
+				self.contains_protected_node = true
+			end
+			
+			-- update extents
+			self.extents.max_x = math.max(self.extents.max_x, testpos.x)
+			self.extents.min_x = math.min(self.extents.min_x, testpos.x)
+			self.extents.max_y = math.max(self.extents.max_y, testpos.y)
+			self.extents.min_y = math.min(self.extents.min_y, testpos.y)
+			self.extents.max_z = math.max(self.extents.max_z, testpos.z)
+			self.extents.min_z = math.min(self.extents.min_z, testpos.z)
+			
+			--queue up potential new test points adjacent to this digtron node
+			to_test:set_if_not_in(tested, testpos.x + 1, testpos.y, testpos.z, true)
+			to_test:set_if_not_in(tested, testpos.x - 1, testpos.y, testpos.z, true)
+			to_test:set_if_not_in(tested, testpos.x, testpos.y + 1, testpos.z, true)
+			to_test:set_if_not_in(tested, testpos.x, testpos.y - 1, testpos.z, true)
+			to_test:set_if_not_in(tested, testpos.x, testpos.y, testpos.z + 1, true)
+			to_test:set_if_not_in(tested, testpos.x, testpos.y, testpos.z - 1, true)
+		elseif minetest.registered_nodes[node.name].buildable_to ~= true then
+			-- Tracks whether the digtron is hovering in mid-air. If any part of the digtron array touches something solid it gains traction.
+			self.traction = self.traction + 1
+		end
+		
+		testpos, _ = to_test:pop()
+	end
+			
+	return self
+end
+
+------------------------------------------------------------------------
+-- Rotation
+
 local facedir_rotate = {
 	['x'] = {
 		[-1] = {[0]=4, 5, 6, 7, 22, 23, 20, 21, 0, 1, 2, 3, 13, 14, 15, 12, 19, 16, 17, 18, 10, 11, 8, 9}, -- 270 degrees
@@ -56,23 +200,6 @@ local rotate_pos = function(axis, direction, pos)
 	end
 end
 
-local get_node_image = function(pos, node)
-	local node_image = {node=node, pos={x=pos.x, y=pos.y, z=pos.z}}
-	node_image.paramtype2 = minetest.registered_nodes[node.name].paramtype2
-	local meta = minetest.get_meta(pos)
-	node_image.meta = meta:to_table()
-	
-	-- Record what kind of thing we've got in a builder node so its facing can be rotated properly
-	if minetest.get_item_group(node.name, "digtron") == 4 then
-		local build_item = node_image.meta.inventory.main[1]
-		if build_item ~= "" then
-			local build_item_def = minetest.registered_nodes[ItemStack(build_item):get_name()]
-			node_image.build_item_paramtype2 = build_item_def.paramtype2
-		end
-	end
-	return node_image
-end
-
 local rotate_node_image = function(node_image, origin, axis, direction, old_pos_pointset)
 	-- Facings
 	if node_image.paramtype2 == "wallmounted" then
@@ -102,7 +229,7 @@ local rotate_node_image = function(node_image, origin, axis, direction, old_pos_
 end
 
 -- Rotates 90 degrees widdershins around the axis defined by facedir (which in this case is pointing out the front of the node, so it needs to be converted into an upward-pointing axis internally)
-digtron.rotate_layout_image = function(layout_image, facedir)
+function DigtronLayout.rotate_layout_image(self, facedir)
 	-- To convert this into the direction the "top" of the axel node is pointing in:
 	-- 0, 1, 2, 3 == (0,1,0)
 	-- 4, 5, 6, 7 == (0,0,1)
@@ -121,14 +248,17 @@ digtron.rotate_layout_image = function(layout_image, facedir)
 	}
 	local params = top[math.floor(facedir/4)]
 	
-	for k, node_image in pairs(layout_image.all) do
-		rotate_node_image(node_image, layout_image.controller, params.axis, params.dir, layout_image.old_pos_pointset)
+	for k, node_image in pairs(self.all) do
+		rotate_node_image(node_image, self.controller, params.axis, params.dir, self.old_pos_pointset)
 	end
-	return layout_image
+	return self
 end
 
-digtron.move_layout_image = function(layout_image, facing, player_name)
-	local extents = layout_image.extents
+-----------------------------------------------------------------------------------------------
+-- Translation
+
+function DigtronLayout.move_layout_image(self, facing, player_name)
+	local extents = self.extents
 	local dir = digtron.facedir_to_dir_map[facing]
 	local increment
 	local filter
@@ -164,42 +294,45 @@ digtron.move_layout_image = function(layout_image, facing, player_name)
 		extents.min_y = extents.min_y + 1
 	end
 
-	for k, node_image in pairs(layout_image.all) do
-		layout_image.old_pos_pointset:set(node_image.pos.x, node_image.pos.y, node_image.pos.z, true)
+	for k, node_image in pairs(self.all) do
+		self.old_pos_pointset:set(node_image.pos.x, node_image.pos.y, node_image.pos.z, true)
 		node_image.pos[filter] = node_image.pos[filter] + increment
-		layout_image.nodes_dug:set(node_image.pos.x, node_image.pos.y, node_image.pos.z, false) -- we've moved a digtron node into this space, mark it so that we don't dig it.
+		self.nodes_dug:set(node_image.pos.x, node_image.pos.y, node_image.pos.z, false) -- we've moved a digtron node into this space, mark it so that we don't dig it.
 		-- TODO: log
 	end
 end
 
-digtron.can_write_layout_image = function(layout_image)
-	for k, node_image in pairs(layout_image.all) do
+-----------------------------------------------------------------------------------------------
+-- Writing to world
+
+function DigtronLayout.can_write_layout_image(self)
+	for k, node_image in pairs(self.all) do
 		-- check if the target node is buildable_to or is marked as part of the digtron that's moving
-		if not layout_image.old_pos_pointset:get(node_image.pos.x, node_image.pos.y, node_image.pos.z)
+		if not self.old_pos_pointset:get(node_image.pos.x, node_image.pos.y, node_image.pos.z)
 			and not minetest.registered_nodes[minetest.get_node(node_image.pos).name].buildable_to then
 			return false
 		--check if we're moving into a protected node
-		elseif layout_image.protected:get(node_image.pos) then
+		elseif self.protected:get(node_image.pos) then
 			return false
 		end
 	end
 	return true
 end
 
-digtron.write_layout_image = function(layout_image)
+function DigtronLayout.write_layout_image(self)
 	-- destroy the old digtron
-	local oldpos, _ = layout_image.old_pos_pointset:pop()
+	local oldpos, _ = self.old_pos_pointset:pop()
 	while oldpos ~= nil do
 		local old_def = minetest.registered_nodes[minetest.get_node(oldpos).name]
 		minetest.remove_node(oldpos)		
 		if old_def.after_dig_node ~= nil then
 			old_def.after_dig_node(oldpos)
 		end
-		oldpos, _ = layout_image.old_pos_pointset:pop()
+		oldpos, _ = self.old_pos_pointset:pop()
 	end		
 
 	-- create the new one
-	for k, node_image in pairs(layout_image.all) do
+	for k, node_image in pairs(self.all) do
 		minetest.add_node(node_image.pos, node_image.node)
 		minetest.get_meta(node_image.pos):from_table(node_image.meta)	
 
@@ -210,121 +343,3 @@ digtron.write_layout_image = function(layout_image)
 	end
 end
 
--- Similar to get_layout, but far more comprehensive. This produces a data structure that will allow the digtron to be rotated and then recreated in its entirety.
-digtron.get_layout_image = function(pos, player)
-
-	local image = {}
-	--initialize. We're assuming that the start position is a controller digtron, should be a safe assumption since only the controller node should call this
-	
-	image.traction = 0
-	image.all = {}
-	image.inventories = {}
-	image.fuelstores = {}
-	image.diggers = {}
-	image.builders = {}
-	image.extents = {}
-	image.water_touching = false
-	image.lava_touching = false
-	image.protected = Pointset.create() -- if any nodes we look at are protected, make note of that. That way we don't need to keep re-testing protection state later.
-	image.old_pos_pointset = Pointset.create() -- For tracking original location of nodes if we do transformations on the Digtron
-	image.nodes_dug = Pointset.create() -- For tracking adjacent nodes that will have been dug by digger heads in future
-	image.contains_protected_node = false -- used to indicate if at least one node in this digtron array is protected from the player.
-	image.controller = {x=pos.x, y=pos.y, z=pos.z} 	--Make a deep copy of the pos parameter just in case the calling code wants to play silly buggers with it
-
-	table.insert(image.all, get_node_image(pos, minetest.get_node(pos))) -- We never visit the source node, so insert it into the all table a priori. Revisit this if a controller node is created that contains fuel or inventory or whatever.
-
-	image.extents.max_x = pos.x
-	image.extents.min_x = pos.x
-	image.extents.max_y = pos.y
-	image.extents.min_y = pos.y
-	image.extents.max_z = pos.z
-	image.extents.min_z = pos.z
-	
-	-- temporary pointsets used while searching
-	local to_test = Pointset.create()
-	local tested = Pointset.create()
-
-	tested:set(pos.x, pos.y, pos.z, true)
-	to_test:set(pos.x + 1, pos.y, pos.z, true)
-	to_test:set(pos.x - 1, pos.y, pos.z, true)
-	to_test:set(pos.x, pos.y + 1, pos.z, true)
-	to_test:set(pos.x, pos.y - 1, pos.z, true)
-	to_test:set(pos.x, pos.y, pos.z + 1, true)
-	to_test:set(pos.x, pos.y, pos.z - 1, true)
-	
-	if minetest.is_protected(pos, player:get_player_name()) and not minetest.check_player_privs(player, "protection_bypass") then
-		image.protected:set(pos.x, pos.y, pos.z, true)
-		image.contains_protected_node = true
-	end
-	
-	-- Do a loop on to_test positions, adding new to_test positions as we find digtron nodes. This is a flood fill operation
-	-- that follows node faces (no diagonals)
-	local testpos, _ = to_test:pop()
-	while testpos ~= nil do
-		tested:set(testpos.x, testpos.y, testpos.z, true) -- track nodes we've looked at to prevent infinite loops
-		local node = minetest.get_node(testpos)
-
-		if node.name == "ignore" then
-			--buildtron array is next to unloaded nodes, too dangerous to do anything. Abort.
-			return nil
-		end
-		
-		if minetest.get_item_group(node.name, "water") ~= 0 then
-			image.water_touching = true
-		elseif minetest.get_item_group(node.name, "lava") ~= 0 then
-			image.lava_touching = true
-			if digtron.lava_impassible == true then
-				image.protected:set(testpos.x, testpos.y, testpos.z, true)
-			end
-		end
-		
-		local group_number = minetest.get_item_group(node.name, "digtron")
-		if group_number > 0 then
-			--found one. Add it to the digtrons output
-			local node_image = get_node_image(testpos, node)
-			
-			table.insert(image.all, node_image)
-
-			-- add a reference to this node's position to special node lists
-			if group_number == 2 then
-				table.insert(image.inventories, node_image)
-			elseif group_number == 3 then
-				table.insert(image.diggers, node_image)
-			elseif group_number == 4 then
-				table.insert(image.builders, node_image)
-			elseif group_number == 5 then
-				table.insert(image.fuelstores, node_image)
-			elseif group_number == 6 then
-				table.insert(image.inventories, node_image)
-				table.insert(image.fuelstores, node_image)
-			end
-			
-			if minetest.is_protected(pos, player:get_player_name()) and not minetest.check_player_privs(player, "protection_bypass") then
-				image.contains_protected_node = true
-			end
-			
-			-- update extents
-			image.extents.max_x = math.max(image.extents.max_x, testpos.x)
-			image.extents.min_x = math.min(image.extents.min_x, testpos.x)
-			image.extents.max_y = math.max(image.extents.max_y, testpos.y)
-			image.extents.min_y = math.min(image.extents.min_y, testpos.y)
-			image.extents.max_z = math.max(image.extents.max_z, testpos.z)
-			image.extents.min_z = math.min(image.extents.min_z, testpos.z)
-			
-			--queue up potential new test points adjacent to this digtron node
-			to_test:set_if_not_in(tested, testpos.x + 1, testpos.y, testpos.z, true)
-			to_test:set_if_not_in(tested, testpos.x - 1, testpos.y, testpos.z, true)
-			to_test:set_if_not_in(tested, testpos.x, testpos.y + 1, testpos.z, true)
-			to_test:set_if_not_in(tested, testpos.x, testpos.y - 1, testpos.z, true)
-			to_test:set_if_not_in(tested, testpos.x, testpos.y, testpos.z + 1, true)
-			to_test:set_if_not_in(tested, testpos.x, testpos.y, testpos.z - 1, true)
-		elseif minetest.registered_nodes[node.name].buildable_to ~= true then
-			-- Tracks whether the digtron is hovering in mid-air. If any part of the digtron array touches something solid it gains traction.
-			image.traction = image.traction + 1
-		end
-		
-		testpos, _ = to_test:pop()
-	end
-			
-	return image
-end

@@ -223,6 +223,7 @@ minetest.register_node("digtron:pusher", {
 		end
 
 		local newpos, status_text, return_code = digtron.execute_move_cycle(pos, clicker)
+		meta = minetest.get_meta(newpos)
 		meta:set_string("infotext", status_text)
 		
 		-- Start the delay before digtron can run again.

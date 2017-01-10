@@ -90,7 +90,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	local fuel_burning = meta:get_float("fuel_burning") -- get amount of burned fuel left over from last cycle
 	local status_text = string.format("Heat remaining in controller furnace: %d", fuel_burning)
 	
-	local layout = digtron.get_layout_image(pos, clicker)
+	local layout = DigtronLayout.create(pos, clicker)
 
 	local status_text, return_code = neighbour_test(layout, status_text)
 	if return_code ~= 0 then
@@ -241,8 +241,8 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	end
 	
 	--move the array
-	digtron.move_layout_image(layout, facing, clicker:get_player_name())
-	digtron.write_layout_image(layout)
+	layout:move_layout_image(facing, clicker:get_player_name())
+	layout:write_layout_image()
 	local oldpos = {x=pos.x, y=pos.y, z=pos.z}
 	pos = digtron.find_new_pos(pos, facing)
 	meta = minetest.get_meta(pos)
@@ -319,7 +319,7 @@ end
 -- Simplified version of the above method that only moves, and doesn't execute diggers or builders.
 digtron.execute_move_cycle = function(pos, clicker)
 	local meta = minetest.get_meta(pos)
-	local layout = digtron.get_layout_image(pos, clicker)
+	local layout = DigtronLayout.create(pos, clicker)
 
 	local status_text = ""
 	local status_text, return_code = neighbour_test(layout, status_text)
@@ -334,8 +334,8 @@ digtron.execute_move_cycle = function(pos, clicker)
 	local move_player = move_player_test(layout, clicker)
 	
 	-- test if any digtrons are obstructed by non-digtron nodes
-	digtron.move_layout_image(layout, facing, clicker:get_player_name())
-	local can_move = digtron.can_write_layout_image(layout, clicker)
+	layout:move_layout_image(facing, clicker:get_player_name())
+	local can_move = layout:can_write_layout_image(clicker)
 	
 	if not can_move then
 		-- mark this node as waiting, will clear this flag in digtron.cycle_time seconds
@@ -349,12 +349,11 @@ digtron.execute_move_cycle = function(pos, clicker)
 	minetest.sound_play("truck", {gain=1.0, pos=pos})
 		
 	--move the array
-	digtron.write_layout_image(layout)
+	layout:write_layout_image()
 	pos = digtron.find_new_pos(pos, facing)
 	if move_player then
 		local player_pos = clicker:getpos()
 		clicker:moveto(digtron.find_new_pos(player_pos, facing), true)
-	end
-	
+	end	
 	return pos, "", 0
 end
