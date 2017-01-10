@@ -4,7 +4,6 @@ digtron = {}
 
 dofile( minetest.get_modpath( "digtron" ) .. "/util_item_place_node.lua" ) -- separated out to avoid potential for license complexity
 dofile( minetest.get_modpath( "digtron" ) .. "/util_movement.lua" ) -- separated out simply for tidiness, there's some big code in there
-dofile( minetest.get_modpath( "digtron" ) .. "/util_layout.lua" ) -- separated out simply for tidiness, there's some big code in there
 dofile( minetest.get_modpath( "digtron" ) .. "/util_execute_cycle.lua" ) -- separated out simply for tidiness, there's some big code in there
 
 -- Apparently node_sound_metal_defaults is a newer thing, I ran into games using an older version of the default mod without it.
