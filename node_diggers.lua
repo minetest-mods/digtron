@@ -69,7 +69,7 @@ minetest.register_node("digtron:digger", {
 				length = 1.0,
 			},
 		},
-		"digtron_motor.png",
+		"digtron_plate.png^digtron_motor.png",
 	},
 
 	-- returns fuel_cost, item_produced
@@ -119,7 +119,7 @@ minetest.register_node("digtron:intermittent_digger", {
 				length = 1.0,
 			},
 		},
-		"digtron_intermittent_motor.png",
+		"digtron_plate.png^digtron_intermittent_motor.png",
 	},
 	
 	on_construct = intermittent_on_construct,
@@ -181,7 +181,7 @@ minetest.register_node("digtron:soft_digger", {
 				length = 1.0,
 			},
 		},
-		"digtron_motor.png^[colorize:#88880030",
+		"digtron_plate.png^digtron_motor.png^[colorize:#88880030",
 	},
 	
 	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate)
@@ -238,7 +238,7 @@ minetest.register_node("digtron:intermittent_soft_digger", {
 				length = 1.0,
 			},
 		},
-		"digtron_intermittent_motor.png^[colorize:#88880030",
+		"digtron_plate.png^digtron_intermittent_motor.png^[colorize:#88880030",
 	},
 	
 	on_construct = intermittent_on_construct,

@@ -27,7 +27,7 @@ minetest.register_node("digtron:controller", {
 		"digtron_plate.png",
 		"digtron_plate.png^[transformR180",
 		"digtron_plate.png",
-		"digtron_control.png",
+		"digtron_plate.png^digtron_control.png",
 	},
 	
 	drawtype = "nodebox",
@@ -133,7 +133,7 @@ minetest.register_node("digtron:auto_controller", {
 		"digtron_plate.png^[colorize:#88000030",
 		"digtron_plate.png^[transformR180^[colorize:#88000030",
 		"digtron_plate.png^[colorize:#88000030",
-		"digtron_control.png^[colorize:#88000030",
+		"digtron_plate.png^digtron_control.png^[colorize:#88000030",
 	},
 	
 	drawtype = "nodebox",
@@ -206,7 +206,7 @@ minetest.register_node("digtron:pusher", {
 		"digtron_plate.png^[colorize:#00880030",
 		"digtron_plate.png^[transformR180^[colorize:#00880030",
 		"digtron_plate.png^[colorize:#00880030",
-		"digtron_control.png^[colorize:#00880030",
+		"digtron_plate.png^digtron_control.png^[colorize:#00880030",
 	},
 	
 	drawtype = "nodebox",

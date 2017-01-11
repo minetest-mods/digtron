@@ -8,7 +8,7 @@ minetest.register_node("digtron:inventory",
 	sounds = digtron.metal_sounds,
 	paramtype2= "facedir",
 	is_ground_content = false,
-	tiles = {"digtron_inventory.png"},
+	tiles = {"digtron_plate.png^digtron_inventory.png"},
 
 	on_construct = function(pos)
 		local meta = minetest.get_meta(pos)
@@ -67,7 +67,7 @@ minetest.register_node("digtron:fuelstore",
 	sounds = digtron.metal_sounds,
 	paramtype2= "facedir",
 	is_ground_content = false,
-	tiles = {"digtron_fuelstore.png"},
+	tiles = {"digtron_plate.png^digtron_fuelstore.png"},
 
 	on_construct = function(pos)
 		local meta = minetest.get_meta(pos)
@@ -146,7 +146,7 @@ minetest.register_node("digtron:combined_storage",
 	sounds = digtron.metal_sounds,
 	paramtype2= "facedir",
 	is_ground_content = false,
-	tiles = {"digtron_combined_storage.png"},
+	tiles = {"digtron_plate.png^digtron_combined_storage.png"},
 
 	on_construct = function(pos)
 		local meta = minetest.get_meta(pos)
