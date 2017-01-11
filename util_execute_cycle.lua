@@ -247,8 +247,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	pos = digtron.find_new_pos(pos, facing)
 	meta = minetest.get_meta(pos)
 	if move_player then
-		local player_pos = clicker:getpos()
-		clicker:moveto(digtron.find_new_pos(player_pos, facing), true)
+		clicker:moveto(digtron.find_new_pos(clicker:getpos(), facing), true)
 	end
 	
 	
@@ -352,8 +351,7 @@ digtron.execute_move_cycle = function(pos, clicker)
 	layout:write_layout_image()
 	pos = digtron.find_new_pos(pos, facing)
 	if move_player then
-		local player_pos = clicker:getpos()
-		clicker:moveto(digtron.find_new_pos(player_pos, facing), true)
-	end	
+		clicker:moveto(digtron.find_new_pos(clicker:getpos(), facing), true)
+	end
 	return pos, "", 0
 end
