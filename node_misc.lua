@@ -34,7 +34,7 @@ minetest.register_node("digtron:light", {
 	description = "Digtron Light",
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 1},
 	drop = "digtron:light",
-	tiles = {"digtron_light.png"},
+	tiles = {"digtron_plate.png^digtron_light.png"},
 	drawtype = "nodebox",
 	paramtype = "light",
 	is_ground_content = false,

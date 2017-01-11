@@ -14,7 +14,7 @@ minetest.register_node("digtron:builder", {
 		"digtron_plate.png^[transformR270",
 		"digtron_plate.png",
 		"digtron_plate.png^[transformR180",
-		"digtron_builder.png",
+		"digtron_plate.png^digtron_builder.png",
 		"digtron_plate.png",
 	},
 	

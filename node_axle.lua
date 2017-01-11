@@ -8,12 +8,12 @@ minetest.register_node("digtron:axle", {
 	is_ground_content = false,
 	-- Aims in the +Z direction by default
 	tiles = {
-		"digtron_axel_top.png",
-		"digtron_axel_top.png",
-		"digtron_axel_side.png",
-		"digtron_axel_side.png",
-		"digtron_axel_side.png",
-		"digtron_axel_side.png",
+		"digtron_plate.png^digtron_axel_top.png",
+		"digtron_plate.png^digtron_axel_top.png",
+		"digtron_plate.png^digtron_axel_side.png",
+		"digtron_plate.png^digtron_axel_side.png",
+		"digtron_plate.png^digtron_axel_side.png",
+		"digtron_plate.png^digtron_axel_side.png",
 	},
 	
 	drawtype = "nodebox",
