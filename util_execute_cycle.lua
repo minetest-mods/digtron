@@ -247,7 +247,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	pos = digtron.find_new_pos(pos, facing)
 	meta = minetest.get_meta(pos)
 	if move_player then
-		clicker:moveto(digtron.find_new_pos(player_pos, facing), true)
+		clicker:moveto(digtron.find_new_pos(clicker:getpos(), facing), true)
 	end
 	
 	local building_fuel_cost = 0
@@ -359,7 +359,7 @@ digtron.execute_move_cycle = function(pos, clicker)
 	local oldpos = {x=pos.x, y=pos.y, z=pos.z}
 	pos = digtron.find_new_pos(pos, facing)
 	if move_player then
-		clicker:moveto(digtron.find_new_pos(player_pos, facing), true)
+		clicker:moveto(digtron.find_new_pos(clicker:getpos(), facing), true)
 	end
 	
 	return pos, "", 0

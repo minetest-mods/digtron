@@ -128,12 +128,12 @@ minetest.register_node("digtron:auto_controller", {
 	is_ground_content = false,
 	-- Aims in the +Z direction by default
 	tiles = {
-		"digtron_plate.png^[transformR90^[colorize:#88000030",
-		"digtron_plate.png^[transformR270^[colorize:#88000030",
-		"digtron_plate.png^[colorize:#88000030",
-		"digtron_plate.png^[transformR180^[colorize:#88000030",
-		"digtron_plate.png^[colorize:#88000030",
-		"digtron_plate.png^digtron_control.png^[colorize:#88000030",
+		"digtron_plate.png^[transformR90^digtron_auto_control_tint.png",
+		"digtron_plate.png^[transformR270^digtron_auto_control_tint.png",
+		"digtron_plate.png^digtron_auto_control_tint.png",
+		"digtron_plate.png^[transformR180^digtron_auto_control_tint.png",
+		"digtron_plate.png^digtron_auto_control_tint.png",
+		"digtron_plate.png^digtron_control.png^digtron_auto_control_tint.png",
 	},
 	
 	drawtype = "nodebox",
@@ -201,12 +201,12 @@ minetest.register_node("digtron:pusher", {
 	is_ground_content = false,
 	-- Aims in the +Z direction by default
 	tiles = {
-		"digtron_plate.png^[transformR90^[colorize:#00880030",
-		"digtron_plate.png^[transformR270^[colorize:#00880030",
-		"digtron_plate.png^[colorize:#00880030",
-		"digtron_plate.png^[transformR180^[colorize:#00880030",
-		"digtron_plate.png^[colorize:#00880030",
-		"digtron_plate.png^digtron_control.png^[colorize:#00880030",
+		"digtron_plate.png^[transformR90^digtron_pusher_tint.png",
+		"digtron_plate.png^[transformR270^digtron_pusher_tint.png",
+		"digtron_plate.png^digtron_pusher_tint.png",
+		"digtron_plate.png^[transformR180^digtron_pusher_tint.png",
+		"digtron_plate.png^digtron_pusher_tint.png",
+		"digtron_plate.png^digtron_control.png^digtron_pusher_tint.png",
 	},
 	
 	drawtype = "nodebox",
