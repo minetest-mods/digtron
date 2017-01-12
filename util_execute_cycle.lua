@@ -221,11 +221,6 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	-- All tests passed, ready to go for real!
 	minetest.sound_play("construction", {gain=1.0, pos=pos})
 
-	-- store or drop the products of the digger heads
-	for _, itemname in pairs(items_dropped) do
-		digtron.place_in_inventory(itemname, layout.inventories, pos)
-	end
-
 	-- if the player is standing within the array or next to it, move him too.
 	local move_player = move_player_test(layout, clicker)
 	
@@ -250,6 +245,11 @@ digtron.execute_dig_cycle = function(pos, clicker)
 		clicker:moveto(digtron.find_new_pos(clicker:getpos(), facing), true)
 	end
 	
+	-- store or drop the products of the digger heads
+	for _, itemname in pairs(items_dropped) do
+		minetest.debug("placing in inventory", itemname)
+		digtron.place_in_inventory(itemname, layout.inventories, oldpos)
+	end
 	
 	local building_fuel_cost = 0
 	local strange_failure = false

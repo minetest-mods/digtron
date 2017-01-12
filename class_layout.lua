@@ -15,7 +15,9 @@ local get_node_image = function(pos, node)
 		local build_item = node_image.meta.inventory.main[1]
 		if build_item ~= "" then
 			local build_item_def = minetest.registered_nodes[ItemStack(build_item):get_name()]
-			node_image.build_item_paramtype2 = build_item_def.paramtype2
+			if build_item_def ~= nil then
+				node_image.build_item_paramtype2 = build_item_def.paramtype2
+			end
 		end
 	end
 	return node_image
