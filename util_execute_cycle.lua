@@ -247,7 +247,6 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	
 	-- store or drop the products of the digger heads
 	for _, itemname in pairs(items_dropped) do
-		minetest.debug("placing in inventory", itemname)
 		digtron.place_in_inventory(itemname, layout.inventories, oldpos)
 	end
 	
