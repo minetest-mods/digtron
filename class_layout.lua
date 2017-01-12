@@ -309,12 +309,15 @@ end
 
 function DigtronLayout.can_write_layout_image(self)
 	for k, node_image in pairs(self.all) do
-		-- check if the target node is buildable_to or is marked as part of the digtron that's moving
-		if not self.old_pos_pointset:get(node_image.pos.x, node_image.pos.y, node_image.pos.z)
-			and not minetest.registered_nodes[minetest.get_node(node_image.pos).name].buildable_to then
-			return false
 		--check if we're moving into a protected node
-		elseif self.protected:get(node_image.pos) then
+		if self.protected:get(node_image.pos.x, node_image.pos.y, node_image.pos.z) then
+			return false
+		end
+		-- check if the target node is buildable_to or is marked as part of the digtron that's moving
+		if not (
+			self.old_pos_pointset:get(node_image.pos.x, node_image.pos.y, node_image.pos.z)
+			or minetest.registered_nodes[minetest.get_node(node_image.pos).name].buildable_to
+			) then
 			return false
 		end
 	end
