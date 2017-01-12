@@ -78,7 +78,8 @@ function DigtronLayout.create(pos, player)
 
 		if node.name == "ignore" then
 			--buildtron array is next to unloaded nodes, too dangerous to do anything. Abort.
-			return nil
+			self.all = nil
+			return self
 		end
 		
 		if minetest.get_item_group(node.name, "water") ~= 0 then
@@ -347,4 +348,3 @@ function DigtronLayout.write_layout_image(self)
 		end
 	end
 end
-
