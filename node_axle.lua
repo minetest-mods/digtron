@@ -36,10 +36,10 @@ minetest.register_node("digtron:axle", {
 			-- Been too soon since last time the digtron rotated.
 			return
 		end
-		local image = digtron.get_layout_image(pos, clicker)
-		digtron.rotate_layout_image(image, node.param2)
-		if digtron.can_write_layout_image(image, clicker) then
-			digtron.write_layout_image(image)
+		local image = DigtronLayout.create(pos, clicker)
+		image:rotate_layout_image(node.param2)
+		if image:can_write_layout_image() then
+			image:write_layout_image()
 			
 			minetest.sound_play("whirr", {gain=1.0, pos=pos})
 			meta = minetest.get_meta(pos)

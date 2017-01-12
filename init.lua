@@ -1,5 +1,6 @@
 dofile( minetest.get_modpath( "digtron" ) .. "/util.lua" )
-dofile( minetest.get_modpath( "digtron" ) .. "/pointset.lua" )
+dofile( minetest.get_modpath( "digtron" ) .. "/class_pointset.lua" )
+dofile( minetest.get_modpath( "digtron" ) .. "/class_layout.lua" )
 dofile( minetest.get_modpath( "digtron" ) .. "/entities.lua" )
 dofile( minetest.get_modpath( "digtron" ) .. "/node_misc.lua" ) -- contains structure and light nodes
 dofile( minetest.get_modpath( "digtron" ) .. "/node_storage.lua" ) -- contains inventory and fuel storage nodes
