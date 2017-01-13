@@ -233,7 +233,7 @@ end
 
 -- Rotates 90 degrees widdershins around the axis defined by facedir (which in this case is pointing out the front of the node, so it needs to be converted into an upward-pointing axis internally)
 function DigtronLayout.rotate_layout_image(self, facedir)
-	-- To convert this into the direction the "top" of the axel node is pointing in:
+	-- To convert this into the direction the "top" of the axle node is pointing in:
 	-- 0, 1, 2, 3 == (0,1,0)
 	-- 4, 5, 6, 7 == (0,0,1)
 	-- 8, 9, 10, 11 == (0,0,-1)

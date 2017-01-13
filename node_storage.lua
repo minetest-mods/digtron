@@ -230,5 +230,21 @@ minetest.register_node("digtron:combined_storage",
 	
 	after_place_node = (function() if minetest.get_modpath("pipeworks") then return pipeworks.after_place end end)(),
 	after_dig_node = (function() if minetest.get_modpath("pipeworks") then return pipeworks.after_dig end end)()
-	
 })
+
+-- Hopper compatibility
+if minetest.get_modpath("hopper") and hopper ~= nil and hopper.add_source ~= nil and hopper.add_destination ~= nil then
+	hopper.add_source("hopper:hopper", "digtron:inventory", "main")
+	hopper.add_source("hopper:hopper", "digtron:fuelstore", "fuel")
+	hopper.add_source("hopper:hopper", "digtron:combined_storage", "main")
+	hopper.add_destination("hopper:hopper", "digtron:inventory", "main")
+	hopper.add_destination("hopper:hopper", "digtron:fuelstore", "fuel")
+	hopper.add_destination("hopper:hopper", "digtron:combined_storage", "main")
+
+	hopper.add_source("hopper:hopper_side", "digtron:inventory", "main")
+	hopper.add_source("hopper:hopper_side", "digtron:fuelstore", "fuel")
+	hopper.add_source("hopper:hopper_side", "digtron:combined_storage", "main")
+	hopper.add_destination("hopper:hopper_side", "digtron:inventory", "main")
+	hopper.add_destination("hopper:hopper_side", "digtron:fuelstore", "fuel")
+	hopper.add_destination("hopper:hopper_side", "digtron:combined_storage", "fuel")
+end
