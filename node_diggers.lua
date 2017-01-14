@@ -85,7 +85,7 @@ minetest.register_node("digtron:digger", {
 	},
 
 	-- returns fuel_cost, item_produced
-	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate)
+	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate, lateral_dig)
 		local facing = minetest.get_node(pos).param2
 		local digpos = digtron.find_new_pos(pos, facing)
 
@@ -140,7 +140,11 @@ minetest.register_node("digtron:intermittent_digger", {
 	on_receive_fields = intermittent_on_receive_fields,
 
 	-- returns fuel_cost, item_produced
-	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate)
+	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate, lateral_dig)
+		if lateral_dig == true then
+			return 0, {}
+		end
+
 		local facing = minetest.get_node(pos).param2
 		local digpos = digtron.find_new_pos(pos, facing)
 
@@ -199,7 +203,7 @@ minetest.register_node("digtron:soft_digger", {
 		"digtron_plate.png^digtron_motor.png^[colorize:#88880030",
 	},
 	
-	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate)
+	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate, lateral_dig)
 		local facing = minetest.get_node(pos).param2
 		local digpos = digtron.find_new_pos(pos, facing)
 		
@@ -256,7 +260,11 @@ minetest.register_node("digtron:intermittent_soft_digger", {
 	
 	on_receive_fields = intermittent_on_receive_fields,
 
-	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate)
+	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate, lateral_dig)
+		if lateral_dig == true then
+			return 0, {}
+		end
+
 		local facing = minetest.get_node(pos).param2
 		local digpos = digtron.find_new_pos(pos, facing)
 		
@@ -328,7 +336,7 @@ minetest.register_node("digtron:dual_digger", {
 	},
 
 	-- returns fuel_cost, items_produced
-	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate)
+	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate, lateral_dig)
 		local facing = minetest.get_node(pos).param2
 		local digpos = digtron.find_new_pos(pos, facing)
 		local digdown = digtron.find_new_pos_downward(pos, facing)
@@ -403,7 +411,7 @@ minetest.register_node("digtron:dual_soft_digger", {
 	},
 
 	-- returns fuel_cost, items_produced
-	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate)
+	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate, lateral_dig)
 		local facing = minetest.get_node(pos).param2
 		local digpos = digtron.find_new_pos(pos, facing)
 		local digdown = digtron.find_new_pos_downward(pos, facing)

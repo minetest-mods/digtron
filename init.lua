@@ -80,3 +80,33 @@ minetest.register_lbm({
 		)		
 	end
 })
+
+minetest.register_lbm({
+	name = "digtron:autocontroller_lateral_upgrade",
+	nodenames = {"digtron:auto_controller"},
+	action = function(pos, node)
+		local meta = minetest.get_meta(pos)
+		local cycles = meta:get_int("offset")
+		meta:set_int("cycles", cycles)
+		meta:set_int("offset", 0)
+		meta:set_int("slope", 0)
+		meta:set_string("formspec",
+			"size[3.5,2]" ..
+			default.gui_bg ..
+			default.gui_bg_img ..
+			default.gui_slots ..
+			"field[0.5,0.8;1,0.1;cycles;Cycles;${cycles}]" ..
+			"tooltip[cycles;When triggered, this controller will try to run for the given number of cycles. The cycle count will decrement as it runs, so if it gets halted by a problem you can fix the problem and restart.]" ..
+			"button_exit[1.2,0.5;1,0.1;set;Set]" ..
+			"tooltip[set;Saves the cycle setting without starting the controller running]" ..
+			"button_exit[2.2,0.5;1,0.1;execute;Set &\nExecute]" ..
+			"tooltip[execute;Begins executing the given number of cycles]" ..
+			"field[0.5,2.0;1,0.1;slope;Slope;${slope}]" ..
+			"tooltip[slope;For diagonal digging. After every X nodes the auto controller moves forward, the controller will add an additional cycle moving the digtron laterally in the direction of the arrows on the side of this controller. Set to 0 for no lateral digging.]" ..
+			"field[1.5,2.0;1,0.1;offset;Offset;${offset}]" ..
+			"tooltip[offset;Sets the offset of the lateral motion defined in the Slope field. Note: this offset is relative to the controller's location. The controller will move down when it reaches the indicated point.]" ..
+			"field[2.5,2.0;1,0.1;period;Delay;${period}]" ..
+			"tooltip[period;Number of seconds to wait between each cycle]"
+		)		
+	end
+})

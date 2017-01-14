@@ -19,16 +19,18 @@ digtron.find_new_pos = function(pos, facing)
 	return vector.add(pos, dir)
 end
 
-digtron.find_new_pos_downward = function(pos, facing)
-	local downdir = (
+digtron.facedir_to_down_dir = function(facing)
+	return (
 		{[0]={x=0, y=-1, z=0},
 		{x=0, y=0, z=-1},
 		{x=0, y=0, z=1},
 		{x=-1, y=0, z=0},
 		{x=1, y=0, z=0},
 		{x=0, y=1, z=0}})[math.floor(facing/4)]
-	return vector.add(pos, downdir)
+end
 
+digtron.find_new_pos_downward = function(pos, facing)
+	return vector.add(pos, digtron.facedir_to_down_dir(facing))
 end
 
 digtron.mark_diggable = function(pos, nodes_dug)

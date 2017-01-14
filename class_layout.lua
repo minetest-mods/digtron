@@ -260,48 +260,20 @@ end
 -----------------------------------------------------------------------------------------------
 -- Translation
 
-function DigtronLayout.move_layout_image(self, facing, player_name)
+function DigtronLayout.move_layout_image(self, dir)
 	local extents = self.extents
-	local dir = digtron.facedir_to_dir_map[facing]
-	local increment
-	local filter
-	if dir == 1 then -- z+
-		filter = "z"
-		increment = 1
-		extents.max_z = extents.max_z + 1
-		extents.min_z = extents.min_z + 1
-	elseif dir == 2 then -- x+
-		filter = "x"
-		increment = 1
-		extents.max_x = extents.max_x + 1
-		extents.min_x = extents.min_x + 1
-	elseif dir == 3 then -- z-
-		filter = "z"
-		increment = -1
-		extents.max_z = extents.max_z - 1
-		extents.min_z = extents.min_z - 1
-	elseif dir == 4 then -- x-
-		filter = "x"
-		increment = -1
-		extents.max_x = extents.max_x - 1
-		extents.min_x = extents.min_x - 1
-	elseif dir == 5 then -- y-
-		filter = "y"
-		increment = -1
-		extents.max_y = extents.max_y - 1
-		extents.min_y = extents.min_y - 1
-	elseif dir == 6 then -- y+
-		filter = "y"
-		increment = 1
-		extents.max_y = extents.max_y + 1
-		extents.min_y = extents.min_y + 1
-	end
-
+	
+	extents.max_x = extents.max_x + dir.x
+	extents.min_x = extents.min_x + dir.x
+	extents.max_y = extents.max_y + dir.y
+	extents.min_y = extents.min_y + dir.y
+	extents.max_z = extents.max_z + dir.z
+	extents.min_z = extents.min_z + dir.z
+	
 	for k, node_image in pairs(self.all) do
 		self.old_pos_pointset:set(node_image.pos.x, node_image.pos.y, node_image.pos.z, true)
-		node_image.pos[filter] = node_image.pos[filter] + increment
+		node_image.pos = vector.add(node_image.pos, dir)
 		self.nodes_dug:set(node_image.pos.x, node_image.pos.y, node_image.pos.z, false) -- we've moved a digtron node into this space, mark it so that we don't dig it.
-		-- TODO: log
 	end
 end
 
@@ -325,14 +297,17 @@ function DigtronLayout.can_write_layout_image(self)
 	return true
 end
 
-function DigtronLayout.write_layout_image(self)
+function DigtronLayout.write_layout_image(self, player)
 	-- destroy the old digtron
 	local oldpos, _ = self.old_pos_pointset:pop()
 	while oldpos ~= nil do
-		local old_def = minetest.registered_nodes[minetest.get_node(oldpos).name]
-		minetest.remove_node(oldpos)		
+		local old_node = minetest.get_node(oldpos)
+		local old_meta = minetest.get_meta(oldpos)
+		local old_def = minetest.registered_nodes[old_node.name]
+		minetest.remove_node(oldpos)
+		minetest.log("action", string.format("%s removes Digtron component %s at (%d, %d, %d)", player:get_player_name(), old_node.name, oldpos.x, oldpos.y, oldpos.z))
 		if old_def.after_dig_node ~= nil then
-			old_def.after_dig_node(oldpos)
+			old_def.after_dig_node(oldpos, old_node, old_meta, player)
 		end
 		oldpos, _ = self.old_pos_pointset:pop()
 	end		
@@ -340,11 +315,12 @@ function DigtronLayout.write_layout_image(self)
 	-- create the new one
 	for k, node_image in pairs(self.all) do
 		minetest.add_node(node_image.pos, node_image.node)
-		minetest.get_meta(node_image.pos):from_table(node_image.meta)	
+		minetest.get_meta(node_image.pos):from_table(node_image.meta)
+		minetest.log("action", string.format("%s adds Digtron component %s at (%d, %d, %d)", player:get_player_name(), node_image.node.name, node_image.pos.x, node_image.pos.y, node_image.pos.z))
 
 		local new_def = minetest.registered_nodes[node_image.node.name]
 		if new_def.after_place_node ~= nil then
-			new_def.after_place_node(node_image.pos)
+			new_def.after_place_node(node_image.pos, player)
 		end
 	end
 end
