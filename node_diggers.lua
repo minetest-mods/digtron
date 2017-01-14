@@ -9,6 +9,18 @@ local digger_nodebox = {
 	{-0.25, -0.25, -0.5, 0.25, 0.25, 0}, -- Drive
 }
 
+local dual_digger_nodebox = {
+	{-0.5, -0.4375, 0, 0.5, 0.5, 0.4375}, -- Block
+	{-0.4375, -0.3125, 0.4375, 0.4375, 0.3125, 0.5}, -- Cutter1
+	{-0.3125, -0.4375, 0.4375, 0.3125, 0.4375, 0.5}, -- Cutter2
+	{-0.5, 0, -0.125, 0.5, 0.125, 0}, -- BackFrame1
+	{-0.25, 0, -0.5, 0.25, 0.25, 0}, -- Drive
+	{-0.25, 0.25, -0.25, 0.25, 0.5, 0}, -- Upper_Drive
+	{-0.5, -0.4375, -0.5, 0.5, 0, 0.4375}, -- Lower_Block
+	{-0.3125, -0.5, -0.4375, 0.3125, -0.4375, 0.4375}, -- Lower_Cutter_1
+	{-0.4375, -0.5, -0.3125, 0.4375, -0.4375, 0.3125}, -- Lower_Cutter_2
+}
+
 local intermittent_on_construct = function(pos)
     local meta = minetest.get_meta(pos)
     meta:set_string("formspec",
@@ -78,14 +90,15 @@ minetest.register_node("digtron:digger", {
 		local digpos = digtron.find_new_pos(pos, facing)
 
 		if protected_nodes:get(digpos.x, digpos.y, digpos.z) then
-			return 0, nil
+			return 0, {}
 		end
 		
 		return digtron.mark_diggable(digpos, nodes_dug)
 	end,
 	
-	damage_creatures = function(player, pos, targetpos, controlling_coordinate)
-		digtron.damage_creatures(player, targetpos, 8)
+	damage_creatures = function(player, pos, controlling_coordinate)
+		local facing = minetest.get_node(pos).param2
+		digtron.damage_creatures(player, digtron.find_new_pos(pos, facing), 8)
 	end,
 })
 
@@ -132,18 +145,20 @@ minetest.register_node("digtron:intermittent_digger", {
 		local digpos = digtron.find_new_pos(pos, facing)
 
 		if protected_nodes:get(digpos.x, digpos.y, digpos.z) then
-			return 0, nil
+			return 0, {}
 		end
 		
 		local meta = minetest.get_meta(pos)
 		if (digpos[controlling_coordinate] + meta:get_int("offset")) % meta:get_int("period") ~= 0 then
-			return 0, nil
+			return 0, {}
 		end
 		
 		return digtron.mark_diggable(digpos, nodes_dug)
 	end,
 	
-	damage_creatures = function(player, pos, targetpos, controlling_coordinate)
+	damage_creatures = function(player, pos, controlling_coordinate)
+		local facing = minetest.get_node(pos).param2
+		local targetpos = digtron.find_new_pos(pos, facing)
 		local meta = minetest.get_meta(pos)
 		if (targetpos[controlling_coordinate] + meta:get_int("offset")) % meta:get_int("period") == 0 then
 			digtron.damage_creatures(player, targetpos, 8)
@@ -189,23 +204,19 @@ minetest.register_node("digtron:soft_digger", {
 		local digpos = digtron.find_new_pos(pos, facing)
 		
 		if protected_nodes:get(digpos.x, digpos.y, digpos.z) then
-			return 0, nil
+			return 0, {}
 		end
-		
-		local target_node = minetest.get_node(digpos)
-		if  minetest.get_item_group(target_node.name, "crumbly") ~= 0 or
-			minetest.get_item_group(target_node.name, "choppy") ~= 0 or
-			minetest.get_item_group(target_node.name, "snappy") ~= 0 or
-			minetest.get_item_group(target_node.name, "oddly_breakable_by_hand") ~= 0 or
-			minetest.get_item_group(target_node.name, "fleshy") ~= 0 then
+			
+		if digtron.is_soft_material(digpos) then
 			return digtron.mark_diggable(digpos, nodes_dug)
 		end
 		
-		return 0, nil
+		return 0, {}
 	end,
 
-	damage_creatures = function(player, pos, targetpos, controlling_coordinate)
-		digtron.damage_creatures(player, targetpos, 4)
+	damage_creatures = function(player, pos, controlling_coordinate)
+		local facing = minetest.get_node(pos).param2
+		digtron.damage_creatures(player, digtron.find_new_pos(pos, facing), 4)
 	end,
 })
 
@@ -250,30 +261,177 @@ minetest.register_node("digtron:intermittent_soft_digger", {
 		local digpos = digtron.find_new_pos(pos, facing)
 		
 		if protected_nodes:get(digpos.x, digpos.y, digpos.z) then
-			return 0, nil
+			return 0, {}
 		end
 		
 		local meta = minetest.get_meta(pos)
 		if (digpos[controlling_coordinate] + meta:get_int("offset")) % meta:get_int("period") ~= 0 then
-			return 0, nil
+			return 0, {}
 		end
 		
-		local target_node = minetest.get_node(digpos)
-		if  minetest.get_item_group(target_node.name, "crumbly") ~= 0 or
-			minetest.get_item_group(target_node.name, "choppy") ~= 0 or
-			minetest.get_item_group(target_node.name, "snappy") ~= 0 or
-			minetest.get_item_group(target_node.name, "oddly_breakable_by_hand") ~= 0 or
-			minetest.get_item_group(target_node.name, "fleshy") ~= 0 then
+		if digtron.is_soft_material(digpos) then
 			return digtron.mark_diggable(digpos, nodes_dug)
 		end
 		
-		return 0, nil
+		return 0, {}
 	end,
 
-	damage_creatures = function(player, pos, targetpos, controlling_coordinate)
+	damage_creatures = function(player, pos, controlling_coordinate)
 		local meta = minetest.get_meta(pos)
+		local facing = minetest.get_node(pos).param2
+		local targetpos = digtron.find_new_pos(pos, facing)		
 		if (targetpos[controlling_coordinate] + meta:get_int("offset")) % meta:get_int("period") == 0 then
 			digtron.damage_creatures(player, targetpos, 4)
 		end
+	end,
+})
+
+-- Digs out nodes that are "in front" of the digger head and "below" the digger head (can be rotated).
+minetest.register_node("digtron:dual_digger", {
+	description = "Dual Digger Head",
+	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 3},
+	drop = "digtron:dual_digger",
+	sounds = digtron.metal_sounds,
+	paramtype = "light",
+	paramtype2= "facedir",
+	is_ground_content = false,	
+	drawtype="nodebox",
+	node_box = {
+		type = "fixed",
+		fixed = dual_digger_nodebox,
+	},
+	
+	-- Aims in the +Z and -Y direction by default
+	tiles = {
+		"digtron_plate.png^digtron_motor.png",
+		{
+			name = "digtron_digger_yb.png",
+			animation = {
+				type = "vertical_frames",
+				aspect_w = 16,
+				aspect_h = 16,
+				length = 1.0,
+			},
+		},
+		"digtron_plate.png",
+		"digtron_plate.png^[transformR180",
+		{
+			name = "digtron_digger_yb.png",
+			animation = {
+				type = "vertical_frames",
+				aspect_w = 16,
+				aspect_h = 16,
+				length = 1.0,
+			},
+		},
+		"digtron_plate.png^digtron_motor.png",
+	},
+
+	-- returns fuel_cost, items_produced
+	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate)
+		local facing = minetest.get_node(pos).param2
+		local digpos = digtron.find_new_pos(pos, facing)
+		local digdown = digtron.find_new_pos_downward(pos, facing)
+
+		local items = {}
+		local cost = 0
+		
+		if protected_nodes:get(digpos.x, digpos.y, digpos.z) ~= true then
+			local forward_cost, forward_items = digtron.mark_diggable(digpos, nodes_dug)
+			for _, item in pairs(forward_items) do
+				table.insert(items, item)
+			end
+			cost = cost + forward_cost
+		end
+		if protected_nodes:get(digdown.x, digdown.y, digdown.z) ~= true then
+			local down_cost, down_items = digtron.mark_diggable(digdown, nodes_dug)
+			for _, item in pairs(down_items) do
+				table.insert(items, item)
+			end
+			cost = cost + down_cost
+		end
+		
+		return cost, items
+	end,
+	
+	damage_creatures = function(player, pos, controlling_coordinate)
+		local facing = minetest.get_node(pos).param2
+		digtron.damage_creatures(player, digtron.find_new_pos(pos, facing), 8)
+		digtron.damage_creatures(player, digtron.find_new_pos_downward(pos, facing), 8)
+	end,
+})
+
+-- Digs out soft nodes that are "in front" of the digger head and "below" the digger head (can be rotated).
+minetest.register_node("digtron:dual_soft_digger", {
+	description = "Dual Soft Material Digger Head",
+	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 3},
+	drop = "digtron:dual_soft_digger",
+	sounds = digtron.metal_sounds,
+	paramtype = "light",
+	paramtype2= "facedir",
+	is_ground_content = false,	
+	drawtype="nodebox",
+	node_box = {
+		type = "fixed",
+		fixed = dual_digger_nodebox,
+	},
+	
+	-- Aims in the +Z and -Y direction by default
+	tiles = {
+		"digtron_plate.png^digtron_motor.png^[colorize:#88880030",
+		{
+			name = "digtron_digger_yb.png^[colorize:#88880030",
+			animation = {
+				type = "vertical_frames",
+				aspect_w = 16,
+				aspect_h = 16,
+				length = 1.0,
+			},
+		},
+		"digtron_plate.png^[colorize:#88880030",
+		"digtron_plate.png^[transformR180^[colorize:#88880030",
+		{
+			name = "digtron_digger_yb.png^[colorize:#88880030",
+			animation = {
+				type = "vertical_frames",
+				aspect_w = 16,
+				aspect_h = 16,
+				length = 1.0,
+			},
+		},
+		"digtron_plate.png^digtron_motor.png^[colorize:#88880030",
+	},
+
+	-- returns fuel_cost, items_produced
+	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate)
+		local facing = minetest.get_node(pos).param2
+		local digpos = digtron.find_new_pos(pos, facing)
+		local digdown = digtron.find_new_pos_downward(pos, facing)
+
+		local items = {}
+		local cost = 0
+		
+		if protected_nodes:get(digpos.x, digpos.y, digpos.z) ~= true and digtron.is_soft_material(digpos) then
+			local forward_cost, forward_items = digtron.mark_diggable(digpos, nodes_dug)
+			for _, item in pairs(forward_items) do
+				table.insert(items, item)
+			end
+			cost = cost + forward_cost
+		end
+		if protected_nodes:get(digdown.x, digdown.y, digdown.z) ~= true and digtron.is_soft_material(digdown) then
+			local down_cost, down_items = digtron.mark_diggable(digdown, nodes_dug)
+			for _, item in pairs(down_items) do
+				table.insert(items, item)
+			end
+			cost = cost + down_cost
+		end
+		
+		return cost, items
+	end,
+	
+	damage_creatures = function(player, pos, controlling_coordinate)
+		local facing = minetest.get_node(pos).param2
+		digtron.damage_creatures(player, digtron.find_new_pos(pos, facing), 4)
+		digtron.damage_creatures(player, digtron.find_new_pos_downward(pos, facing), 4)
 	end,
 })

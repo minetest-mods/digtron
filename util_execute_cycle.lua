@@ -116,7 +116,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 		local targetdef = minetest.registered_nodes[target.name]
 		if targetdef.execute_dig ~= nil then
 			local fuel_cost, dropped = targetdef.execute_dig(location.pos, layout.protected, layout.nodes_dug, controlling_coordinate)
-			if dropped ~= nil then
+			if table.getn(dropped) > 0 then
 				for _, itemname in pairs(dropped) do
 					table.insert(items_dropped, itemname)
 				end
@@ -230,7 +230,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 			local target = minetest.get_node(location.pos)
 			local targetdef = minetest.registered_nodes[target.name]
 			if targetdef.damage_creatures ~= nil then
-				targetdef.damage_creatures(clicker, location.pos, digtron.find_new_pos(location.pos, target.param2), controlling_coordinate)
+				targetdef.damage_creatures(clicker, location.pos, controlling_coordinate)
 			end
 		end
 	end

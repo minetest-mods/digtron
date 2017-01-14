@@ -16,11 +16,19 @@ end
 digtron.find_new_pos = function(pos, facing)
 	-- finds the point one node "forward", based on facing
 	local dir = minetest.facedir_to_dir(facing)
-	local newpos = {}
-	newpos.x = pos.x + dir.x
-	newpos.y = pos.y + dir.y
-	newpos.z = pos.z + dir.z
-	return newpos
+	return vector.add(pos, dir)
+end
+
+digtron.find_new_pos_downward = function(pos, facing)
+	local downdir = (
+		{[0]={x=0, y=-1, z=0},
+		{x=0, y=0, z=-1},
+		{x=0, y=0, z=1},
+		{x=-1, y=0, z=0},
+		{x=1, y=0, z=0},
+		{x=0, y=1, z=0}})[math.floor(facing/4)]
+	return vector.add(pos, downdir)
+
 end
 
 digtron.mark_diggable = function(pos, nodes_dug)
@@ -34,7 +42,7 @@ digtron.mark_diggable = function(pos, nodes_dug)
 	
 	-- prevent digtrons from being marked for digging.
 	if minetest.get_item_group(target.name, "digtron") ~= 0 then
-		return 0, nil
+		return 0, {}
 	end
 
 	local targetdef = minetest.registered_nodes[target.name]
@@ -65,7 +73,7 @@ digtron.mark_diggable = function(pos, nodes_dug)
 			return material_cost, minetest.get_node_drops(target.name, "")
 		end
 	end
-	return 0, nil
+	return 0, {}
 end
 	
 digtron.can_build_to = function(pos, protected_nodes, dug_nodes)
@@ -221,4 +229,15 @@ digtron.damage_creatures = function(player, pos, amount)
 		end
 	end
 end
-	
+
+digtron.is_soft_material = function(target)
+	local target_node = minetest.get_node(target)
+	if  minetest.get_item_group(target_node.name, "crumbly") ~= 0 or
+		minetest.get_item_group(target_node.name, "choppy") ~= 0 or
+		minetest.get_item_group(target_node.name, "snappy") ~= 0 or
+		minetest.get_item_group(target_node.name, "oddly_breakable_by_hand") ~= 0 or
+		minetest.get_item_group(target_node.name, "fleshy") ~= 0 then
+		return true
+	end
+	return false
+end

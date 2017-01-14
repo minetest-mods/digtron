@@ -175,6 +175,29 @@ minetest.register_craft({
 			}
 })
 
+minetest.register_craft({
+	output = "digtron:dual_soft_digger",
+	type = "shapeless",
+	recipe = {"digtron:soft_digger", "digtron:soft_digger"},
+})
+minetest.register_craft({
+	output = "digtron:dual_digger",
+	type = "shapeless",
+	recipe = {"digtron:digger", "digtron:digger"},
+})
+minetest.register_craft({
+	output = "digtron:soft_digger 2",
+	recipe = {
+			{"digtron:dual_soft_digger"},
+			}
+})
+minetest.register_craft({
+	output = "digtron:digger 2",
+	recipe = {
+			{"digtron:dual_digger"},
+			}
+})
+
 -- And some recycling reactions to get digtron cores out of the "cheap" parts:
 
 minetest.register_craft({
