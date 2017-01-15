@@ -8,6 +8,7 @@ dofile( minetest.get_modpath( "digtron" ) .. "/node_diggers.lua" ) -- contains a
 dofile( minetest.get_modpath( "digtron" ) .. "/node_builders.lua" ) -- contains all builders (there's just one currently)
 dofile( minetest.get_modpath( "digtron" ) .. "/node_controllers.lua" ) -- controllers
 dofile( minetest.get_modpath( "digtron" ) .. "/node_axle.lua" ) -- Rotation controller
+dofile( minetest.get_modpath( "digtron" ) .. "/crate.lua" ) -- Digtron portability support
 dofile( minetest.get_modpath( "digtron" ) .. "/recipes.lua" )
 
 digtron.creative_mode = false -- this causes digtrons to operate without consuming fuel or building materials.

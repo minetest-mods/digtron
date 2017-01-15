@@ -25,7 +25,7 @@ end
 
 function DigtronLayout.create(pos, player)
 	local self = {}
-	setmetatable(self,DigtronLayout)
+	setmetatable(self, DigtronLayout)
 
 	--initialize. We're assuming that the start position is a controller digtron, should be a safe assumption since only the controller node should call this
 	self.traction = 0
@@ -314,7 +314,7 @@ function DigtronLayout.write_layout_image(self, player)
 
 	-- create the new one
 	for k, node_image in pairs(self.all) do
-		minetest.add_node(node_image.pos, node_image.node)
+		minetest.set_node(node_image.pos, node_image.node)
 		minetest.get_meta(node_image.pos):from_table(node_image.meta)
 		minetest.log("action", string.format("%s adds Digtron component %s at (%d, %d, %d)", player:get_player_name(), node_image.node.name, node_image.pos.x, node_image.pos.y, node_image.pos.z))
 
@@ -323,4 +323,37 @@ function DigtronLayout.write_layout_image(self, player)
 			new_def.after_place_node(node_image.pos, player)
 		end
 	end
+end
+
+
+---------------------------------------------------------------------------------------------
+-- Serialization. Currently only serializes the data that is needed by the crate, upgrade this function if more is needed
+
+function DigtronLayout.serialize(self)
+	-- serialize can't handle ItemStack objects, convert them to strings.
+	for _, node_image in pairs(self.all) do
+		for k, inv in pairs(node_image.meta.inventory) do
+			for index, item in pairs(inv) do
+				inv[index] = item:to_string()
+			end
+		end
+	end
+
+	return minetest.serialize({controller=self.controller, all=self.all})
+end
+
+function DigtronLayout.deserialize(layout_string)
+	local self = {}
+	setmetatable(self, DigtronLayout)
+	
+	if not layout_string or layout_string == "" then
+		return nil
+	end
+	deserialized_layout = minetest.deserialize(layout_string)
+
+	self.all = deserialized_layout.all
+	self.controller = deserialized_layout.controller
+	self.old_pos_pointset = Pointset.create() -- needed by the write_layout method, leave empty
+
+	return self
 end
