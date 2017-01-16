@@ -3,7 +3,7 @@ minetest.register_craft({
 	recipe = {
 			{"","default:chest",""},
 			{"","digtron:digtron_core",""},
-			{"","default:mese",""}
+			{"","default:mese_crystal",""}
 			}
 })
 
