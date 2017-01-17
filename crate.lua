@@ -36,6 +36,7 @@ minetest.register_node("digtron:empty_crate", {
 		
 		-- Create the loaded crate node
 		minetest.set_node(pos, {name="digtron:loaded_crate", param1=node.param1, param2=node.param2})
+		minetest.sound_play("machine1", {gain=1.0, pos=pos})
 		
 		local meta = minetest.get_meta(pos)
 		meta:set_string("crated_layout", layout_string)
@@ -110,6 +111,7 @@ minetest.register_node("digtron:loaded_crate", {
 		
 		-- build digtron. Since the empty crate was included in the layout, that will overwrite this loaded crate and destroy it.
 		if layout then
+			minetest.sound_play("machine2", {gain=1.0, pos=pos})
 			layout:write_layout_image(sender)
 		end
 	end,
