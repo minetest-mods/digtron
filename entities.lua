@@ -50,6 +50,32 @@ minetest.register_entity("digtron:marker_vertical", {
 	end,
 })
 
+minetest.register_entity("digtron:marker_crate", {
+	initial_properties = {
+		visual = "cube",
+		visual_size = {x=1.05, y=1.05},
+		textures = {"digtron_crate.png", "digtron_crate.png", "digtron_crate.png", "digtron_crate.png", "digtron_crate.png", "digtron_crate.png"},
+		collisionbox = {-0.525, -0.525, -0.525, 0.525, 0.525, 0.525},
+		physical = false,
+	},
+
+	on_activate = function(self, staticdata)
+		minetest.after(5.0, 
+			function(self) 
+				self.object:remove()
+			end,
+			self)
+	end,
+	
+	on_rightclick=function(self, clicker)
+		self.object:remove()
+	end,
+	
+	on_punch = function(self, hitter)
+		self.object:remove()
+	end,
+})
+
 minetest.register_entity("digtron:builder_item", {
 
 	initial_properties = {

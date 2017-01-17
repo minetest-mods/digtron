@@ -2,11 +2,13 @@
 -- Note that inventories are digtron group 2.
 minetest.register_node("digtron:inventory",
 {
-	description = "Digtron Inventory Hopper",
+	description = "Digtron Inventory Storage",
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 2, tubedevice = 1, tubedevice_receiver = 1},
 	drop = "digtron:inventory",
 	sounds = digtron.metal_sounds,
 	paramtype2= "facedir",
+	drawtype = "nodebox",
+	paramtype = "light",
 	is_ground_content = false,
 	tiles = {"digtron_plate.png^digtron_inventory.png"},
 
@@ -61,11 +63,13 @@ minetest.register_node("digtron:inventory",
 -- Note that fuel stores are digtron group 5.
 minetest.register_node("digtron:fuelstore",
 {
-	description = "Digtron Fuel Hopper",
+	description = "Digtron Fuel Storage",
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 5, tubedevice = 1, tubedevice_receiver = 1},
 	drop = "digtron:fuelstore",
 	sounds = digtron.metal_sounds,
 	paramtype2= "facedir",
+	drawtype = "nodebox",
+	paramtype = "light",
 	is_ground_content = false,
 	tiles = {"digtron_plate.png^digtron_fuelstore.png"},
 
@@ -145,6 +149,8 @@ minetest.register_node("digtron:combined_storage",
 	drop = "digtron:combined_storage",
 	sounds = digtron.metal_sounds,
 	paramtype2= "facedir",
+	drawtype = "nodebox",
+	paramtype = "light",
 	is_ground_content = false,
 	tiles = {"digtron_plate.png^digtron_combined_storage.png"},
 

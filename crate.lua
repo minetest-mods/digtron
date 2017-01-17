@@ -50,8 +50,10 @@ local loaded_formspec =  "size[4,1.5]" ..
 	default.gui_bg_img ..
 	default.gui_slots ..
 	"field[0.3,0.5;4,0.5;title;Digtron Name;${title}]" ..
-	"button_exit[0.5,1.2;1,0.1;save;Save Title]" ..
+	"button_exit[0.5,1.2;1,0.1;save;Save\nTitle]" ..
 	"tooltip[save;Saves the title of this Digtron]" ..
+	"button_exit[1.5,1.2;1,0.1;show;Show\nNodes]" ..
+	"tooltip[save;Shows what nodes the packed Digtron will occupy if unpacked]" ..
 	"button_exit[2.5,1.2;1,0.1;unpack;Unpack]" ..
 	"tooltip[unpack;Attempts to unpack the Digtron on this location]"
 
@@ -71,22 +73,33 @@ minetest.register_node("digtron:loaded_crate", {
 	on_receive_fields = function(pos, formname, fields, sender)
 		local meta = minetest.get_meta(pos)
 		
-		if fields.unpack or fields.save then
+		if fields.unpack or fields.save or fields.show then
 			meta:set_string("title", fields.title)
 			meta:set_string("infotext", fields.title)
 		end
 		
-		if not fields.unpack then
+		
+		if not (fields.unpack or fields.show) then
 			return
 		end
 		
 		local layout_string = meta:get_string("crated_layout")
 		local layout = DigtronLayout.deserialize(layout_string)
-		
+
 		if layout == nil then
 			meta:set_string("infotext", meta:get_string("title") .. "\nUnable to read layout from crate metadata, regrettably this Digtron may be corrupted or lost.")
 			minetest.sound_play("buzzer", {gain=0.5, pos=pos})			
 			-- Something went horribly wrong
+			return
+		end
+		
+		for _, node_image in pairs(layout.all) do
+			if not vector.equals(pos, node_image.pos) then
+				minetest.add_entity(node_image.pos, "digtron:marker_crate")
+			end
+		end
+		
+		if not fields.unpack then
 			return
 		end
 		
