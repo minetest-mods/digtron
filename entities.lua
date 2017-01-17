@@ -60,6 +60,15 @@ minetest.register_entity("digtron:marker_crate", {
 	},
 
 	on_activate = function(self, staticdata)
+		local pos = self.object:getpos()
+		local node = minetest.get_node(pos)
+		local node_def = minetest.registered_nodes[node.name]
+		if not node_def.buildable_to then
+			local props = self.object:get_properties()
+			props.textures = {"digtron_no_entry.png", "digtron_no_entry.png", "digtron_no_entry.png", "digtron_no_entry.png", "digtron_no_entry.png", "digtron_no_entry.png"}
+			self.object:set_properties(props)
+		end
+		
 		minetest.after(5.0, 
 			function(self) 
 				self.object:remove()
