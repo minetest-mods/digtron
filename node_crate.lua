@@ -8,7 +8,9 @@ minetest.register_craft({
 })
 
 minetest.register_node("digtron:empty_crate", {
-	description = "Empty Digtron Crate",
+	description = "Digtron Crate (Empty)",
+	_doc_items_longdesc = digtron.doc.empty_crate_longdesc,
+    _doc_items_usagehelp = digtron.doc.empty_crate_usagehelp,
 	groups = {cracky = 3, oddly_breakable_by_hand=3},
 	drop = "digtron:empty_crate",
 	sounds = default.node_sound_wood_defaults(),
@@ -58,7 +60,9 @@ local loaded_formspec =  "size[4,1.5]" ..
 	"tooltip[unpack;Attempts to unpack the Digtron on this location]"
 
 minetest.register_node("digtron:loaded_crate", {
-	description = "Loaded Digtron Crate",
+	description = "Digtron Crate (Loaded)",
+	_doc_items_longdesc = digtron.doc.loaded_crate_longdesc,
+    _doc_items_usagehelp = digtron.doc.loaded_crate_usagehelp,
 	groups = {cracky = 3, oddly_breakable_by_hand=3, not_in_creative_inventory=1, digtron=1},
 	stack_max = 1,
 	sounds = default.node_sound_wood_defaults(),
@@ -78,7 +82,6 @@ minetest.register_node("digtron:loaded_crate", {
 			meta:set_string("infotext", fields.title)
 		end
 		
-		
 		if not (fields.unpack or fields.show) then
 			return
 		end
@@ -93,9 +96,23 @@ minetest.register_node("digtron:loaded_crate", {
 			return
 		end
 		
+		local protected_node = false
+		local obstructed_node = false
+		
+		local pos_diff = vector.subtract(pos, layout.controller)
+		layout.controller = pos
 		for _, node_image in pairs(layout.all) do
+			node_image.pos = vector.add(pos_diff, node_image.pos)
 			if not vector.equals(pos, node_image.pos) then
-				minetest.add_entity(node_image.pos, "digtron:marker_crate")
+				if minetest.is_protected(node_image.pos, sender:get_player_name()) and not minetest.check_player_privs(sender, "protection_bypass") then
+					protected_node = true
+					minetest.add_entity(node_image.pos, "digtron:marker_crate_bad")
+				elseif not minetest.registered_nodes[minetest.get_node(node_image.pos).name].buildable_to then
+					obstructed_node = true
+					minetest.add_entity(node_image.pos, "digtron:marker_crate_bad")
+				else
+					minetest.add_entity(node_image.pos, "digtron:marker_crate_good")
+				end
 			end
 		end
 		
@@ -103,30 +120,21 @@ minetest.register_node("digtron:loaded_crate", {
 			return
 		end
 		
-		local pos_diff = vector.subtract(pos, layout.controller)
-		layout.controller = pos
-		for _, node_image in pairs(layout.all) do
-			node_image.pos = vector.add(pos_diff, node_image.pos)
-			
-			if minetest.is_protected(node_image.pos, sender:get_player_name()) and not minetest.check_player_privs(sender, "protection_bypass") then
-				meta:set_string("infotext", meta:get_string("title") .. "\nUnable to deploy Digtron due to protected nodes in target area")
-				minetest.sound_play("buzzer", {gain=0.5, pos=pos})
-				return
-			end
-			
-			if not minetest.registered_nodes[minetest.get_node(node_image.pos).name].buildable_to
-			  and not vector.equals(layout.controller, node_image.pos) then
-				meta:set_string("infotext", meta:get_string("title") .. "\nUnable to deploy Digtron due to obstruction in target area")
-				minetest.sound_play("buzzer", {gain=0.5, pos=pos})
-				return
-			end
+		if protected_node then
+			meta:set_string("infotext", meta:get_string("title") .. "\nUnable to deploy Digtron due to protected nodes in target area")
+			minetest.sound_play("buzzer", {gain=0.5, pos=pos})
+			return
+		end
+		
+		if obstructed_node then
+			meta:set_string("infotext", meta:get_string("title") .. "\nUnable to deploy Digtron due to obstruction in target area")
+			minetest.sound_play("buzzer", {gain=0.5, pos=pos})
+			return
 		end
 		
 		-- build digtron. Since the empty crate was included in the layout, that will overwrite this loaded crate and destroy it.
-		if layout then
-			minetest.sound_play("machine2", {gain=1.0, pos=pos})
-			layout:write_layout_image(sender)
-		end
+		minetest.sound_play("machine2", {gain=1.0, pos=pos})
+		layout:write_layout_image(sender)
 	end,
 		
 	on_dig = function(pos, node, player)

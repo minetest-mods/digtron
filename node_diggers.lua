@@ -53,7 +53,9 @@ end,
 
 -- Digs out nodes that are "in front" of the digger head.
 minetest.register_node("digtron:digger", {
-	description = "Digger Head",
+	description = "Digtron Digger Head",
+	_doc_items_longdesc = digtron.doc.digger_longdesc,
+    _doc_items_usagehelp = digtron.doc.digger_usagehelp,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 3},
 	drop = "digtron:digger",
 	sounds = digtron.metal_sounds,
@@ -104,7 +106,9 @@ minetest.register_node("digtron:digger", {
 
 -- Digs out nodes that are "in front" of the digger head.
 minetest.register_node("digtron:intermittent_digger", {
-	description = "Intermittent Digger Head",
+	description = "Digtron Intermittent Digger Head",
+	_doc_items_longdesc = digtron.doc.intermittent_digger_longdesc,
+    _doc_items_usagehelp = digtron.doc.intermittent_digger_usagehelp,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 3},
 	drop = "digtron:intermittent_digger",
 	sounds = digtron.metal_sounds,
@@ -172,7 +176,9 @@ minetest.register_node("digtron:intermittent_digger", {
 
 -- A special-purpose digger to deal with stuff like sand and gravel in the ceiling. It always digs (no periodicity or offset), but it only digs falling_block nodes
 minetest.register_node("digtron:soft_digger", {
-	description = "Soft Material Digger Head",
+	description = "Digtron Soft Material Digger Head",
+	_doc_items_longdesc = digtron.doc.soft_digger_longdesc,
+    _doc_items_usagehelp = digtron.doc.soft_digger_usagehelp,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 3},
 	drop = "digtron:soft_digger",
 	sounds = digtron.metal_sounds,
@@ -225,7 +231,9 @@ minetest.register_node("digtron:soft_digger", {
 })
 
 minetest.register_node("digtron:intermittent_soft_digger", {
-	description = "Intermittent Soft Material Digger Head",
+	description = "Digtron Intermittent Soft Material Digger Head",
+	_doc_items_longdesc = digtron.doc.intermittent_soft_digger_longdesc,
+    _doc_items_usagehelp = digtron.doc.intermittent_soft_digger_usagehelp,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 3},
 	drop = "digtron:intermittent_soft_digger",
 	sounds = digtron.metal_sounds,
@@ -296,7 +304,9 @@ minetest.register_node("digtron:intermittent_soft_digger", {
 
 -- Digs out nodes that are "in front" of the digger head and "below" the digger head (can be rotated).
 minetest.register_node("digtron:dual_digger", {
-	description = "Dual Digger Head",
+	description = "Digtron Dual Digger Head",
+	_doc_items_longdesc = digtron.doc.dual_digger_longdesc,
+    _doc_items_usagehelp = digtron.doc.dual_digger_usagehelp,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 3},
 	drop = "digtron:dual_digger",
 	sounds = digtron.metal_sounds,
@@ -371,7 +381,9 @@ minetest.register_node("digtron:dual_digger", {
 
 -- Digs out soft nodes that are "in front" of the digger head and "below" the digger head (can be rotated).
 minetest.register_node("digtron:dual_soft_digger", {
-	description = "Dual Soft Material Digger Head",
+	description = "Digtron Dual Soft Material Digger Head",
+	_doc_items_longdesc = digtron.doc.dual_soft_digger_longdesc,
+    _doc_items_usagehelp = digtron.doc.dual_soft_digger_usagehelp,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 3},
 	drop = "digtron:dual_soft_digger",
 	sounds = digtron.metal_sounds,

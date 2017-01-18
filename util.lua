@@ -1,7 +1,5 @@
 -- A random assortment of methods used in various places in this mod.
 
-digtron = {}
-
 dofile( minetest.get_modpath( "digtron" ) .. "/util_item_place_node.lua" ) -- separated out to avoid potential for license complexity
 dofile( minetest.get_modpath( "digtron" ) .. "/util_execute_cycle.lua" ) -- separated out simply for tidiness, there's some big code in there
 

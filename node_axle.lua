@@ -1,5 +1,7 @@
 minetest.register_node("digtron:axle", {
-	description = "Digtron Rotation Unit",
+	description = "Digtron Rotation Axle",
+	_doc_items_longdesc = digtron.doc.axle_longdesc,
+    _doc_items_usagehelp = digtron.doc.axle_usagehelp,
 	groups = {cracky = 3, oddly_breakable_by_hand=3, digtron = 1},
 	drop = "digtron:axle",
 	sounds = digtron.metal_sounds,

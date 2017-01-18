@@ -1,8 +1,9 @@
 -- Storage buffer. Builder nodes draw from this inventory and digger nodes deposit into it.
 -- Note that inventories are digtron group 2.
-minetest.register_node("digtron:inventory",
-{
+minetest.register_node("digtron:inventory", {
 	description = "Digtron Inventory Storage",
+	_doc_items_longdesc = digtron.doc.inventory_longdesc,
+    _doc_items_usagehelp = digtron.doc.inventory_usagehelp,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 2, tubedevice = 1, tubedevice_receiver = 1},
 	drop = "digtron:inventory",
 	sounds = digtron.metal_sounds,
@@ -61,9 +62,10 @@ minetest.register_node("digtron:inventory",
 
 -- Fuel storage. Controller node draws fuel from here.
 -- Note that fuel stores are digtron group 5.
-minetest.register_node("digtron:fuelstore",
-{
+minetest.register_node("digtron:fuelstore", {
 	description = "Digtron Fuel Storage",
+	_doc_items_longdesc = digtron.doc.fuelstore_longdesc,
+    _doc_items_usagehelp = digtron.doc.fuelstore_usagehelp,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 5, tubedevice = 1, tubedevice_receiver = 1},
 	drop = "digtron:fuelstore",
 	sounds = digtron.metal_sounds,
@@ -142,9 +144,10 @@ minetest.register_node("digtron:fuelstore",
 })
 
 -- Combined storage. Group 6 has both an inventory and a fuel store
-minetest.register_node("digtron:combined_storage",
-{
+minetest.register_node("digtron:combined_storage", {
 	description = "Digtron Combined Storage",
+	_doc_items_longdesc = digtron.doc.combined_storage_longdesc,
+    _doc_items_usagehelp = digtron.doc.combined_storage_usagehelp,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 6, tubedevice = 1, tubedevice_receiver = 1},
 	drop = "digtron:combined_storage",
 	sounds = digtron.metal_sounds,

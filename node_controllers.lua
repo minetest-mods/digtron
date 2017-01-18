@@ -14,6 +14,8 @@ local controller_nodebox ={
 -- Master controller. Most complicated part of the whole system. Determines which direction a digtron moves and triggers all of its component parts.
 minetest.register_node("digtron:controller", {
 	description = "Digtron Control Unit",
+	_doc_items_longdesc = digtron.doc.controller_longdesc,
+    _doc_items_usagehelp = digtron.doc.controller_usagehelp,
 	groups = {cracky = 3, oddly_breakable_by_hand = 3, digtron = 1},
 	drop = "digtron:controller",
 	sounds = digtron.metal_sounds,
@@ -149,6 +151,8 @@ end
 
 minetest.register_node("digtron:auto_controller", {
 	description = "Digtron Automatic Control Unit",
+	_doc_items_longdesc = digtron.doc.auto_controller_longdesc,
+    _doc_items_usagehelp = digtron.doc.auto_controller_usagehelp,
 	groups = {cracky = 3, oddly_breakable_by_hand = 3, digtron = 1},
 	drop = "digtron:auto_controller",
 	sounds = digtron.metal_sounds,
@@ -253,6 +257,8 @@ minetest.register_node("digtron:auto_controller", {
 -- Handy for shoving a digtron to the side if it's been built a bit off.
 minetest.register_node("digtron:pusher", {
 	description = "Digtron Pusher Unit",
+	_doc_items_longdesc = digtron.doc.pusher_longdesc,
+    _doc_items_usagehelp = digtron.doc.pusher_usagehelp,
 	groups = {cracky = 3, oddly_breakable_by_hand=3, digtron = 1},
 	drop = "digtron:pusher",
 	sounds = digtron.metal_sounds,

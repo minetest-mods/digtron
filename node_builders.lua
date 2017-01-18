@@ -2,7 +2,9 @@
 
 -- Builds objects in the targeted node. This is a complicated beastie.
 minetest.register_node("digtron:builder", {
-	description = "Builder Unit",
+	description = "Digtron Builder Module",
+	_doc_items_longdesc = digtron.doc.builder_longdesc,
+    _doc_items_usagehelp = digtron.doc.builder_usagehelp,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 4},
 	drop = "digtron:builder",
 	sounds = digtron.metal_sounds,

@@ -1,6 +1,8 @@
 minetest.register_craftitem("digtron:digtron_core", {
 	description = "Digtron Core",
-	inventory_image = "digtron_core.png"
+	inventory_image = "digtron_core.png",
+	_doc_items_longdesc = digtron.doc.core_longdesc,
+    _doc_items_usagehelp = digtron.doc.core_usagehelp,
 })
 
 minetest.register_craft({
