@@ -236,6 +236,7 @@ minetest.register_node("digtron:builder", {
 					minetest.log("action", string.format("%s uses Digtron to build %s at (%d, %d, %d), displacing %s", player:get_player_name(), item_stack:get_name(), buildpos.x, buildpos.y, buildpos.z, oldnode.name))
 					--flag this node as *not* to be dug.
 					nodes_dug:set(buildpos.x, buildpos.y, buildpos.z, false)
+					digtron.award_item_built(item_stack:get_name(), player:get_player_name())
 					return true
 				else
 					--failed to build, target node probably obstructed. Put the item back in inventory.
