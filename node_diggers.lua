@@ -31,7 +31,7 @@ local intermittent_on_construct = function(pos)
 		"field[0.5,0.8;1,0.1;period;Periodicity;${period}]" ..
 		"tooltip[period;Digger will dig once every n steps. These steps are globally aligned, all diggers with the same period and offset will dig on the same location.]" ..
 		"field[1.5,0.8;1,0.1;offset;Offset;${offset}]" ..
-		"tooltip[offset;Offsets the start of periodicity counting by this amount. For example, a digger with period 2 and offset 0 digs every even-numbered node and one with period 2 and offset 1 digs every odd-numbered node.]" ..
+		"tooltip[offset;Offsets the start of periodicity counting by this amount. For example, a digger with period 2 and offset 0 digs every even-numbered block and one with period 2 and offset 1 digs every odd-numbered block.]" ..
 		"button_exit[2.2,0.5;1,0.1;set;Save]" ..
 		"tooltip[set;Saves settings]"
 	)

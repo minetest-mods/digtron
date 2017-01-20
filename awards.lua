@@ -168,14 +168,14 @@ awards.register_achievement("digtron_lava",{
 
 awards.register_achievement("digtron_size10",{
 	title = "Bigtron",
-	description = "Operated a Digtron with 10 or more component nodes.",
+	description = "Operated a Digtron with 10 or more component blocks.",
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^digtron_crate.png",
 })
 
 awards.register_achievement("digtron_size100",{
 	title = "Really Bigtron",
-	description = "Operated a Digtron with 100 or more component nodes.",
+	description = "Operated a Digtron with 100 or more component blocks.",
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^digtron_crate.png", -- TODO: Visually distinguish this from Bigtron
 })
@@ -280,28 +280,28 @@ awards.register_achievement("digtron_1000dirt_dug",{
 
 awards.register_achievement("digtron_1000_dug",{
 	title = "Digtron Miner",
-	description = "Excavate 1000 nodes using Digtrons",
+	description = "Excavate 1000 blocks using Digtrons",
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_tool_bronzepick.png^digtron_digger_yb_frame.png",
 })
 
 awards.register_achievement("digtron_10000_dug",{
 	title = "Digtron Expert Miner",
-	description = "Excavate 10,000 nodes using Digtrons",
+	description = "Excavate 10,000 blocks using Digtrons",
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_tool_steelpick.png^digtron_digger_yb_frame.png",
 })
 
 awards.register_achievement("digtron_100000_dug",{
 	title = "Digtron Master Miner",
-	description = "Excavate 100,000 nodes using Digtrons",
+	description = "Excavate 100,000 blocks using Digtrons",
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_tool_diamondpick.png^digtron_digger_yb_frame.png",
 })
 
 awards.register_achievement("digtron_1000000_dug",{
 	title = "DIGTRON MEGAMINER",
-	description = "Excavate over a million nodes using Digtrons!",
+	description = "Excavate over a million blocks using Digtrons!",
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_tool_mesepick.png^digtron_digger_yb_frame.png",
 })
@@ -364,14 +364,14 @@ awards.register_achievement("digtron_100gold_dug",{
 
 awards.register_achievement("digtron_1000_built",{
 	title = "Constructive Digging",
-	description = "Build 1,000 nodes with a Digtron",
+	description = "Build 1,000 blocks with a Digtron",
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^digtron_builder.png",
 })
 
 awards.register_achievement("digtron_10000_built",{
 	title = "Highly Constructive Digging",
-	description = "Build 10,000 nodes with a Digtron",
+	description = "Build 10,000 blocks with a Digtron",
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^digtron_axel_side.png^[transformR90^digtron_builder.png",
 })

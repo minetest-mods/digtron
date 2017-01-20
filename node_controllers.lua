@@ -82,7 +82,7 @@ local auto_formspec = "size[3.5,2]" ..
 	"button_exit[2.2,0.5;1,0.1;execute;Set &\nExecute]" ..
 	"tooltip[execute;Begins executing the given number of cycles]" ..
 	"field[0.5,2.0;1,0.1;slope;Slope;${slope}]" ..
-	"tooltip[slope;For diagonal digging. After every X nodes the auto controller moves forward, the controller will add an additional cycle moving the digtron laterally in the direction of the arrows on the side of this controller. Set to 0 for no lateral digging.]" ..
+	"tooltip[slope;For diagonal digging. After every X blocks the auto controller moves forward, the controller will add an additional cycle moving the digtron laterally in the direction of the arrows on the side of this controller. Set to 0 for no lateral digging.]" ..
 	"field[1.5,2.0;1,0.1;offset;Offset;${offset}]" ..
 	"tooltip[offset;Sets the offset of the lateral motion defined in the Slope field. Note: this offset is relative to the controller's location. The controller will move down when it reaches the indicated point.]" ..
 	"field[2.5,2.0;1,0.1;period;Delay;${period}]" ..

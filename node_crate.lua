@@ -24,7 +24,7 @@ minetest.register_node("digtron:empty_crate", {
 		if layout.contains_protected_node then
 			local meta = minetest.get_meta(pos)
 			minetest.sound_play("buzzer", {gain=0.5, pos=pos})
-			meta:set_string("infotext", "Digtron can't be packaged, it contains protected nodes")
+			meta:set_string("infotext", "Digtron can't be packaged, it contains protected blocks")
 			-- no stealing other peoples' digtrons
 			return
 		end
@@ -54,8 +54,8 @@ local loaded_formspec =  "size[4,1.5]" ..
 	"field[0.3,0.5;4,0.5;title;Digtron Name;${title}]" ..
 	"button_exit[0.5,1.2;1,0.1;save;Save\nTitle]" ..
 	"tooltip[save;Saves the title of this Digtron]" ..
-	"button_exit[1.5,1.2;1,0.1;show;Show\nNodes]" ..
-	"tooltip[save;Shows what nodes the packed Digtron will occupy if unpacked]" ..
+	"button_exit[1.5,1.2;1,0.1;show;Show\nBlocks]" ..
+	"tooltip[save;Shows which blocks the packed Digtron will occupy if unpacked]" ..
 	"button_exit[2.5,1.2;1,0.1;unpack;Unpack]" ..
 	"tooltip[unpack;Attempts to unpack the Digtron on this location]"
 
@@ -121,7 +121,7 @@ minetest.register_node("digtron:loaded_crate", {
 		end
 		
 		if protected_node then
-			meta:set_string("infotext", meta:get_string("title") .. "\nUnable to deploy Digtron due to protected nodes in target area")
+			meta:set_string("infotext", meta:get_string("title") .. "\nUnable to deploy Digtron due to protected blocks in target area")
 			minetest.sound_play("buzzer", {gain=0.5, pos=pos})
 			return
 		end

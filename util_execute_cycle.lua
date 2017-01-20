@@ -58,7 +58,7 @@ local function neighbour_test(layout, status_text)
 	if layout.traction * digtron.traction_factor < table.getn(layout.all) then
 		-- digtrons can't fly
 		minetest.sound_play("squeal", {gain=1.0, pos=layout.controller})
-		return string.format("Digtron has %d nodes but only enough traction to move %d nodes.\n", table.getn(layout.all), layout.traction * digtron.traction_factor)
+		return string.format("Digtron has %d blocks but only enough traction to move %d blocks.\n", table.getn(layout.all), layout.traction * digtron.traction_factor)
 			 .. status_text, 2
 	end
 
