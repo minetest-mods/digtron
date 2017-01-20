@@ -49,18 +49,18 @@ minetest.register_node("digtron:builder", {
 			default.gui_bg_img ..
 			default.gui_slots ..
 			"list[current_name;main;0.5,0;1,1;]" ..
---			"tooltip[main;Builder will build the type of block in this slot. Note that only one item needs to be placed here, to 'program' it. The builder will draw construction materials from the central inventory when building.]" ..
+--			"tooltip[main;Builder will build the type of block in this slot.\nNote that only one item needs to be placed here, to 'program' it.\nThe builder will draw construction materials from the central inventory when building.]" ..
 			"label[0.5,0.8;Block to build]" ..
 			"field[2.5,0.8;1,0.1;period;Periodicity;${period}]" ..
-			"tooltip[period;Builder will build once every n steps. These steps are globally aligned, so all builders with the same period and offset will build on the same location.]" ..
+			"tooltip[period;Builder will build once every n steps.\nThese steps are globally aligned, so all builders with the\nsame period and offset will build on the same location.]" ..
 			"field[3.5,0.8;1,0.1;offset;Offset;${offset}]" ..
-			"tooltip[offset;Offsets the start of periodicity counting by this amount. For example, a builder with period 2 and offset 0 builds every even-numbered block and one with period 2 and offset 1 builds every odd-numbered block.]" ..
+			"tooltip[offset;Offsets the start of periodicity counting by this amount.\nFor example, a builder with period 2 and offset 0 builds\nevery even-numbered block and one with period 2 and\noffset 1 builds every odd-numbered block.]" ..
 			"button_exit[4.2,0.5;1,0.1;set;Save &\nShow]" ..
 			"tooltip[set;Saves settings]" ..
 			"field[5.7,0.8;1,0.1;build_facing;Facing;${build_facing}]" ..
-			"tooltip[build_facing;Value from 0-23. Not all block types make use of this. Use the 'Read & Save' button to copy the facing of the block currently in the builder output location]" ..
+			"tooltip[build_facing;Value from 0-23. Not all block types make use of this.\nUse the 'Read & Save' button to copy the facing of the block\ncurrently in the builder output location]" ..
 			"button_exit[6.4,0.5;1,0.1;read;Read &\nSave]" ..
-			"tooltip[read;Reads the facing of the block currently in the build location, then saves all settings]" ..
+			"tooltip[read;Reads the facing of the block currently in the build location,\nthen saves all settings]" ..
 			"list[current_player;main;0,1.3;8,1;]" ..
 			"list[current_player;main;0,1.3;8,1;]" ..
 			default.get_hotbar_bg(0,1.3) ..

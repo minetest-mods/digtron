@@ -168,15 +168,15 @@ minetest.register_lbm({
 			default.gui_bg_img ..
 			default.gui_slots ..
 			"field[0.5,0.8;1,0.1;cycles;Cycles;${cycles}]" ..
-			"tooltip[cycles;When triggered, this controller will try to run for the given number of cycles. The cycle count will decrement as it runs, so if it gets halted by a problem you can fix the problem and restart.]" ..
+			"tooltip[cycles;When triggered, this controller will try to run for the given number of cycles.\nThe cycle count will decrement as it runs, so if it gets halted by a problem\nyou can fix the problem and restart.]" ..
 			"button_exit[1.2,0.5;1,0.1;set;Set]" ..
 			"tooltip[set;Saves the cycle setting without starting the controller running]" ..
 			"button_exit[2.2,0.5;1,0.1;execute;Set &\nExecute]" ..
 			"tooltip[execute;Begins executing the given number of cycles]" ..
 			"field[0.5,2.0;1,0.1;slope;Slope;${slope}]" ..
-			"tooltip[slope;For diagonal digging. After every X blocks the auto controller moves forward, the controller will add an additional cycle moving the digtron laterally in the direction of the arrows on the side of this controller. Set to 0 for no lateral digging.]" ..
+			"tooltip[slope;For diagonal digging. After every X nodes the auto controller moves forward,\nthe controller will add an additional cycle moving the digtron laterally in the\ndirection of the arrows on the side of this controller.\nSet to 0 for no lateral digging.]" ..
 			"field[1.5,2.0;1,0.1;offset;Offset;${offset}]" ..
-			"tooltip[offset;Sets the offset of the lateral motion defined in the Slope field. Note: this offset is relative to the controller's location. The controller will move down when it reaches the indicated point.]" ..
+			"tooltip[offset;Sets the offset of the lateral motion defined in the Slope field.\nNote: this offset is relative to the controller's location.\nThe controller will move down when it reaches the indicated point.]" ..
 			"field[2.5,2.0;1,0.1;period;Delay;${period}]" ..
 			"tooltip[period;Number of seconds to wait between each cycle]"
 		)		
