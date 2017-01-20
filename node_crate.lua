@@ -1,12 +1,3 @@
-minetest.register_craft({
-	output = "digtron:empty_crate",
-	recipe = {
-			{"","default:chest",""},
-			{"","digtron:digtron_core",""},
-			{"","default:mese_crystal",""}
-			}
-})
-
 minetest.register_node("digtron:empty_crate", {
 	description = "Digtron Crate (Empty)",
 	_doc_items_longdesc = digtron.doc.empty_crate_longdesc,

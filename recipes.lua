@@ -113,6 +113,15 @@ minetest.register_craft({
 			}
 })
 
+minetest.register_craft({
+	output = "digtron:empty_crate",
+	recipe = {
+			{"","default:chest",""},
+			{"","digtron:digtron_core",""},
+			{"","default:mese_crystal",""}
+			}
+})
+
 -- Structural
 
 minetest.register_craft({
