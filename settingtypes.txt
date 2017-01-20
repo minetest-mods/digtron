@@ -1,0 +1,27 @@
+#This causes digtrons to operate without consuming fuel or building materials.
+#It's a separate setting from regular creative mode.
+digtron_creative_mode (Digtron requires fuel) bool false
+#When true, lava counts as protected blocks.
+digtron_lava_impassible (Lava is impassible to Digtrons) bool true
+#When true, diggers deal damage to creatures when they trigger.
+digtron_damage_creatures (Digtrons cause damage) bool true
+#How many seconds a digtron waits between cycles.
+#Auto-controllers can make this wait longer, but cannot make it shorter.
+digtron_cycle_time (Minimum Digtron cycle time in seconds) float 1.0 0.0 60.0
+#How many Digtron blocks can be moved for each adjacent
+#solid block that the Digtron has traction against
+digtron_traction_factor (Digtron traction factor) float 3.0 0.0 1000.0
+#eg, stone.
+#In a default Minetest game one lump of coal provides 40.0 units of fuel.
+digtron_dig_cost_cracky (Digtron dig fuel cost for cracky blocks) float 1.0 0.0 100.0
+# eg, dirt, sand.
+#In a default Minetest game one lump of coal provides 40.0 units of fuel.
+digtron_dig_cost_crumbly (Digtron dig fuel cost for crumbly blocks) float 0.5 0.0 100.0
+#eg, wood.
+#In a default Minetest game one lump of coal provides 40.0 units of fuel.
+digtron_dig_cost_choppy (Digtron dig fuel cost for choppy blocks) float 0.75 0.0 100.0
+#Fuel cost to dig a block that doesn't fall into one of the other categories.
+#In a default Minetest game one lump of coal provides 40.0 units of fuel.
+digtron_dig_cost_default (Digtron fuel dig cost for other block types) float 0.5 0.0 100.0
+#How much fuel is required to build a block
+digtron_build_cost (Digtron fuel cost to build one block) float 1.0 0.0 100.0
