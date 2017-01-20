@@ -29,6 +29,8 @@ minetest.register_node("digtron:empty_crate", {
 			return
 		end
 
+		digtron.award_crate(layout, clicker:get_player_name())
+		
 		local layout_string = layout:serialize()
 		
 		-- destroy everything. Note that this includes the empty crate, which will be bundled up with the layout.

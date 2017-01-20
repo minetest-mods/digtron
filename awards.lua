@@ -2,6 +2,7 @@ if not minetest.get_modpath("awards") then
 	digtron.award_item_dug = function (items, player, count) end
 	digtron.award_layout = function (layout, player) end
 	digtron.award_item_built = function(item_name, player) end
+	digtron.award_crate = function (layout, player) end
 	return
 end
 ---------------------------------------------------------------------------
@@ -148,6 +149,20 @@ digtron.award_layout = function (layout, player)
 					end
 				end
 			end
+		end
+	end
+end
+
+digtron.award_crate = function (layout, player)
+	if layout == nil or player == nil or player == "" then
+		return
+	end
+
+	-- Note that we're testing >10 rather than >9 because this layout includes the crate node
+	if table.getn(layout.all) > 10 then
+		awards.unlock(player, "digtron_crate10")
+		if table.getn(layout.all) > 100 then
+			awards.unlock(player, "digtron_crate100")
 		end
 	end
 end
@@ -374,4 +389,25 @@ awards.register_achievement("digtron_10000_built",{
 	description = "Build 10,000 blocks with a Digtron",
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^digtron_axel_side.png^[transformR90^digtron_builder.png",
+})
+
+awards.register_achievement("digtron_water",{
+	title = "Deep Blue Digtron",
+	description = "Encountered water while operating a Digtron.",
+	background = "awards_bg_mining.png",
+	icon = "default_water.png^digtron_digger_yb_frame.png",
+})
+
+awards.register_achievement("digtron_crate10",{
+	title = "Digtron Packrat",
+	description = "Stored 10 or more Digtron blocks in one crate.",
+	background = "awards_bg_mining.png",
+	icon = "digtron_plate.png^digtron_crate.png", -- TODO: Visually distinguish this from Bigtron
+})
+
+awards.register_achievement("digtron_crate100",{
+	title = "Digtron Hoarder",
+	description = "Stored 100 or more Digtron blocks in one crate.",
+	background = "awards_bg_mining.png",
+	icon = "digtron_plate.png^digtron_crate.png", -- TODO: Visually distinguish this from Bigtron
 })
