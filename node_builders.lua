@@ -144,6 +144,9 @@ minetest.register_node("digtron:builder", {
 	end,
 
 	allow_metadata_inventory_put = function(pos, listname, index, stack, player)
+		if minetest.get_item_group(stack:get_name(), "digtron") ~= 0 then
+			return 0 -- don't allow builders to be set to build Digtron nodes, they'll just clog the output.
+		end	
 		local inv = minetest.get_inventory({type="node", pos=pos})
 		inv:set_stack(listname, index, stack:take_item(1))
 		return 0
