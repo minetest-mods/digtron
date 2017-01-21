@@ -88,7 +88,7 @@ end
 digtron.execute_dig_cycle = function(pos, clicker)
 	local meta = minetest.get_meta(pos)
 	local fuel_burning = meta:get_float("fuel_burning") -- get amount of burned fuel left over from last cycle
-	local status_text = string.format("Heat remaining in controller furnace: %d", fuel_burning)
+	local status_text = string.format("Heat remaining in controller furnace: %d", math.max(0, fuel_burning))
 	
 	local layout = DigtronLayout.create(pos, clicker)
 
@@ -290,7 +290,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 		fuel_burning = fuel_burning + digtron.burn(layout.fuelstores, -fuel_burning, false)
 	end
 	meta:set_float("fuel_burning", fuel_burning)
-	status_text = status_text .. string.format("Heat remaining in controller furnace: %d", fuel_burning)
+	status_text = status_text .. string.format("Heat remaining in controller furnace: %d", math.max(0, fuel_burning))
 
 	-- Eyecandy
 	for _, particles in pairs(particle_systems) do
@@ -364,7 +364,7 @@ end
 digtron.execute_downward_dig_cycle = function(pos, clicker)
 	local meta = minetest.get_meta(pos)
 	local fuel_burning = meta:get_float("fuel_burning") -- get amount of burned fuel left over from last cycle
-	local status_text = string.format("Heat remaining in controller furnace: %d", fuel_burning)
+	local status_text = string.format("Heat remaining in controller furnace: %d", math.max(0, fuel_burning))
 	
 	local layout = DigtronLayout.create(pos, clicker)
 
@@ -472,7 +472,7 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 		fuel_burning = fuel_burning + digtron.burn(layout.fuelstores, -fuel_burning, false)
 	end
 	meta:set_float("fuel_burning", fuel_burning)
-	status_text = status_text .. string.format("Heat remaining in controller furnace: %d", fuel_burning)
+	status_text = status_text .. string.format("Heat remaining in controller furnace: %d", math.max(0, fuel_burning))
 
 	-- Eyecandy
 	for _, particles in pairs(particle_systems) do
