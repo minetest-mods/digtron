@@ -1,4 +1,4 @@
-digtron - a modular tunnel boring/building machine for minetest, v0.7 - 2017-01-08
+digtron - a modular tunnel boring/building machine for minetest, v0.7.6 - 2017-01-22
 
 Forum : https://forum.minetest.net/viewtopic.php?f=9&t=16295
 github: https://github.com/FaceDeer/digtron/
