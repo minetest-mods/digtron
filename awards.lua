@@ -20,17 +20,17 @@ digtron.award_item_dug = function (items_dropped, player)
 		if minetest.get_item_group(item, "tree") > 0 then
 			awards.tbv(data, "digtron_dug_groups")
 			awards.tbv(data["digtron_dug_groups"], "tree")
-			data["digtron_dug_groups"]["tree"] = data["digtron_dug_groups"]["tree"] + count
+			data["digtron_dug_groups"]["tree"] = data["digtron_dug_groups"]["tree"] + 1
 		end
 		if minetest.get_item_group(item, "dirt") > 0 then
 			awards.tbv(data, "digtron_dug_groups")
 			awards.tbv(data["digtron_dug_groups"], "dirt")
-			data["digtron_dug_groups"]["dirt"] = data["digtron_dug_groups"]["dirt"] + count
+			data["digtron_dug_groups"]["dirt"] = data["digtron_dug_groups"]["dirt"] + 1
 		end
 		if minetest.get_item_group(item, "grass") > 0 then
 			awards.tbv(data, "digtron_dug_groups")
 			awards.tbv(data["digtron_dug_groups"], "grass")
-			data["digtron_dug_groups"]["grass"] = data["digtron_dug_groups"]["grass"] + count
+			data["digtron_dug_groups"]["grass"] = data["digtron_dug_groups"]["grass"] + 1
 		end		
 	end
 	
