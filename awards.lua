@@ -13,23 +13,21 @@ digtron.award_item_dug = function (items_dropped, player)
 	end
 
 	local data = awards.players[player]
+
+	awards.tbv(data, "digtron_dug_groups")
+	awards.tbv(data["digtron_dug_groups"], "tree", 0)
+	awards.tbv(data["digtron_dug_groups"], "dirt", 0)
+	awards.tbv(data["digtron_dug_groups"], "grass", 0)
 	
 	for _, item in pairs(items_dropped) do
 		awards.increment_item_counter(data, "digtron_dug", item)
-		
 		if minetest.get_item_group(item, "tree") > 0 then
-			awards.tbv(data, "digtron_dug_groups")
-			awards.tbv(data["digtron_dug_groups"], "tree")
 			data["digtron_dug_groups"]["tree"] = data["digtron_dug_groups"]["tree"] + 1
 		end
 		if minetest.get_item_group(item, "dirt") > 0 then
-			awards.tbv(data, "digtron_dug_groups")
-			awards.tbv(data["digtron_dug_groups"], "dirt")
 			data["digtron_dug_groups"]["dirt"] = data["digtron_dug_groups"]["dirt"] + 1
 		end
 		if minetest.get_item_group(item, "grass") > 0 then
-			awards.tbv(data, "digtron_dug_groups")
-			awards.tbv(data["digtron_dug_groups"], "grass")
 			data["digtron_dug_groups"]["grass"] = data["digtron_dug_groups"]["grass"] + 1
 		end		
 	end
@@ -70,10 +68,6 @@ digtron.award_item_dug = function (items_dropped, player)
 		end
 	end
 
-	awards.tbv(data, "digtron_dug_groups")
-	awards.tbv(data.digtron_dug_groups, "tree", 0)
-	awards.tbv(data.digtron_dug_groups, "dirt", 0)
-	awards.tbv(data.digtron_dug_groups, "grass", 0)
 	if data["digtron_dug_groups"]["tree"] > 1000 then
 		awards.unlock(player, "digtron_1000wood_dug")
 		if data["digtron_dug_groups"]["tree"] > 10000 then
