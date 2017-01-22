@@ -136,7 +136,7 @@ minetest.register_node("digtron:intermittent_digger", {
 				length = 1.0,
 			},
 		},
-		"digtron_plate.png^digtron_intermittent_motor.png",
+		"digtron_plate.png^digtron_intermittent.png^digtron_motor.png",
 	},
 	
 	on_construct = intermittent_on_construct,
@@ -193,12 +193,12 @@ minetest.register_node("digtron:soft_digger", {
 	
 	-- Aims in the +Z direction by default
 	tiles = {
-		"digtron_plate.png^[transformR90^[colorize:#88880030",
-		"digtron_plate.png^[transformR270^[colorize:#88880030",
-		"digtron_plate.png^[colorize:#88880030",
-		"digtron_plate.png^[transformR180^[colorize:#88880030",
+		"digtron_plate.png^[transformR90^[colorize:" .. digtron.soft_digger_colorize,
+		"digtron_plate.png^[transformR270^[colorize:" .. digtron.soft_digger_colorize,
+		"digtron_plate.png^[colorize:" .. digtron.soft_digger_colorize,
+		"digtron_plate.png^[transformR180^[colorize:" .. digtron.soft_digger_colorize,
 		{
-			name = "digtron_digger_yb.png^[colorize:#88880030",
+			name = "digtron_digger_yb.png^[colorize:" .. digtron.soft_digger_colorize,
 			animation = {
 				type = "vertical_frames",
 				aspect_w = 16,
@@ -206,7 +206,7 @@ minetest.register_node("digtron:soft_digger", {
 				length = 1.0,
 			},
 		},
-		"digtron_plate.png^digtron_motor.png^[colorize:#88880030",
+		"digtron_plate.png^digtron_motor.png^[colorize:" .. digtron.soft_digger_colorize,
 	},
 	
 	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate, lateral_dig)
@@ -248,12 +248,12 @@ minetest.register_node("digtron:intermittent_soft_digger", {
 	
 	-- Aims in the +Z direction by default
 	tiles = {
-		"digtron_plate.png^[transformR90^[colorize:#88880030",
-		"digtron_plate.png^[transformR270^[colorize:#88880030",
-		"digtron_plate.png^[colorize:#88880030",
-		"digtron_plate.png^[transformR180^[colorize:#88880030",
+		"digtron_plate.png^[transformR90^[colorize:" .. digtron.soft_digger_colorize,
+		"digtron_plate.png^[transformR270^[colorize:" .. digtron.soft_digger_colorize,
+		"digtron_plate.png^[colorize:" .. digtron.soft_digger_colorize,
+		"digtron_plate.png^[transformR180^[colorize:" .. digtron.soft_digger_colorize,
 		{
-			name = "digtron_digger_yb.png^[colorize:#88880030",
+			name = "digtron_digger_yb.png^[colorize:" .. digtron.soft_digger_colorize,
 			animation = {
 				type = "vertical_frames",
 				aspect_w = 16,
@@ -261,7 +261,7 @@ minetest.register_node("digtron:intermittent_soft_digger", {
 				length = 1.0,
 			},
 		},
-		"digtron_plate.png^digtron_intermittent_motor.png^[colorize:#88880030",
+		"digtron_plate.png^digtron_intermittent.png^digtron_motor.png^[colorize:" .. digtron.soft_digger_colorize,
 	},
 	
 	on_construct = intermittent_on_construct,
@@ -398,9 +398,9 @@ minetest.register_node("digtron:dual_soft_digger", {
 	
 	-- Aims in the +Z and -Y direction by default
 	tiles = {
-		"digtron_plate.png^digtron_motor.png^[colorize:#88880030",
+		"digtron_plate.png^digtron_motor.png^[colorize:" .. digtron.soft_digger_colorize,
 		{
-			name = "digtron_digger_yb.png^[colorize:#88880030",
+			name = "digtron_digger_yb.png^[colorize:" .. digtron.soft_digger_colorize,
 			animation = {
 				type = "vertical_frames",
 				aspect_w = 16,
@@ -408,10 +408,10 @@ minetest.register_node("digtron:dual_soft_digger", {
 				length = 1.0,
 			},
 		},
-		"digtron_plate.png^[colorize:#88880030",
-		"digtron_plate.png^[transformR180^[colorize:#88880030",
+		"digtron_plate.png^[colorize:" .. digtron.soft_digger_colorize,
+		"digtron_plate.png^[transformR180^[colorize:" .. digtron.soft_digger_colorize,
 		{
-			name = "digtron_digger_yb.png^[colorize:#88880030",
+			name = "digtron_digger_yb.png^[colorize:" .. digtron.soft_digger_colorize,
 			animation = {
 				type = "vertical_frames",
 				aspect_w = 16,
@@ -419,7 +419,7 @@ minetest.register_node("digtron:dual_soft_digger", {
 				length = 1.0,
 			},
 		},
-		"digtron_plate.png^digtron_motor.png^[colorize:#88880030",
+		"digtron_plate.png^digtron_motor.png^[colorize:" .. digtron.soft_digger_colorize,
 	},
 
 	-- returns fuel_cost, items_produced

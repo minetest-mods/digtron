@@ -161,12 +161,12 @@ minetest.register_node("digtron:auto_controller", {
 	is_ground_content = false,
 	-- Aims in the +Z direction by default
 	tiles = {
-		"digtron_plate.png^[transformR90^digtron_auto_control_tint.png",
-		"digtron_plate.png^[transformR270^digtron_auto_control_tint.png",
-		"digtron_plate.png^digtron_axel_side.png^[transformR270^digtron_auto_control_tint.png",
-		"digtron_plate.png^digtron_axel_side.png^[transformR270^digtron_auto_control_tint.png",
-		"digtron_plate.png^digtron_auto_control_tint.png",
-		"digtron_plate.png^digtron_control.png^digtron_auto_control_tint.png",
+		"digtron_plate.png^[transformR90^[colorize:" .. digtron.auto_controller_colorize,
+		"digtron_plate.png^[transformR270^[colorize:" .. digtron.auto_controller_colorize,
+		"digtron_plate.png^digtron_axel_side.png^[transformR270^[colorize:" .. digtron.auto_controller_colorize,
+		"digtron_plate.png^digtron_axel_side.png^[transformR270^[colorize:" .. digtron.auto_controller_colorize,
+		"digtron_plate.png^[colorize:" .. digtron.auto_controller_colorize,
+		"digtron_plate.png^digtron_control.png^[colorize:" .. digtron.auto_controller_colorize,
 	},
 	
 	drawtype = "nodebox",
@@ -222,7 +222,7 @@ minetest.register_node("digtron:auto_controller", {
 			local node = minetest.get_node(pos)
 			local controlling_coordinate = digtron.get_controlling_coordinate(pos, node.param2)
 			
-			local newpos = pos --digtron.find_new_pos(pos, minetest.get_node(pos).param2)
+			local newpos = pos
 			local markerpos = {x=newpos.x, y=newpos.y, z=newpos.z}
 			local x_pos = math.floor((newpos[controlling_coordinate]+offset)/slope)*slope - offset
 			markerpos[controlling_coordinate] = x_pos
@@ -267,12 +267,12 @@ minetest.register_node("digtron:pusher", {
 	is_ground_content = false,
 	-- Aims in the +Z direction by default
 	tiles = {
-		"digtron_plate.png^[transformR90^digtron_pusher_tint.png",
-		"digtron_plate.png^[transformR270^digtron_pusher_tint.png",
-		"digtron_plate.png^digtron_pusher_tint.png",
-		"digtron_plate.png^[transformR180^digtron_pusher_tint.png",
-		"digtron_plate.png^digtron_pusher_tint.png",
-		"digtron_plate.png^digtron_control.png^digtron_pusher_tint.png",
+		"digtron_plate.png^[transformR90^[colorize:" .. digtron.pusher_controller_colorize,
+		"digtron_plate.png^[transformR270^[colorize:" .. digtron.pusher_controller_colorize,
+		"digtron_plate.png^[colorize:" .. digtron.pusher_controller_colorize,
+		"digtron_plate.png^[transformR180^[colorize:" .. digtron.pusher_controller_colorize,
+		"digtron_plate.png^[colorize:" .. digtron.pusher_controller_colorize,
+		"digtron_plate.png^digtron_control.png^[colorize:" .. digtron.pusher_controller_colorize,
 	},
 	
 	drawtype = "nodebox",

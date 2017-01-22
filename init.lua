@@ -1,5 +1,9 @@
 digtron = {}
 
+digtron.auto_controller_colorize = "#88000030"
+digtron.pusher_controller_colorize = "#00880030"
+digtron.soft_digger_colorize = "#88880030"
+
 dofile( minetest.get_modpath( "digtron" ) .. "/util.lua" )
 dofile( minetest.get_modpath( "digtron" ) .. "/doc.lua" )
 dofile( minetest.get_modpath( "digtron" ) .. "/awards.lua" )

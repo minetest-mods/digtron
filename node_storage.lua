@@ -11,7 +11,14 @@ minetest.register_node("digtron:inventory", {
 	drawtype = "nodebox",
 	paramtype = "light",
 	is_ground_content = false,
-	tiles = {"digtron_plate.png^digtron_inventory.png"},
+	tiles = {
+		"digtron_plate.png^digtron_crossbrace.png",
+		"digtron_plate.png^digtron_crossbrace.png",
+		"digtron_plate.png^digtron_crossbrace.png^digtron_storage.png",
+		"digtron_plate.png^digtron_crossbrace.png^digtron_storage.png",
+		"digtron_plate.png^digtron_crossbrace.png^digtron_storage.png",
+		"digtron_plate.png^digtron_crossbrace.png^digtron_storage.png",
+		},
 
 	on_construct = function(pos)
 		local meta = minetest.get_meta(pos)
@@ -73,7 +80,14 @@ minetest.register_node("digtron:fuelstore", {
 	drawtype = "nodebox",
 	paramtype = "light",
 	is_ground_content = false,
-	tiles = {"digtron_plate.png^digtron_fuelstore.png"},
+	tiles = {
+		"digtron_plate.png^digtron_crossbrace.png^digtron_flammable.png",
+		"digtron_plate.png^digtron_crossbrace.png^digtron_flammable.png",
+		"digtron_plate.png^digtron_crossbrace.png^digtron_flammable.png^digtron_storage.png",
+		"digtron_plate.png^digtron_crossbrace.png^digtron_flammable.png^digtron_storage.png",
+		"digtron_plate.png^digtron_crossbrace.png^digtron_flammable.png^digtron_storage.png",
+		"digtron_plate.png^digtron_crossbrace.png^digtron_flammable.png^digtron_storage.png",
+		},
 
 	on_construct = function(pos)
 		local meta = minetest.get_meta(pos)
@@ -155,8 +169,13 @@ minetest.register_node("digtron:combined_storage", {
 	drawtype = "nodebox",
 	paramtype = "light",
 	is_ground_content = false,
-	tiles = {"digtron_plate.png^digtron_combined_storage.png"},
-
+	tiles = {
+		"digtron_plate.png^digtron_crossbrace.png^digtron_flammable_small.png^[transformR180^digtron_flammable_small.png",
+		"digtron_plate.png^digtron_crossbrace.png^digtron_flammable_small.png^[transformR180^digtron_flammable_small.png",		"digtron_plate.png^digtron_crossbrace.png^digtron_flammable_small.png^digtron_storage.png",
+		"digtron_plate.png^digtron_crossbrace.png^digtron_flammable_small.png^digtron_storage.png",
+		"digtron_plate.png^digtron_crossbrace.png^digtron_flammable_small.png^digtron_storage.png",
+		"digtron_plate.png^digtron_crossbrace.png^digtron_flammable_small.png^digtron_storage.png",
+		},
 	on_construct = function(pos)
 		local meta = minetest.get_meta(pos)
 		meta:set_string("formspec", 
