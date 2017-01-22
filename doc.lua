@@ -17,7 +17,9 @@ digtron.doc.builder_longdesc = "A 'builder' module for a Digtron. By itself it d
 digtron.doc.builder_usagehelp = "A builder head is the most complex component of this system. It has period and offset properties, and also an inventory slot where you \"program\" it by placing an example of the block type that you want it to build.\n\n" ..
 'When the "Save & Show" button is clicked the properties for period and offset will be saved, and markers will briefly be shown to indicate where the nearest spots corresponding to those values are. The builder will build its output at those locations provided it is moving along the matching axis.\n\n' ..
 'The "output" side of a builder is the side with a black crosshair on it.\n\n' ..
-'Builders also have a "facing" setting. If you haven\'t memorized the meaning of the 24 facing values yet, builder heads have a helpful "Read & Save" button to fill this value in for you. Simply build a temporary instance of the block in the output location in front of the builder, adjust it to the orientation you want using the screwdriver tool, and then when you click the "Read & Save" button the block\'s facing will be read and saved.'
+'Builders also have a "facing" setting. If you haven\'t memorized the meaning of the 24 facing values yet, builder heads have a helpful "Read & Save" button to fill this value in for you. Simply build a temporary instance of the block in the output location in front of the builder, adjust it to the orientation you want using the screwdriver tool, and then when you click the "Read & Save" button the block\'s facing will be read and saved.\n\n' ..
+"Note: if more than one builder tries to build into the same space simultaneously, it is not predictable which builder will take priority. You should arrange your builders to avoid this to get consistent results."
+
 
 --------------------------------------------------------------------
 
