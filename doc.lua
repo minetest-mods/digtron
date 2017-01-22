@@ -63,7 +63,7 @@ digtron.doc.auto_controller_usagehelp = "An Auto-control module can be set to ru
 
 digtron.doc.pusher_longdesc = "A simplified controller that merely moves a Digtron around without triggering its builder or digger modules"
 digtron.doc.pusher_usagehelp = "Aka the \"can you rebuild it six inches to the left\" module. This is a much simplified control module that does not trigger the digger or builder heads when right-clicked, it only moves the digging machine. It's up to you to ensure there's space for it to move into.\n\n"..
-"Since movement alone does not require fuel, a pusher module has no internal furnace."
+"Since movement alone does not require fuel, a pusher module has no internal furnace. Pushers also don't require traction, since their primary purpose is repositioning Digtrons let's say they have a built-in crane or something."
 
 digtron.doc.axle_longdesc = "A device that allows one to rotate their Digtron into new orientations"
 digtron.doc.axle_usagehelp = "This magical module can rotate a Digtron array in place around itself. Right-clicking on it will rotate the Digtron 90 degrees in the direction the orange arrows on its sides indicate (widdershins around the Y axis by default, use the screwdriver to change this) assuming there's space for the Digtron in its new orientation. Builders and diggers will not trigger on rotation."
@@ -140,7 +140,7 @@ doc.add_entry("digtron", "concepts", {
 "Period - Builder and digger heads can be made periodic by changing the period value to something other than 1. This determines how frequently they trigger. A period of 1 triggers on every block, a period of 2 triggers once every second block, a period of 3 triggers once every third block, etc. These are useful when setting up a machine to place regularly-spaced features as it goes. For example, you could have a builder head that places a torch every 8 steps, or a digger block that punches a landing in the side of a vertical stairwell at every level.\n\n"..
 "Offset - The location at which a periodic module triggers is globally uniform. This is handy if you want to line up the blocks you're building (for example, placing pillars and a crosspiece every 4 blocks in a tunnel, or punching alcoves in a wall to place glass windows). If you wish to change how the pattern lines up, modify the \"offset\" setting.\n\n" ..
 "Shift-right-clicking - since most of the blocks of the digging machine have control screens associated with right-clicking, building additional blocks on top of them or rotating them with the screwdriver requires the shift key to be held down when right-clicking on them.\n\n" ..
-"Traction - Digtrons cannot fly. By default, they need to be touching one block of solid ground for every three blocks of Digtron in order to move."
+"Traction - Digtrons cannot fly. By default, they need to be touching one block of solid ground for every three blocks of Digtron in order to move. Digtrons can fall, though - traction is never needed when a Digtron is moving downward. \"Pusher\" controllers can ignore the need for traction when moving in any direction."
 }})
 
 doc.add_entry("digtron", "noises", {
