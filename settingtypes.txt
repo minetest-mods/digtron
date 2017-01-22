@@ -1,6 +1,7 @@
-#This causes digtrons to operate without consuming fuel or building materials.
+#This can cause digtrons to operate without consuming fuel or building materials,
+#though they still check whether they have enough in inventory.
 #It's a separate setting from regular creative mode.
-digtron_creative_mode (Digtron requires fuel) bool false
+digtron_uses_resources (Digtron uses resources) bool true
 #When true, lava counts as protected blocks.
 digtron_lava_impassible (Lava is impassible to Digtrons) bool true
 #When true, diggers deal damage to creatures when they trigger.
