@@ -12,17 +12,20 @@ digtron_cycle_time (Minimum Digtron cycle time in seconds) float 1.0 0.0 60.0
 #How many Digtron blocks can be moved for each adjacent
 #solid block that the Digtron has traction against
 digtron_traction_factor (Digtron traction factor) float 3.0 0.0 1000.0
+
+[Fuel costs]
+
 #eg, stone.
 #In a default Minetest game one lump of coal provides 40.0 units of fuel.
-digtron_dig_cost_cracky (Digtron dig fuel cost for cracky blocks) float 1.0 0.0 100.0
+digtron_dig_cost_cracky (Fuel cost for digging cracky blocks) float 1.0 0.0 100.0
 # eg, dirt, sand.
 #In a default Minetest game one lump of coal provides 40.0 units of fuel.
-digtron_dig_cost_crumbly (Digtron dig fuel cost for crumbly blocks) float 0.5 0.0 100.0
+digtron_dig_cost_crumbly (Fuel cost for digging crumbly blocks) float 0.5 0.0 100.0
 #eg, wood.
 #In a default Minetest game one lump of coal provides 40.0 units of fuel.
-digtron_dig_cost_choppy (Digtron dig fuel cost for choppy blocks) float 0.75 0.0 100.0
+digtron_dig_cost_choppy (Fuel cost for digging choppy blocks) float 0.75 0.0 100.0
 #Fuel cost to dig a block that doesn't fall into one of the other categories.
 #In a default Minetest game one lump of coal provides 40.0 units of fuel.
-digtron_dig_cost_default (Digtron fuel dig cost for other block types) float 0.5 0.0 100.0
+digtron_dig_cost_default (Fuel cost for digging other block types) float 0.5 0.0 100.0
 #How much fuel is required to build a block
-digtron_build_cost (Digtron fuel cost to build one block) float 1.0 0.0 100.0
+digtron_build_cost (Fuel cost to build one block) float 1.0 0.0 100.0
