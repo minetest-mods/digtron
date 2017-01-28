@@ -169,3 +169,33 @@ minetest.register_lbm({
 		)		
 	end
 })
+
+if minetest.get_modpath("catacomb") and catacomb ~= nil and catacomb.chamber_protected_nodes ~= nil and catacomb.passage_protected_nodes ~= nil then
+	local digtron_nodes = {
+		minetest.get_content_id("digtron:inventory"),
+		minetest.get_content_id("digtron:fuelstore"),
+		minetest.get_content_id("digtron:combined_storage"),
+		minetest.get_content_id("digtron:axle"),
+		minetest.get_content_id("digtron:builder"),
+		minetest.get_content_id("digtron:controller"),
+		minetest.get_content_id("digtron:auto_controller"),
+		minetest.get_content_id("digtron:pusher"),
+		minetest.get_content_id("digtron:loaded_crate"),
+		minetest.get_content_id("digtron:digger"),
+		minetest.get_content_id("digtron:intermittent_digger"),
+		minetest.get_content_id("digtron:soft_digger"),
+		minetest.get_content_id("digtron:intermittent_soft_digger"),
+		minetest.get_content_id("digtron:dual_digger"),
+		minetest.get_content_id("digtron:dual_soft_digger"),
+		minetest.get_content_id("digtron:structure"),
+		minetest.get_content_id("digtron:light"),
+		minetest.get_content_id("digtron:panel"),
+		minetest.get_content_id("digtron:edge_panel"),
+		minetest.get_content_id("digtron:corner_panel"),
+	}
+	for _, node_id in pairs(digtron_nodes) do
+		minetest.debug("protecting ", dump(node_id))
+		catacomb.chamber_protected_nodes[node_id] = true
+		catacomb.passage_protected_nodes[node_id] = true
+	end
+end
