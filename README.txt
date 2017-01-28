@@ -13,6 +13,7 @@ The basic nodes that can be assembled into a functioning digging machine are:
 
 A digging machine's components must be connected to the control node via a path leading through the faces of the nodes - diagonal connections across edges and corners don't count.
 
+Note for modders: if you wish to make a node impenetrable to Digtron's digging, add it to the "digtron_protected" group.
 
 Crafting recipes
 ================

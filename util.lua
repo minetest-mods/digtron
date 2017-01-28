@@ -41,7 +41,7 @@ digtron.mark_diggable = function(pos, nodes_dug)
 	local target = minetest.get_node(pos)
 	
 	-- prevent digtrons from being marked for digging.
-	if minetest.get_item_group(target.name, "digtron") ~= 0 then
+	if minetest.get_item_group(target.name, "digtron") ~= 0 or minetest.get_item_group(target.name, "digtron_protected") ~= 0 then
 		return 0, {}
 	end
 
