@@ -76,6 +76,19 @@ local function move_player_test(layout, player)
 	return false
 end
 
+local function test_stop_block(pos, items)
+	local inv = minetest.get_inventory({type="node", pos=pos})
+	local item_stack = inv:get_stack("stop", 1)
+	if not item_stack:is_empty() then
+		for _, item in pairs(items) do
+			if item == item_stack:get_name() then
+				return true
+			end
+		end
+	end
+	return false
+end
+
 -- returns newpos, status string, and a return code indicating why the method returned (so the auto-controller can keep trying if it's due to unloaded nodes)
 -- 0 - success
 -- 1 - failed due to unloaded nodes
@@ -140,6 +153,10 @@ digtron.execute_dig_cycle = function(pos, clicker)
 		if not digtron.can_move_to(newpos, layout.protected, layout.nodes_dug) then
 			can_move = false
 		end
+	end
+	
+	if test_stop_block(pos, items_dropped) then
+		can_move = false
 	end
 	
 	if not can_move then
@@ -419,7 +436,11 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 			can_move = false
 		end
 	end
-	
+
+	if test_stop_block(pos, items_dropped) then
+		can_move = false
+	end
+
 	if not can_move then
 		-- mark this node as waiting, will clear this flag in digtron.cycle_time seconds
 		minetest.get_meta(pos):set_string("waiting", "true")

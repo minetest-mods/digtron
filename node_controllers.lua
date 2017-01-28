@@ -71,22 +71,32 @@ minetest.register_node("digtron:controller", {
 -- Auto-controller
 ---------------------------------------------------------------------------------------------------------------
 
-local auto_formspec = "size[3.5,2]" ..
+local auto_formspec = "size[8,6.2]" ..
 	default.gui_bg ..
 	default.gui_bg_img ..
 	default.gui_slots ..
-	"field[0.5,0.8;1,0.1;cycles;Cycles;${cycles}]" ..
+	"container[2.5,0]" ..
+	"field[0.0,0.8;1,0.1;cycles;Cycles;${cycles}]" ..
 	"tooltip[cycles;When triggered, this controller will try to run for the given number of cycles.\nThe cycle count will decrement as it runs, so if it gets halted by a problem\nyou can fix the problem and restart.]" ..
-	"button_exit[1.2,0.5;1,0.1;set;Set]" ..
+	"button_exit[0.7,0.5;1,0.1;set;Set]" ..
 	"tooltip[set;Saves the cycle setting without starting the controller running]" ..
-	"button_exit[2.2,0.5;1,0.1;execute;Set &\nExecute]" ..
+	"button_exit[1.7,0.5;1,0.1;execute;Set &\nExecute]" ..
 	"tooltip[execute;Begins executing the given number of cycles]" ..
-	"field[0.5,2.0;1,0.1;slope;Slope;${slope}]" ..
+	"field[0.0,2.0;1,0.1;slope;Slope;${slope}]" ..
 	"tooltip[slope;For diagonal digging. After every X nodes the auto controller moves forward,\nthe controller will add an additional cycle moving the digtron laterally in the\ndirection of the arrows on the side of this controller.\nSet to 0 for no lateral digging.]" ..
-	"field[1.5,2.0;1,0.1;offset;Offset;${offset}]" ..
+	"field[1.0,2.0;1,0.1;offset;Offset;${offset}]" ..
 	"tooltip[offset;Sets the offset of the lateral motion defined in the Slope field.\nNote: this offset is relative to the controller's location.\nThe controller will move down when it reaches the indicated point.]" ..
-	"field[2.5,2.0;1,0.1;period;Delay;${period}]" ..
-	"tooltip[period;Number of seconds to wait between each cycle]"
+	"field[2.0,2.0;1,0.1;period;Delay;${period}]" ..
+	"tooltip[period;Number of seconds to wait between each cycle]" ..
+	"list[current_name;stop;3.0,0.7;1,1;]" ..
+	"label[3.0,1.5;Stop block]"	..
+	"container_end[]" ..
+	"list[current_player;main;0,2.3;8,1;]" ..
+	default.get_hotbar_bg(0,2.3) ..
+	"list[current_player;main;0,3.5;8,3;8]" ..
+	"listring[current_player;main]" ..
+	"listring[current_name;stop]"
+
 			
 -- Needed to make this global so that it could recurse into minetest.after
 digtron.auto_cycle = function(pos)
@@ -185,8 +195,26 @@ minetest.register_node("digtron:auto_controller", {
 		meta:set_int("offset", 0)
 		meta:set_int("cycles", 0)
 		meta:set_int("slope", 0)
+		
+		local inv = meta:get_inventory()
+		inv:set_size("stop", 1)
 	end,
 
+	allow_metadata_inventory_put = function(pos, listname, index, stack, player)
+		if minetest.get_item_group(stack:get_name(), "digtron") ~= 0 then
+			return 0 -- pointless setting a Digtron node as a stop block
+		end	
+		local inv = minetest.get_inventory({type="node", pos=pos})
+		inv:set_stack(listname, index, stack:take_item(1))
+		return 0
+	end,
+	
+	allow_metadata_inventory_take = function(pos, listname, index, stack, player)
+		local inv = minetest.get_inventory({type="node", pos=pos})
+		inv:set_stack(listname, index, ItemStack(""))
+		return 0
+	end,
+	
 	on_receive_fields = function(pos, formname, fields, sender)
         local meta = minetest.get_meta(pos)
 		local offset = tonumber(fields.offset)

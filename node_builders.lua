@@ -62,7 +62,6 @@ minetest.register_node("digtron:builder", {
 			"button_exit[6.4,0.5;1,0.1;read;Read &\nSave]" ..
 			"tooltip[read;Reads the facing of the block currently in the build location,\nthen saves all settings]" ..
 			"list[current_player;main;0,1.3;8,1;]" ..
-			"list[current_player;main;0,1.3;8,1;]" ..
 			default.get_hotbar_bg(0,1.3) ..
 			"list[current_player;main;0,2.5;8,3;8]" ..
 			"listring[current_player;main]" ..
@@ -154,6 +153,8 @@ minetest.register_node("digtron:builder", {
 	end,
 	
 	allow_metadata_inventory_take = function(pos, listname, index, stack, player)
+		local inv = minetest.get_inventory({type="node", pos=pos})
+		inv:set_stack(listname, index, ItemStack(""))
 		return 0
 	end,
 	
