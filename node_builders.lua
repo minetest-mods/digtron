@@ -65,7 +65,8 @@ minetest.register_node("digtron:builder", {
 			"list[current_player;main;0,1.3;8,1;]" ..
 			default.get_hotbar_bg(0,1.3) ..
 			"list[current_player;main;0,2.5;8,3;8]" ..
-			"listring[current_player;main]"
+			"listring[current_player;main]" ..
+			"listring[current_name;main]"
 		)
 		meta:set_int("period", 1) 
 		meta:set_int("offset", 0) 
