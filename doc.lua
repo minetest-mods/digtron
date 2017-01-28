@@ -5,6 +5,7 @@ if not minetest.get_modpath("doc") then
 end
 
 local pipeworks_enabled = minetest.get_modpath("pipeworks") ~= nil
+local hoppers_enabled = minetest.get_modpath("hopper") and hopper ~= nil and hopper.add_container ~= nil
 
 digtron.doc.core_longdesc = "A crafting component used in the manufacture of all Digtron block types."
 digtron.doc.core_usagehelp = "Place the Digtron Core in the center of the crafting grid. All Digtron recipes consist of arranging various other materials around the central Digtron Core."
@@ -26,6 +27,16 @@ digtron.doc.inventory_usagehelp = "Inventory modules have the same capacity as a
 "Inventory modules are not required for a digging-only machine. If there's not enough storage space to hold the materials produced by the digging heads the excess material will be ejected out the back of the control block. They're handy for accumulating ores and other building materials, though.\n\n"..
 "Digging machines can have multiple inventory modules added to expand their capacity."
 
+if hoppers_enabled then
+	digtron.doc.inventory_usagehelp = digtron.doc.inventory_usagehelp .. "\n\n" ..
+	"Digtron inventory modules are compatible with hoppers, adjacent hoppers will add to or take from their inventories. Hoppers are not part of the Digtron and will not move with it, however. They may be useful for creating a \"docking station\" for a Digtron."
+end
+
+if pipeworks_enabled then
+	digtron.doc.inventory_usagehelp = digtron.doc.inventory_usagehelp .. "\n\n" ..
+	"Inventory modules are compatible with Pipeworks blocks. When a Digtron moves one of the inventory modules adjacent to a pipe it will automatically hook up to it, and disconnect again when it moves on.\n\n"
+end
+
 digtron.doc.fuelstore_longdesc = "Stores fuel to run a Digtron"
 digtron.doc.fuelstore_usagehelp = "Digtrons have an appetite. Build operations and dig operations require a certain amount of fuel, and that fuel comes from fuel hopper modules. Note that movement does not require fuel, only digging and building.\n\n"..
 "When a control unit is triggered, it will tally up how much fuel is required for the next cycle and then burn items from the fuel hopper until a sufficient amount of heat has been generated to power the operation. Any leftover heat will be retained by the control unit for use in the next cycle; this is the \"heat remaining in controller furnace\". This means you don't have to worry too much about what kinds of fuel you put in the hopper, none will be wasted (unless you dig away a control unit with some heat remaining in it, that heat does get wasted).\n\n" ..
@@ -35,8 +46,28 @@ digtron.doc.fuelstore_usagehelp = "Digtrons have an appetite. Build operations a
 "\tDig 60 wood blocks\n"..
 "\tDig 80 dirt or sand blocks"
 
+if hoppers_enabled then
+	digtron.doc.fuelstore_usagehelp = digtron.doc.fuelstore_usagehelp .. "\n\n" ..
+	"Digtron fuel store modules are compatible with hoppers, adjacent hoppers will add to or take from their inventories. Hoppers are not part of the Digtron and will not move with it, however. They may be useful for creating a \"docking station\" for a Digtron."
+end
+
+if pipeworks_enabled then
+	digtron.doc.fuelstore_usagehelp = digtron.doc.fuelstore_usagehelp .. "\n\n" ..
+	"Fuel modules are compatible with Pipeworks blocks. When a Digtron moves one of the inventory modules adjacent to a pipe it will automatically hook up to it, and disconnect again when it moves on.\n\n"
+end
+
 digtron.doc.combined_storage_longdesc = "Stores fuel for a Digtron and also has an inventory for building materials"
 digtron.doc.combined_storage_usagehelp = "For smaller jobs the two dedicated modules may simply be too much of a good thing, wasting precious Digtron space to give unneeded capacity. The combined storage module is the best of both worlds, splitting its internal space between building material inventory and fuel storage. It has 3/4 building material capacity and 1/4 fuel storage capacity."
+
+if hoppers_enabled then
+	digtron.doc.combined_storage_usagehelp = digtron.doc.combined_storage_usagehelp .. "\n\n" ..
+	"Digtron inventory modules are compatible with hoppers, adjacent hoppers will add to or take from their inventories. A hopper on top of a combined inventory module will insert items into its general inventory, a side hopper will insert items into its fuel inventory, and a hopper on the bottom of a combined inventory module will take items from its general inventory. Hoppers are not part of the Digtron and will not move with it, however. They may be useful for creating a \"docking station\" for a Digtron."
+end
+
+if pipeworks_enabled then
+	digtron.doc.combined_storage_usagehelp = digtron.doc.combined_storage_usagehelp .. "\n\n" ..
+	"Combination modules are compatible with Pipeworks blocks. When a Digtron moves one of the inventory modules adjacent to a pipe it will automatically hook up to it, and disconnect again when it moves on. Items are extracted from the \"main\" inventory, and items coming into the combination module from any direction except the underside are inserted into \"main\". However, a pipe entering the combination module from the underside will attempt to insert items into the \"fuel\" inventory instead."
+end
 
 ---------------------------------------------------------------------
 
@@ -164,14 +195,3 @@ doc.add_entry("digtron", "tips", {
 "If you're building a repeating pattern of blocks, your periodicity should be one larger than your largest offset. For example, if you've laid out builders to create a set of spiral stairs and the offsets are from 0 to 11, you'll want to use periodicity 12.\n\n" ..
 "A good way to program a set of builders is to build a complete example of the structure you want them to create, then place builders against the structure and have them \"read\" all of its facings. This also lets you more easily visualize the tricks that might be needed to allow the digtron to pass through the structure as it's being built."
 }})
-
-if pipeworks_enabled then
-doc.add_entry("digtron", "pipeworks", {
-	name = "Pipeworks",
-	data = { text =
-"The three inventory modules are compatible with Pipeworks blocks. When a Digtron moves one of the inventory modules adjacent to a pipe it will automatically hook up to it, and disconnect again when it moves on.\n\n" ..
-"Inventory modules act like chests.\n\n" ..
-"Fuel modules act like chests, but will reject any non-fuel items that try to enter them.\n\n" ..
-"Combination modules act like furnances. For the most part, that means they act like chests - items are extracted from the \"main\" inventory, and items coming into the combination module are inserted into \"main\". However, a pipe entering the combination module from the underside will attempt to insert items into the \"fuel\" inventory."
-}})
-end
