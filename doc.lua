@@ -6,8 +6,6 @@ end
 
 local pipeworks_enabled = minetest.get_modpath("pipeworks") ~= nil
 
-minetest.debug("pipeworks_enabled", dump(pipeworks_enabled))
-
 digtron.doc.core_longdesc = "A crafting component used in the manufacture of all Digtron block types."
 digtron.doc.core_usagehelp = "Place the Digtron Core in the center of the crafting grid. All Digtron recipes consist of arranging various other materials around the central Digtron Core."
 
