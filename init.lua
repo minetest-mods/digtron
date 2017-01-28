@@ -194,7 +194,6 @@ if minetest.get_modpath("catacomb") and catacomb ~= nil and catacomb.chamber_pro
 		minetest.get_content_id("digtron:corner_panel"),
 	}
 	for _, node_id in pairs(digtron_nodes) do
-		minetest.debug("protecting ", dump(node_id))
 		catacomb.chamber_protected_nodes[node_id] = true
 		catacomb.passage_protected_nodes[node_id] = true
 	end
