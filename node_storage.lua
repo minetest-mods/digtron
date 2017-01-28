@@ -261,18 +261,18 @@ minetest.register_node("digtron:combined_storage", {
 })
 
 -- Hopper compatibility
-if minetest.get_modpath("hopper") and hopper ~= nil and hopper.add_source ~= nil and hopper.add_destination ~= nil then
-	hopper.add_source("hopper:hopper", "digtron:inventory", "main")
-	hopper.add_source("hopper:hopper", "digtron:fuelstore", "fuel")
-	hopper.add_source("hopper:hopper", "digtron:combined_storage", "main")
-	hopper.add_destination("hopper:hopper", "digtron:inventory", "main")
-	hopper.add_destination("hopper:hopper", "digtron:fuelstore", "fuel")
-	hopper.add_destination("hopper:hopper", "digtron:combined_storage", "main")
+if minetest.get_modpath("hopper") and hopper ~= nil and hopper.add_container ~= nil then
+	hopper:add_container({
+		{"top", "digtron:inventory", "main"},
+		{"bottom", "digtron:inventory", "main"},
+		{"side", "digtron:inventory", "main"},
 
-	hopper.add_source("hopper:hopper_side", "digtron:inventory", "main")
-	hopper.add_source("hopper:hopper_side", "digtron:fuelstore", "fuel")
-	hopper.add_source("hopper:hopper_side", "digtron:combined_storage", "main")
-	hopper.add_destination("hopper:hopper_side", "digtron:inventory", "main")
-	hopper.add_destination("hopper:hopper_side", "digtron:fuelstore", "fuel")
-	hopper.add_destination("hopper:hopper_side", "digtron:combined_storage", "fuel")
+		{"top", "digtron:fuelstore", "fuel"},
+		{"bottom", "digtron:fuelstore", "fuel"},
+		{"side", "digtron:fuelstore", "fuel"},
+	
+		{"top", "digtron:combined_storage", "main"},
+		{"bottom", "digtron:combined_storage", "main"},
+		{"side", "digtron:combined_storage", "fuel"},
+	})
 end
