@@ -127,9 +127,9 @@ minetest.register_craft({
 minetest.register_craft({
 	output = "digtron:structure",
 	recipe = {
-			{"default:stick","","default:stick"},
+			{"group:stick","","group:stick"},
 			{"","digtron:digtron_core",""},
-			{"default:stick","","default:stick"}
+			{"group:stick","","group:stick"}
 			}
 })
 
