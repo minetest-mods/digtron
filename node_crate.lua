@@ -56,7 +56,7 @@ minetest.register_node("digtron:loaded_crate", {
 	description = "Digtron Crate (Loaded)",
 	_doc_items_longdesc = digtron.doc.loaded_crate_longdesc,
     _doc_items_usagehelp = digtron.doc.loaded_crate_usagehelp,
-	groups = {cracky = 3, oddly_breakable_by_hand=3, not_in_creative_inventory=1, digtron=1},
+	groups = {cracky = 3, oddly_breakable_by_hand=3, not_in_creative_inventory=1, digtron_protected=1},
 	stack_max = 1,
 	sounds = default.node_sound_wood_defaults(),
 	tiles = {"digtron_plate.png^digtron_crate.png"},
