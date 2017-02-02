@@ -1,5 +1,34 @@
 -- Note: builders go in group 4 and have both test_build and execute_build methods.
 
+local builder_formspec =
+	"size[8,5.2]" ..
+	default.gui_bg ..
+	default.gui_bg_img ..
+	default.gui_slots ..
+	"list[current_name;main;0.5,0;1,1;]" ..
+	"label[0.5,0.8;Block to build]" ..
+	"field[2.3,0.8;1,0.1;period;Periodicity;${period}]" ..
+	"tooltip[period;Builder will build once every n steps.\nThese steps are globally aligned, so all builders with the\nsame period and offset will build on the same location.]" ..
+	"field[3.3,0.8;1,0.1;offset;Offset;${offset}]" ..
+	"tooltip[offset;Offsets the start of periodicity counting by this amount.\nFor example, a builder with period 2 and offset 0 builds\nevery even-numbered block and one with period 2 and\noffset 1 builds every odd-numbered block.]" ..
+	"button_exit[4.0,0.5;1,0.1;set;Save &\nShow]" ..
+	"tooltip[set;Saves settings]" ..
+	"field[5.3,0.8;1,0.1;build_facing;Facing;${build_facing}]" ..
+	"tooltip[build_facing;Value from 0-23. Not all block types make use of this.\nUse the 'Read & Save' button to copy the facing of the block\ncurrently in the builder output location]" ..
+	"button_exit[6.0,0.5;1,0.1;read;Read &\nSave]" ..
+	"tooltip[read;Reads the facing of the block currently in the build location,\nthen saves all settings]" ..
+	"list[current_player;main;0,1.3;8,1;]" ..
+	default.get_hotbar_bg(0,1.3) ..
+	"list[current_player;main;0,2.5;8,3;8]" ..
+	"listring[current_player;main]" ..
+	"listring[current_name;main]"
+
+if minetest.get_modpath("doc") then
+	builder_formspec = builder_formspec ..
+	"button_exit[7.0,0.5;1,0.1;help;Help]" ..
+	"tooltip[help;Show documentation about this block]"
+end
+
 -- Builds objects in the targeted node. This is a complicated beastie.
 minetest.register_node("digtron:builder", {
 	description = "Digtron Builder Module",
@@ -43,30 +72,7 @@ minetest.register_node("digtron:builder", {
 	
 	on_construct = function(pos)
         local meta = minetest.get_meta(pos)
-        meta:set_string("formspec",
-			"size[8,5.2]" ..
-			default.gui_bg ..
-			default.gui_bg_img ..
-			default.gui_slots ..
-			"list[current_name;main;0.5,0;1,1;]" ..
---			"tooltip[main;Builder will build the type of block in this slot.\nNote that only one item needs to be placed here, to 'program' it.\nThe builder will draw construction materials from the central inventory when building.]" ..
-			"label[0.5,0.8;Block to build]" ..
-			"field[2.5,0.8;1,0.1;period;Periodicity;${period}]" ..
-			"tooltip[period;Builder will build once every n steps.\nThese steps are globally aligned, so all builders with the\nsame period and offset will build on the same location.]" ..
-			"field[3.5,0.8;1,0.1;offset;Offset;${offset}]" ..
-			"tooltip[offset;Offsets the start of periodicity counting by this amount.\nFor example, a builder with period 2 and offset 0 builds\nevery even-numbered block and one with period 2 and\noffset 1 builds every odd-numbered block.]" ..
-			"button_exit[4.2,0.5;1,0.1;set;Save &\nShow]" ..
-			"tooltip[set;Saves settings]" ..
-			"field[5.7,0.8;1,0.1;build_facing;Facing;${build_facing}]" ..
-			"tooltip[build_facing;Value from 0-23. Not all block types make use of this.\nUse the 'Read & Save' button to copy the facing of the block\ncurrently in the builder output location]" ..
-			"button_exit[6.4,0.5;1,0.1;read;Read &\nSave]" ..
-			"tooltip[read;Reads the facing of the block currently in the build location,\nthen saves all settings]" ..
-			"list[current_player;main;0,1.3;8,1;]" ..
-			default.get_hotbar_bg(0,1.3) ..
-			"list[current_player;main;0,2.5;8,3;8]" ..
-			"listring[current_player;main]" ..
-			"listring[current_name;main]"
-		)
+        meta:set_string("formspec", builder_formspec)
 		meta:set_int("period", 1) 
 		meta:set_int("offset", 0) 
 		meta:set_int("build_facing", 0)
@@ -130,6 +136,10 @@ minetest.register_node("digtron:builder", {
 			local facing = minetest.get_node(pos).param2
 			local buildpos = digtron.find_new_pos(pos, facing)
 			meta:set_int("build_facing", minetest.get_node(buildpos).param2)
+		end
+		
+		if fields.help and minetest.get_modpath("doc") then --check for mod in case someone disabled it after this digger was built
+			doc.show_entry(sender:get_player_name(), "nodes", "digtron:builder")
 		end
 
 		digtron.update_builder_item(pos)

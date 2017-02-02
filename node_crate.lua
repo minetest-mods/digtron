@@ -40,17 +40,37 @@ minetest.register_node("digtron:empty_crate", {
 	end,
 })
 
-local loaded_formspec =  "size[4,1.5]" ..
+local loaded_formspec
+
+if minetest.get_modpath("doc") then
+	loaded_formspec =
+	"size[4.1,1.5]" ..
+	default.gui_bg ..
+	default.gui_bg_img ..
+	default.gui_slots ..
+	"field[0.3,0.5;4,0.5;title;Digtron Name;${title}]" ..
+	"button_exit[0.0,1.2;1,0.1;save;Save\nTitle]" ..
+	"tooltip[save;Saves the title of this Digtron]" ..
+	"button_exit[1.0,1.2;1,0.1;show;Show\nBlocks]" ..
+	"tooltip[show;Shows which blocks the packed Digtron will occupy if unpacked]" ..
+	"button_exit[2.0,1.2;1,0.1;unpack;Unpack]" ..
+	"tooltip[unpack;Attempts to unpack the Digtron on this location]" ..
+	"button_exit[3.0,1.2;1,0.1;help;Help]" ..
+	"tooltip[help;Show documentation about this block]"
+else
+	loaded_formspec =
+	"size[4,1.5]" ..
 	default.gui_bg ..
 	default.gui_bg_img ..
 	default.gui_slots ..
 	"field[0.3,0.5;4,0.5;title;Digtron Name;${title}]" ..
 	"button_exit[0.5,1.2;1,0.1;save;Save\nTitle]" ..
-	"tooltip[save;Saves the title of this Digtron]" ..
+	"tooltip[show;Saves the title of this Digtron]" ..
 	"button_exit[1.5,1.2;1,0.1;show;Show\nBlocks]" ..
 	"tooltip[save;Shows which blocks the packed Digtron will occupy if unpacked]" ..
 	"button_exit[2.5,1.2;1,0.1;unpack;Unpack]" ..
 	"tooltip[unpack;Attempts to unpack the Digtron on this location]"
+end
 
 minetest.register_node("digtron:loaded_crate", {
 	description = "Digtron Crate (Loaded)",
@@ -75,6 +95,10 @@ minetest.register_node("digtron:loaded_crate", {
 			meta:set_string("infotext", fields.title)
 		end
 		
+		if fields.help and minetest.get_modpath("doc") then --check for mod in case someone disabled it after this digger was built
+			doc.show_entry(sender:get_player_name(), "nodes", "digtron:loaded_crate")
+		end
+
 		if not (fields.unpack or fields.show) then
 			return
 		end

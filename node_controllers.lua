@@ -75,7 +75,7 @@ local auto_formspec = "size[8,6.2]" ..
 	default.gui_bg ..
 	default.gui_bg_img ..
 	default.gui_slots ..
-	"container[2.5,0]" ..
+	"container[2.0,0]" ..
 	"field[0.0,0.8;1,0.1;cycles;Cycles;${cycles}]" ..
 	"tooltip[cycles;When triggered, this controller will try to run for the given number of cycles.\nThe cycle count will decrement as it runs, so if it gets halted by a problem\nyou can fix the problem and restart.]" ..
 	"button_exit[0.7,0.5;1,0.1;set;Set]" ..
@@ -97,7 +97,12 @@ local auto_formspec = "size[8,6.2]" ..
 	"listring[current_player;main]" ..
 	"listring[current_name;stop]"
 
-			
+if minetest.get_modpath("doc") then
+	auto_formspec = auto_formspec ..
+	"button_exit[7.0,0.5;1,0.1;help;Help]" ..
+	"tooltip[help;Show documentation about this block]"
+end	
+
 -- Needed to make this global so that it could recurse into minetest.after
 digtron.auto_cycle = function(pos)
 	local node = minetest.get_node(pos)
@@ -263,7 +268,11 @@ minetest.register_node("digtron:auto_controller", {
 				markerpos[controlling_coordinate] = x_pos + slope
 				minetest.add_entity(markerpos, "digtron:marker_vertical")
 			end
-		end		
+		end	
+		
+		if fields.help and minetest.get_modpath("doc") then --check for mod in case someone disabled it after this digger was built
+			doc.show_entry(sender:get_player_name(), "nodes", "digtron:auto_controller")
+		end
 	end,	
 	
 	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)

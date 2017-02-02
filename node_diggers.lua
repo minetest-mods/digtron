@@ -21,20 +21,28 @@ local dual_digger_nodebox = {
 	{-0.4375, -0.5, -0.3125, 0.4375, -0.4375, 0.3125}, -- Lower_Cutter_2
 }
 
+local intermittent_formspec = 
+	default.gui_bg ..
+	default.gui_bg_img ..
+	default.gui_slots ..
+	"field[0.5,0.8;1,0.1;period;Periodicity;${period}]" ..
+	"tooltip[period;Digger will dig once every n steps.\nThese steps are globally aligned, all diggers with\nthe same period and offset will dig on the same location.]" ..
+	"field[1.5,0.8;1,0.1;offset;Offset;${offset}]" ..
+	"tooltip[offset;Offsets the start of periodicity counting by this amount.\nFor example, a digger with period 2 and offset 0 digs\nevery even-numbered block and one with period 2 and\noffset 1 digs every odd-numbered block.]" ..
+	"button_exit[2.2,0.5;1,0.1;set;Save]" ..
+	"tooltip[set;Saves settings]"
+
 local intermittent_on_construct = function(pos)
+	local formspec = intermittent_formspec
+	if minetest.get_modpath("doc") then
+		formspec = "size[4.5,1]" .. formspec ..
+		"button_exit[3.2,0.5;1,0.1;help;Help]" ..
+		"tooltip[help;Show documentation about this block]"
+	else
+		formspec = "size[3.5,1]" .. formspec
+	end
     local meta = minetest.get_meta(pos)
-    meta:set_string("formspec",
-		"size[3.5,1]" ..
-		default.gui_bg ..
-		default.gui_bg_img ..
-		default.gui_slots ..
-		"field[0.5,0.8;1,0.1;period;Periodicity;${period}]" ..
-		"tooltip[period;Digger will dig once every n steps.\nThese steps are globally aligned, all diggers with\nthe same period and offset will dig on the same location.]" ..
-		"field[1.5,0.8;1,0.1;offset;Offset;${offset}]" ..
-		"tooltip[offset;Offsets the start of periodicity counting by this amount.\nFor example, a digger with period 2 and offset 0 digs\nevery even-numbered block and one with period 2 and\noffset 1 digs every odd-numbered block.]" ..
-		"button_exit[2.2,0.5;1,0.1;set;Save]" ..
-		"tooltip[set;Saves settings]"
-	)
+    meta:set_string("formspec", formspec)
 	meta:set_int("period", 1) 
 	meta:set_int("offset", 0) 
 end
@@ -48,6 +56,10 @@ local intermittent_on_receive_fields = function(pos, formname, fields, sender)
 	end
 	if offset then
 		meta:set_int("offset", math.floor(offset))
+	end
+	if fields.help and minetest.get_modpath("doc") then --check for mod in case someone disabled it after this digger was built
+		local node_name = minetest.get_node(pos).name
+		doc.show_entry(sender:get_player_name(), "nodes", node_name)
 	end
 end,
 
