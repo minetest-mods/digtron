@@ -1,3 +1,7 @@
+-- internationalization boilerplate
+local MP = minetest.get_modpath(minetest.get_current_modname())
+local S, NS = dofile(MP.."/intllib.lua")
+
 -- Note: builders go in group 4 and have both test_build and execute_build methods.
 
 local builder_formspec =
@@ -6,17 +10,17 @@ local builder_formspec =
 	default.gui_bg_img ..
 	default.gui_slots ..
 	"list[current_name;main;0.5,0;1,1;]" ..
-	"label[0.5,0.8;Block to build]" ..
-	"field[2.3,0.8;1,0.1;period;Periodicity;${period}]" ..
-	"tooltip[period;Builder will build once every n steps.\nThese steps are globally aligned, so all builders with the\nsame period and offset will build on the same location.]" ..
-	"field[3.3,0.8;1,0.1;offset;Offset;${offset}]" ..
-	"tooltip[offset;Offsets the start of periodicity counting by this amount.\nFor example, a builder with period 2 and offset 0 builds\nevery even-numbered block and one with period 2 and\noffset 1 builds every odd-numbered block.]" ..
-	"button_exit[4.0,0.5;1,0.1;set;Save &\nShow]" ..
-	"tooltip[set;Saves settings]" ..
-	"field[5.3,0.8;1,0.1;build_facing;Facing;${build_facing}]" ..
-	"tooltip[build_facing;Value from 0-23. Not all block types make use of this.\nUse the 'Read & Save' button to copy the facing of the block\ncurrently in the builder output location]" ..
-	"button_exit[6.0,0.5;1,0.1;read;Read &\nSave]" ..
-	"tooltip[read;Reads the facing of the block currently in the build location,\nthen saves all settings]" ..
+	"label[0.5,0.8;" .. S("Block to build") .. "]" ..
+	"field[2.3,0.8;1,0.1;period;" .. S("Periodicity") .. ";${period}]" ..
+	"tooltip[period;" .. S("Builder will build once every n steps.\nThese steps are globally aligned, so all builders with the\nsame period and offset will build on the same location.") .. "]" ..
+	"field[3.3,0.8;1,0.1;offset;" .. S("Offset") .. ";${offset}]" ..
+	"tooltip[offset;" .. S("Offsets the start of periodicity counting by this amount.\nFor example, a builder with period 2 and offset 0 builds\nevery even-numbered block and one with period 2 and\noffset 1 builds every odd-numbered block.") .. "]" ..
+	"button_exit[4.0,0.5;1,0.1;set;" .. S("Save &\nShow") .. "]" ..
+	"tooltip[set;" .. S("Saves settings") .. "]" ..
+	"field[5.3,0.8;1,0.1;build_facing;" .. S("Facing") .. ";${build_facing}]" ..
+	"tooltip[build_facing;" .. S("Value from 0-23. Not all block types make use of this.\nUse the 'Read & Save' button to copy the facing of the block\ncurrently in the builder output location.") .. "]" ..
+	"button_exit[6.0,0.5;1,0.1;read;" .. S("Read &\nSave") .. "]" ..
+	"tooltip[read;" .. S("Reads the facing of the block currently in the build location,\nthen saves all settings.") .. "]" ..
 	"list[current_player;main;0,1.3;8,1;]" ..
 	default.get_hotbar_bg(0,1.3) ..
 	"list[current_player;main;0,2.5;8,3;8]" ..
@@ -25,13 +29,13 @@ local builder_formspec =
 
 if minetest.get_modpath("doc") then
 	builder_formspec = builder_formspec ..
-	"button_exit[7.0,0.5;1,0.1;help;Help]" ..
-	"tooltip[help;Show documentation about this block]"
+	"button_exit[7.0,0.5;1,0.1;help;" .. S("Help") .. "]" ..
+	"tooltip[help;" .. S("Show documentation about this block") .. "]"
 end
 
 -- Builds objects in the targeted node. This is a complicated beastie.
 minetest.register_node("digtron:builder", {
-	description = "Digtron Builder Module",
+	description = S("Digtron Builder Module"),
 	_doc_items_longdesc = digtron.doc.builder_longdesc,
     _doc_items_usagehelp = digtron.doc.builder_usagehelp,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 4},
@@ -234,7 +238,7 @@ minetest.register_node("digtron:builder", {
 				if digtron.creative_mode then
 					local returned_stack, success = digtron.item_place_node(item_stack, player, buildpos, tonumber(build_facing))
 					if success == true then
-						minetest.log("action", string.format("%s uses Digtron to build %s at (%d, %d, %d), displacing %s", player:get_player_name(), item_stack:get_name(), buildpos.x, buildpos.y, buildpos.z, oldnode.name))
+						minetest.log("action", string.format(S("%s uses Digtron to build %s at (%d, %d, %d), displacing %s"), player:get_player_name(), item_stack:get_name(), buildpos.x, buildpos.y, buildpos.z, oldnode.name))
 						nodes_dug:set(buildpos.x, buildpos.y, buildpos.z, false)
 						return true
 					end
@@ -248,7 +252,7 @@ minetest.register_node("digtron:builder", {
 				end
 				local returned_stack, success = digtron.item_place_node(item_stack, player, buildpos, tonumber(build_facing))
 				if success == true then
-					minetest.log("action", string.format("%s uses Digtron to build %s at (%d, %d, %d), displacing %s", player:get_player_name(), item_stack:get_name(), buildpos.x, buildpos.y, buildpos.z, oldnode.name))
+					minetest.log("action", string.format(S("%s uses Digtron to build %s at (%d, %d, %d), displacing %s"), player:get_player_name(), item_stack:get_name(), buildpos.x, buildpos.y, buildpos.z, oldnode.name))
 					--flag this node as *not* to be dug.
 					nodes_dug:set(buildpos.x, buildpos.y, buildpos.z, false)
 					digtron.award_item_built(item_stack:get_name(), player:get_player_name())

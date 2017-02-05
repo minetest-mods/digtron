@@ -7,6 +7,10 @@ if not minetest.get_modpath("awards") then
 end
 ---------------------------------------------------------------------------
 
+-- internationalization boilerplate
+local MP = minetest.get_modpath(minetest.get_current_modname())
+local S, NS = dofile(MP.."/intllib.lua")
+
 digtron.award_item_dug = function (items_dropped, player)
 	if table.getn(items_dropped) == 0 then
 		return
@@ -162,246 +166,239 @@ digtron.award_crate = function (layout, player)
 end
 
 awards.register_achievement("digtron_water",{
-	title = "Deep Blue Digtron",
-	description = "Encountered water while operating a Digtron.",
+	title = S("Deep Blue Digtron"),
+	description = S("Encounter water while operating a Digtron."),
 	background = "awards_bg_mining.png",
 	icon = "default_water.png^digtron_digger_yb_frame.png",
 })
 
 awards.register_achievement("digtron_lava",{
-	title = "Digtrons of Fire",
-	description = "Encountered lava while operating a Digtron.",
+	title = S("Digtrons of Fire"),
+	description = S("Encounter lava while operating a Digtron."),
 	background = "awards_bg_mining.png",
 	icon = "default_lava.png^digtron_digger_yb_frame.png",
 })
 
 awards.register_achievement("digtron_size10",{
-	title = "Bigtron",
-	description = "Operated a Digtron with 10 or more component blocks.",
+	title = S("Bigtron"),
+	description = S("Operate a Digtron with 10 or more component blocks."),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^digtron_crate.png",
 })
 
 awards.register_achievement("digtron_size100",{
-	title = "Really Bigtron",
-	description = "Operated a Digtron with 100 or more component blocks.",
+	title = S("Really Bigtron"),
+	description = S("Operate a Digtron with 100 or more component blocks."),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^digtron_crate.png", -- TODO: Visually distinguish this from Bigtron
 })
 
 awards.register_achievement("digtron_builder25",{
-	title = "Buildtron",
-	description = "Operated a Digtron with 25 or more builder modules.",
+	title = S("Buildtron"),
+	description = S("Operate a Digtron with 25 or more builder modules."),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^digtron_builder.png^digtron_crate.png",
 })
 
 awards.register_achievement("digtron_digger25",{
-	title = "Digging Leviathan",
-	description = "Operated a Digtron with 25 or more digger heads.",
+	title = S("Digging Leviathan"),
+	description = S("Operate a Digtron with 25 or more digger heads."),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^digtron_motor.png^digtron_crate.png",
 })
 
 awards.register_achievement("digtron_height1000",{
-	title = "Digtron In The Sky",
-	description = "Operate a Digtron above 1000m elevation",
+	title = S("Digtron In The Sky"),
+	description = S("Operate a Digtron above 1000m elevation"),
 	background = "awards_bg_mining.png",
 	icon = "default_river_water.png^default_snow_side.png^[transformR180^digtron_digger_yb_frame.png",
 })
 
 awards.register_achievement("digtron_height100",{
-	title = "Digtron High",
-	description = "Operated a Digtron above 100m elevation",
+	title = S("Digtron High"),
+	description = S("Operate a Digtron above 100m elevation"),
 	background = "awards_bg_mining.png",
 	icon = "default_river_water.png^default_snow_side.png^digtron_digger_yb_frame.png",
 })
 
 awards.register_achievement("digtron_depth100",{
-	title = "Scratching the Surface",
-	description = "Operated a Digtron 100m underground",
+	title = S("Scratching the Surface"),
+	description = S("Operate a Digtron 100m underground"),
 	background = "awards_bg_mining.png",
 	icon = "default_cobble.png^digtron_digger_yb_frame.png^awards_level1.png",
 })
 
 awards.register_achievement("digtron_depth1000",{
-	title = "Digging Deeper",
-	description = "Operated a Digtron 1,000m underground",
+	title = S("Digging Deeper"),
+	description = S("Operate a Digtron 1,000m underground"),
 	background = "awards_bg_mining.png",
 	icon = "default_cobble.png^[colorize:#0002^digtron_digger_yb_frame.png^awards_level2.png",
 })
 
 awards.register_achievement("digtron_depth2000",{
-	title = "More Than a Mile",
-	description = "Operated a Digtron 2,000m underground",
+	title = S("More Than a Mile"),
+	description = S("Operate a Digtron 2,000m underground"),
 	background = "awards_bg_mining.png",
 	icon = "default_cobble.png^[colorize:#0004^digtron_digger_yb_frame.png^awards_level3.png",
 })
 
 awards.register_achievement("digtron_depth4000",{
-	title = "Digging Below Plausibility",
-	description = "The deepest mine in the world is only 3.9 km deep, you operated a Digtron below 4km",
+	title = S("Digging Below Plausibility"),
+	description = S("The deepest mine in the world is only 3.9 km deep, you operated a Digtron below 4km"),
 	background = "awards_bg_mining.png",
 	icon = "default_cobble.png^[colorize:#0006^digtron_digger_yb_frame.png^awards_level4.png",
 })
 
 awards.register_achievement("digtron_depth8000",{
-	title = "Double Depth",
-	description = "Operated a Digtron 8,000m underground",
+	title = S("Double Depth"),
+	description = S("Operate a Digtron 8,000m underground"),
 	background = "awards_bg_mining.png",
 	icon = "default_cobble.png^[colorize:#0008^digtron_digger_yb_frame.png^awards_level5.png",
 })
 
 awards.register_achievement("digtron_depth16000",{
-	title = "Halfway to the Core",
-	description = "Operated a Digtron 16,000m underground",
+	title = S("Halfway to the Core"),
+	description = S("Operate a Digtron 16,000m underground"),
 	background = "awards_bg_mining.png",
 	icon = "default_cobble.png^[colorize:#000A^digtron_digger_yb_frame.png^awards_level6.png",
 })
 
 awards.register_achievement("digtron_depth30000",{
-	title = "Nowhere To Go But Up",
-	description = "Operated a Digtron 30,000m underground",
+	title = S("Nowhere To Go But Up"),
+	description = S("Operate a Digtron 30,000m underground"),
 	background = "awards_bg_mining.png",
 	icon = "default_cobble.png^[colorize:#000C^digtron_digger_yb_frame.png^awards_level7.png",
 })
 
 awards.register_achievement("digtron_100mese_dug",{
-	title = "Mese Master",
-	description = "Mine 100 Mese crystals with a Digtron",
+	title = S("Mese Master"),
+	description = S("Mine 100 Mese crystals with a Digtron"),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_mese_crystal.png^digtron_digger_yb_frame.png",
 })
 
 awards.register_achievement("digtron_100diamond_dug",{
-	title = "Diamonds Vs. Diamonds",
-	description = "Mine 100 diamonds with a Digtron",
+	title = S("Diamond Vs. Diamond"),
+	description = S("Mine 100 diamonds with a Digtron"),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_diamond.png^digtron_digger_yb_frame.png",
 })
 
 awards.register_achievement("digtron_1000dirt_dug",{
-	title = "Strip Mining",
-	description = "Excavate 1000 units of dirt with a Digtron",
+	title = S("Strip Mining"),
+	description = S("Excavate 1000 units of dirt with a Digtron"),
 	background = "awards_bg_mining.png",
 	icon = "default_dirt.png^digtron_digger_yb_frame.png",
 })
 
 awards.register_achievement("digtron_1000_dug",{
-	title = "Digtron Miner",
-	description = "Excavate 1000 blocks using Digtrons",
+	title = S("Digtron Miner"),
+	description = S("Excavate 1000 blocks using a Digtron"),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_tool_bronzepick.png^digtron_digger_yb_frame.png",
 })
 
 awards.register_achievement("digtron_10000_dug",{
-	title = "Digtron Expert Miner",
-	description = "Excavate 10,000 blocks using Digtrons",
+	title = S("Digtron Expert Miner"),
+	description = S("Excavate 10,000 blocks using a Digtron"),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_tool_steelpick.png^digtron_digger_yb_frame.png",
 })
 
 awards.register_achievement("digtron_100000_dug",{
-	title = "Digtron Master Miner",
-	description = "Excavate 100,000 blocks using Digtrons",
+	title = S("Digtron Master Miner"),
+	description = S("Excavate 100,000 blocks using a Digtron"),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_tool_diamondpick.png^digtron_digger_yb_frame.png",
 })
 
 awards.register_achievement("digtron_1000000_dug",{
-	title = "DIGTRON MEGAMINER",
-	description = "Excavate over a million blocks using Digtrons!",
+	title = S("DIGTRON MEGAMINER"),
+	description = S("Excavate over a million blocks using a Digtron!"),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_tool_mesepick.png^digtron_digger_yb_frame.png",
 })
 
 awards.register_achievement("digtron_1000wood_dug",{
-	title = "Clear Cutting",
-	description = "Chop down 1000 units of tree with a Digtron",
+	title = S("Clear Cutting"),
+	description = S("Chop down 1000 units of tree with a Digtron"),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_sapling.png^digtron_digger_yb_frame.png",
 })
 
 awards.register_achievement("digtron_10000wood_dug",{
-	title = "Digtron Deforestation",
-	description = "Chop down 10,000 units of tree with a Digtron",
+	title = S("Digtron Deforestation"),
+	description = S("Chop down 10,000 units of tree with a Digtron"),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_sapling.png^digtron_digger_yb_frame.png",
 })
 
 awards.register_achievement("digtron_1000grass_dug",{
-	title = "Lawnmower",
-	description = "Harvest 1000 units of grass with a Digtron",
+	title = S("Lawnmower"),
+	description = S("Harvest 1000 units of grass with a Digtron"),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_grass_5.png^digtron_digger_yb_frame.png",
 })
 
 awards.register_achievement("digtron_1000iron_dug",{
-	title = "Iron Digtron",
-	description = "Excavate 1000 units of iron ore with a Digtron",
+	title = S("Iron Digtron"),
+	description = S("Excavate 1000 units of iron ore with a Digtron"),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_steel_ingot.png^digtron_digger_yb_frame.png",
 })
 
 awards.register_achievement("digtron_1000copper_dug",{
-	title = "Copper Digtron",
-	description = "Excavate 1000 units of copper ore with a Digtron",
+	title = S("Copper Digtron"),
+	description = S("Excavate 1000 units of copper ore with a Digtron"),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_copper_ingot.png^digtron_digger_yb_frame.png",
 })
 
 awards.register_achievement("digtron_1000coal_dug",{
-	title = "Coal Digtron",
-	description = "Excavate 1,000 units if coal with a Digtron",
+	title = S("Coal Digtron"),
+	description = S("Excavate 1,000 units if coal with a Digtron"),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_coal_lump.png^digtron_digger_yb_frame.png",
 })
 
 awards.register_achievement("digtron_10000coal_dug",{
-	title = "Bagger 288",
-	description = "Excavate 10,000 units of coal with a Digtron",
+	title = S("Bagger 288"),
+	description = S("Excavate 10,000 units of coal with a Digtron"),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_coal_block.png^digtron_digger_yb_frame.png",
 })
 
 awards.register_achievement("digtron_100gold_dug",{
-	title = "Digtron 49er",
-	description = "Excavate 100 units of gold with a Digtron",
+	title = S("Digtron 49er"),
+	description = S("Excavate 100 units of gold with a Digtron"),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_gold_ingot.png^digtron_digger_yb_frame.png",
 })
 
 awards.register_achievement("digtron_1000_built",{
-	title = "Constructive Digging",
-	description = "Build 1,000 blocks with a Digtron",
+	title = S("Constructive Digging"),
+	description = S("Build 1,000 blocks with a Digtron"),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^digtron_builder.png",
 })
 
 awards.register_achievement("digtron_10000_built",{
-	title = "Highly Constructive Digging",
-	description = "Build 10,000 blocks with a Digtron",
+	title = S("Highly Constructive Digging"),
+	description = S("Build 10,000 blocks with a Digtron"),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^digtron_axel_side.png^[transformR90^digtron_builder.png",
 })
 
-awards.register_achievement("digtron_water",{
-	title = "Deep Blue Digtron",
-	description = "Encountered water while operating a Digtron.",
-	background = "awards_bg_mining.png",
-	icon = "default_water.png^digtron_digger_yb_frame.png",
-})
-
 awards.register_achievement("digtron_crate10",{
-	title = "Digtron Packrat",
-	description = "Stored 10 or more Digtron blocks in one crate.",
+	title = S("Digtron Packrat"),
+	description = S("Stored 10 or more Digtron blocks in one crate."),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^digtron_crate.png", -- TODO: Visually distinguish this from Bigtron
 })
 
 awards.register_achievement("digtron_crate100",{
-	title = "Digtron Hoarder",
-	description = "Stored 100 or more Digtron blocks in one crate.",
+	title = S("Digtron Hoarder"),
+	description = S("Stored 100 or more Digtron blocks in one crate."),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^digtron_crate.png", -- TODO: Visually distinguish this from Bigtron
 })

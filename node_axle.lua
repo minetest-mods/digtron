@@ -1,5 +1,9 @@
+-- internationalization boilerplate
+local MP = minetest.get_modpath(minetest.get_current_modname())
+local S, NS = dofile(MP.."/intllib.lua")
+
 minetest.register_node("digtron:axle", {
-	description = "Digtron Rotation Axle",
+	description = S("Digtron Rotation Axle"),
 	_doc_items_longdesc = digtron.doc.axle_longdesc,
     _doc_items_usagehelp = digtron.doc.axle_usagehelp,
 	groups = {cracky = 3, oddly_breakable_by_hand=3, digtron = 1},
@@ -50,7 +54,7 @@ minetest.register_node("digtron:axle", {
 			minetest.get_node_timer(pos):start(digtron.cycle_time*2)
 		else
 			minetest.sound_play("buzzer", {gain=1.0, pos=pos})
-			meta:set_string("infotext", "Digtron is obstructed.")
+			meta:set_string("infotext", S("Digtron is obstructed."))
 		end
 	end,
 	

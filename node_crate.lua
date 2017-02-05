@@ -1,5 +1,9 @@
+-- internationalization boilerplate
+local MP = minetest.get_modpath(minetest.get_current_modname())
+local S, NS = dofile(MP.."/intllib.lua")
+
 minetest.register_node("digtron:empty_crate", {
-	description = "Digtron Crate (Empty)",
+	description = S("Digtron Crate (Empty)"),
 	_doc_items_longdesc = digtron.doc.empty_crate_longdesc,
     _doc_items_usagehelp = digtron.doc.empty_crate_usagehelp,
 	groups = {cracky = 3, oddly_breakable_by_hand=3},
@@ -15,7 +19,7 @@ minetest.register_node("digtron:empty_crate", {
 		if layout.contains_protected_node then
 			local meta = minetest.get_meta(pos)
 			minetest.sound_play("buzzer", {gain=0.5, pos=pos})
-			meta:set_string("infotext", "Digtron can't be packaged, it contains protected blocks")
+			meta:set_string("infotext", S("Digtron can't be packaged, it contains protected blocks"))
 			-- no stealing other peoples' digtrons
 			return
 		end
@@ -35,8 +39,8 @@ minetest.register_node("digtron:empty_crate", {
 		
 		local meta = minetest.get_meta(pos)
 		meta:set_string("crated_layout", layout_string)
-		meta:set_string("title", "Crated Digtron")
-		meta:set_string("infotext", "Crated Digtron")
+		meta:set_string("title", S("Crated Digtron"))
+		meta:set_string("infotext", S("Crated Digtron"))
 	end,
 })
 
@@ -48,32 +52,32 @@ if minetest.get_modpath("doc") then
 	default.gui_bg ..
 	default.gui_bg_img ..
 	default.gui_slots ..
-	"field[0.3,0.5;4,0.5;title;Digtron Name;${title}]" ..
-	"button_exit[0.0,1.2;1,0.1;save;Save\nTitle]" ..
-	"tooltip[save;Saves the title of this Digtron]" ..
-	"button_exit[1.0,1.2;1,0.1;show;Show\nBlocks]" ..
-	"tooltip[show;Shows which blocks the packed Digtron will occupy if unpacked]" ..
-	"button_exit[2.0,1.2;1,0.1;unpack;Unpack]" ..
-	"tooltip[unpack;Attempts to unpack the Digtron on this location]" ..
-	"button_exit[3.0,1.2;1,0.1;help;Help]" ..
-	"tooltip[help;Show documentation about this block]"
+	"field[0.3,0.5;4,0.5;title;" .. S("Digtron Name") .. ";${title}]" ..
+	"button_exit[0.0,1.2;1,0.1;save;" .. S("Save\nTitle") .. "]" ..
+	"tooltip[save;" .. S("Saves the title of this Digtron") .. "]" ..
+	"button_exit[1.0,1.2;1,0.1;show;" .. S("Show\nBlocks") .. "]" ..
+	"tooltip[show;" .. S("Shows which blocks the packed Digtron will occupy if unpacked") .. "]" ..
+	"button_exit[2.0,1.2;1,0.1;unpack;" .. S("Unpack") .. "]" ..
+	"tooltip[unpack;" .. S("Attempts to unpack the Digtron on this location") .. "]" ..
+	"button_exit[3.0,1.2;1,0.1;help;" .. S("Help") .. "]" ..
+	"tooltip[help;" .. S("Show documentation about this block") .. "]"
 else
 	loaded_formspec =
 	"size[4,1.5]" ..
 	default.gui_bg ..
 	default.gui_bg_img ..
 	default.gui_slots ..
-	"field[0.3,0.5;4,0.5;title;Digtron Name;${title}]" ..
-	"button_exit[0.5,1.2;1,0.1;save;Save\nTitle]" ..
-	"tooltip[show;Saves the title of this Digtron]" ..
-	"button_exit[1.5,1.2;1,0.1;show;Show\nBlocks]" ..
-	"tooltip[save;Shows which blocks the packed Digtron will occupy if unpacked]" ..
-	"button_exit[2.5,1.2;1,0.1;unpack;Unpack]" ..
-	"tooltip[unpack;Attempts to unpack the Digtron on this location]"
+	"field[0.3,0.5;4,0.5;title;" .. S("Digtron Name") .. ";${title}]" ..
+	"button_exit[0.5,1.2;1,0.1;save;" .. S("Save\nTitle") .. "]" ..
+	"tooltip[show;" .. S("Saves the title of this Digtron") .. "]" ..
+	"button_exit[1.5,1.2;1,0.1;show;" .. S("Show\nBlocks") .. "]" ..
+	"tooltip[save;" .. S("Shows which blocks the packed Digtron will occupy if unpacked") .. "]" ..
+	"button_exit[2.5,1.2;1,0.1;unpack;" .. S("Unpack") .. "]" ..
+	"tooltip[unpack;" .. S("Attempts to unpack the Digtron on this location") .. "]"
 end
 
 minetest.register_node("digtron:loaded_crate", {
-	description = "Digtron Crate (Loaded)",
+	description = S("Digtron Crate (Loaded)"),
 	_doc_items_longdesc = digtron.doc.loaded_crate_longdesc,
     _doc_items_usagehelp = digtron.doc.loaded_crate_usagehelp,
 	groups = {cracky = 3, oddly_breakable_by_hand=3, not_in_creative_inventory=1, digtron_protected=1},
@@ -107,7 +111,7 @@ minetest.register_node("digtron:loaded_crate", {
 		local layout = DigtronLayout.deserialize(layout_string)
 
 		if layout == nil then
-			meta:set_string("infotext", meta:get_string("title") .. "\nUnable to read layout from crate metadata, regrettably this Digtron may be corrupted or lost.")
+			meta:set_string("infotext", meta:get_string("title") .. "\n" .. S("Unable to read layout from crate metadata, regrettably this Digtron may be corrupted or lost."))
 			minetest.sound_play("buzzer", {gain=0.5, pos=pos})			
 			-- Something went horribly wrong
 			return
@@ -138,13 +142,13 @@ minetest.register_node("digtron:loaded_crate", {
 		end
 		
 		if protected_node then
-			meta:set_string("infotext", meta:get_string("title") .. "\nUnable to deploy Digtron due to protected blocks in target area")
+			meta:set_string("infotext", meta:get_string("title") .. "\n" .. S("Unable to deploy Digtron due to protected blocks in target area"))
 			minetest.sound_play("buzzer", {gain=0.5, pos=pos})
 			return
 		end
 		
 		if obstructed_node then
-			meta:set_string("infotext", meta:get_string("title") .. "\nUnable to deploy Digtron due to obstruction in target area")
+			meta:set_string("infotext", meta:get_string("title") .. "\n" .. S("Unable to deploy Digtron due to obstruction in target area"))
 			minetest.sound_play("buzzer", {gain=0.5, pos=pos})
 			return
 		end

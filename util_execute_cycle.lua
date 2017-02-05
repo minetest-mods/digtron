@@ -1,3 +1,7 @@
+-- internationalization boilerplate
+local MP = minetest.get_modpath(minetest.get_current_modname())
+local S, NS = dofile(MP.."/intllib.lua")
+
 local dig_dust = function(pos, facing)
 	local direction = minetest.facedir_to_dir(facing)
 	return {
@@ -44,7 +48,7 @@ local function neighbour_test(layout, status_text, dir)
 	if layout.all == nil then
 		-- get_all_digtron_neighbours returns nil if the digtron array touches unloaded nodes, too dangerous to do anything in that situation. Abort.
 		minetest.sound_play("buzzer", {gain=0.25, pos=layout.controller})
-		return "Digtron is adjacent to unloaded nodes.\n" .. status_text, 1
+		return S("Digtron is adjacent to unloaded nodes.") .. "\n" .. status_text, 1
 	end
 	
 	if layout.water_touching == true then
@@ -103,7 +107,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	local facing = minetest.get_node(pos).param2
 	local dir = minetest.facedir_to_dir(facing)
 	local fuel_burning = meta:get_float("fuel_burning") -- get amount of burned fuel left over from last cycle
-	local status_text = string.format("Heat remaining in controller furnace: %d", math.max(0, fuel_burning))
+	local status_text = string.format(S("Heat remaining in controller furnace: %d"), math.max(0, fuel_burning))
 	
 	local layout = DigtronLayout.create(pos, clicker)
 
@@ -165,7 +169,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 		minetest.get_node_timer(pos):start(digtron.cycle_time)
 		minetest.sound_play("squeal", {gain=1.0, pos=pos})
 		minetest.sound_play("buzzer", {gain=0.5, pos=pos})
-		return pos, "Digtron is obstructed.\n" .. status_text, 3 --Abort, don't dig and don't build.
+		return pos, S("Digtron is obstructed.") .. "\n" .. status_text, 3 --Abort, don't dig and don't build.
 	end
 
 	----------------------------------------------------------------------------------------------------------------------
@@ -212,7 +216,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	
 	if test_fuel_needed > fuel_burning + test_fuel_burned then
 		minetest.sound_play("buzzer", {gain=0.5, pos=pos})
-		return pos, "Digtron needs more fuel.", 4 -- abort, don't dig and don't build.
+		return pos, S("Digtron needs more fuel."), 4 -- abort, don't dig and don't build.
 	end
 	
 	if not can_build then
@@ -222,11 +226,11 @@ digtron.execute_dig_cycle = function(pos, clicker)
 		local return_code = 5
 		if test_build_return_code == 3 then
 			minetest.sound_play("honk", {gain=0.5, pos=pos}) -- A builder is not configured
-			return_string = "Digtron connected to at least one builder with no output material assigned.\n"
+			return_string = S("Digtron connected to at least one builder with no output material assigned.") .. "\n"
 			return_code = 6
 		elseif test_build_return_code == 2 then
 			minetest.sound_play("dingding", {gain=1.0, pos=pos}) -- Insufficient inventory
-			return_string = string.format("Digtron has insufficient building materials. Needed: %s\n",
+			return_string = string.format(S("Digtron has insufficient building materials. Needed: %s") .. "\n",
 				test_build_return_item:get_name())
 			return_code = 7
 		end
@@ -295,7 +299,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 		-- We weren't able to detect this build failure ahead of time, so make a big noise now. This is strange, shouldn't happen.
 		minetest.sound_play("dingding", {gain=1.0, pos=pos})
 		minetest.sound_play("buzzer", {gain=0.5, pos=pos})
-		status_text = "Digtron unexpectedly failed to execute one or more build operations, likely due to an inventory error.\n"
+		status_text = S("Digtron unexpectedly failed to execute one or more build operations, likely due to an inventory error.") .. "\n"
 	end
 	
 	-- acutally burn the fuel needed
@@ -308,7 +312,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 		fuel_burning = fuel_burning + digtron.burn(layout.fuelstores, -fuel_burning, false)
 	end
 	meta:set_float("fuel_burning", fuel_burning)
-	status_text = status_text .. string.format("Heat remaining in controller furnace: %d", math.max(0, fuel_burning))
+	status_text = status_text .. string.format(S("Heat remaining in controller furnace: %d"), math.max(0, fuel_burning))
 
 	-- Eyecandy
 	for _, particles in pairs(particle_systems) do
@@ -320,7 +324,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	local node_to_dig, whether_to_dig = layout.nodes_dug:pop()
 	while node_to_dig ~= nil do
 		if whether_to_dig == true then
-			minetest.log("action", string.format("%s uses Digtron to dig %s at (%d, %d, %d)", clicker:get_player_name(), minetest.get_node(node_to_dig).name, node_to_dig.x, node_to_dig.y, node_to_dig.z))
+			minetest.log("action", string.format(S("%s uses Digtron to dig %s at (%d, %d, %d)"), clicker:get_player_name(), minetest.get_node(node_to_dig).name, node_to_dig.x, node_to_dig.y, node_to_dig.z))
 			minetest.remove_node(node_to_dig)
 		end
 		-- all of the digtron's nodes wind up in nodes_dug, so this is an ideal place to stick
@@ -358,7 +362,7 @@ digtron.execute_move_cycle = function(pos, clicker)
 		minetest.get_node_timer(pos):start(digtron.cycle_time)
 		minetest.sound_play("squeal", {gain=1.0, pos=pos})
 		minetest.sound_play("buzzer", {gain=0.5, pos=pos})
-		return pos, "Digtron is obstructed.\n" .. status_text, 3 --Abort, don't dig and don't build.
+		return pos, S("Digtron is obstructed.") .. "\n" .. status_text, 3 --Abort, don't dig and don't build.
 	end
 
 	minetest.sound_play("truck", {gain=1.0, pos=pos})
@@ -385,7 +389,7 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 	local facing = minetest.get_node(pos).param2
 	local dir = digtron.facedir_to_down_dir(facing)
 	local fuel_burning = meta:get_float("fuel_burning") -- get amount of burned fuel left over from last cycle
-	local status_text = string.format("Heat remaining in controller furnace: %d", math.max(0, fuel_burning))
+	local status_text = string.format(S("Heat remaining in controller furnace: %d"), math.max(0, fuel_burning))
 	
 	local layout = DigtronLayout.create(pos, clicker)
 
@@ -447,7 +451,7 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 		minetest.get_node_timer(pos):start(digtron.cycle_time)
 		minetest.sound_play("squeal", {gain=1.0, pos=pos})
 		minetest.sound_play("buzzer", {gain=0.5, pos=pos})
-		return pos, "Digtron is obstructed.\n" .. status_text, 3 --Abort, don't dig and don't build.
+		return pos, S("Digtron is obstructed.") .. "\n" .. status_text, 3 --Abort, don't dig and don't build.
 	end
 
 	----------------------------------------------------------------------------------------------------------------------
@@ -496,7 +500,7 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 		fuel_burning = fuel_burning + digtron.burn(layout.fuelstores, -fuel_burning, false)
 	end
 	meta:set_float("fuel_burning", fuel_burning)
-	status_text = status_text .. string.format("Heat remaining in controller furnace: %d", math.max(0, fuel_burning))
+	status_text = status_text .. string.format(S("Heat remaining in controller furnace: %d"), math.max(0, fuel_burning))
 
 	-- Eyecandy
 	for _, particles in pairs(particle_systems) do
@@ -508,7 +512,7 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 	local node_to_dig, whether_to_dig = layout.nodes_dug:pop()
 	while node_to_dig ~= nil do
 		if whether_to_dig == true then
-			minetest.log("action", string.format("%s uses Digtron to dig %s at (%d, %d, %d)", clicker:get_player_name(), minetest.get_node(node_to_dig).name, node_to_dig.x, node_to_dig.y, node_to_dig.z))
+			minetest.log("action", string.format(S("%s uses Digtron to dig %s at (%d, %d, %d)"), clicker:get_player_name(), minetest.get_node(node_to_dig).name, node_to_dig.x, node_to_dig.y, node_to_dig.z))
 			minetest.remove_node(node_to_dig)
 		end
 		-- all of the digtron's nodes wind up in nodes_dug, so this is an ideal place to stick

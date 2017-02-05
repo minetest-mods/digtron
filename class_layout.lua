@@ -43,7 +43,7 @@ function DigtronLayout.create(pos, player)
 	self.contains_protected_node = false -- used to indicate if at least one node in this digtron array is protected from the player.
 	self.controller = {x=pos.x, y=pos.y, z=pos.z} 	--Make a deep copy of the pos parameter just in case the calling code wants to play silly buggers with it
 
-	table.insert(self.all, get_node_image(pos, minetest.get_node(pos))) -- We never visit the source node, so insert it into the all table a priori. Revisit this if a controller node is created that contains fuel or inventory or whatever.
+	table.insert(self.all, get_node_image(pos, minetest.get_node(pos))) -- We never visit the source node, so insert it into the all table a priori. Revisit this design decision if a controller node is created that contains fuel or inventory or whatever.
 
 	self.extents.max_x = pos.x
 	self.extents.min_x = pos.x

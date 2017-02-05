@@ -1,3 +1,7 @@
+-- internationalization boilerplate
+local MP = minetest.get_modpath(minetest.get_current_modname())
+local S, NS = dofile(MP.."/intllib.lua")
+
 local controller_nodebox ={
 	{-0.3125, -0.3125, -0.3125, 0.3125, 0.3125, 0.3125}, -- Core
 	{-0.1875, 0.3125, -0.1875, 0.1875, 0.5, 0.1875}, -- +y_connector
@@ -13,7 +17,7 @@ local controller_nodebox ={
 
 -- Master controller. Most complicated part of the whole system. Determines which direction a digtron moves and triggers all of its component parts.
 minetest.register_node("digtron:controller", {
-	description = "Digtron Control Module",
+	description = S("Digtron Control Module"),
 	_doc_items_longdesc = digtron.doc.controller_longdesc,
     _doc_items_usagehelp = digtron.doc.controller_usagehelp,
 	groups = {cracky = 3, oddly_breakable_by_hand = 3, digtron = 1},
@@ -41,7 +45,7 @@ minetest.register_node("digtron:controller", {
 	on_construct = function(pos)
         local meta = minetest.get_meta(pos)
 		meta:set_float("fuel_burning", 0.0)
-		meta:set_string("infotext", "Heat remaining in controller furnace: 0")
+		meta:set_string("infotext", string.format(S("Heat remaining in controller furnace: %d"), 0))
 	end,
 	
 	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
@@ -76,20 +80,20 @@ local auto_formspec = "size[8,6.2]" ..
 	default.gui_bg_img ..
 	default.gui_slots ..
 	"container[2.0,0]" ..
-	"field[0.0,0.8;1,0.1;cycles;Cycles;${cycles}]" ..
-	"tooltip[cycles;When triggered, this controller will try to run for the given number of cycles.\nThe cycle count will decrement as it runs, so if it gets halted by a problem\nyou can fix the problem and restart.]" ..
-	"button_exit[0.7,0.5;1,0.1;set;Set]" ..
-	"tooltip[set;Saves the cycle setting without starting the controller running]" ..
-	"button_exit[1.7,0.5;1,0.1;execute;Set &\nExecute]" ..
-	"tooltip[execute;Begins executing the given number of cycles]" ..
-	"field[0.0,2.0;1,0.1;slope;Slope;${slope}]" ..
-	"tooltip[slope;For diagonal digging. After every X nodes the auto controller moves forward,\nthe controller will add an additional cycle moving the digtron laterally in the\ndirection of the arrows on the side of this controller.\nSet to 0 for no lateral digging.]" ..
-	"field[1.0,2.0;1,0.1;offset;Offset;${offset}]" ..
-	"tooltip[offset;Sets the offset of the lateral motion defined in the Slope field.\nNote: this offset is relative to the controller's location.\nThe controller will move down when it reaches the indicated point.]" ..
-	"field[2.0,2.0;1,0.1;period;Delay;${period}]" ..
-	"tooltip[period;Number of seconds to wait between each cycle]" ..
+	"field[0.0,0.8;1,0.1;cycles;" .. S("Cycles").. ";${cycles}]" ..
+	"tooltip[cycles;" .. S("When triggered, this controller will try to run for the given number of cycles.\nThe cycle count will decrement as it runs, so if it gets halted by a problem\nyou can fix the problem and restart.").. "]" ..
+	"button_exit[0.7,0.5;1,0.1;set;" .. S("Set").. "]" ..
+	"tooltip[set;" .. S("Saves the cycle setting without starting the controller running").. "]" ..
+	"button_exit[1.7,0.5;1,0.1;execute;" .. S("Set &\nExecute").. "]" ..
+	"tooltip[execute;" .. S("Begins executing the given number of cycles").. "]" ..
+	"field[0.0,2.0;1,0.1;slope;" .. S("Slope").. ";${slope}]" ..
+	"tooltip[slope;" .. S("For diagonal digging. After every X nodes the auto controller moves forward,\nthe controller will add an additional cycle moving the digtron laterally in the\ndirection of the arrows on the side of this controller.\nSet to 0 for no lateral digging.").. "]" ..
+	"field[1.0,2.0;1,0.1;offset;" .. S("Offset").. ";${offset}]" ..
+	"tooltip[offset;" .. S("Sets the offset of the lateral motion defined in the Slope field.\nNote: this offset is relative to the controller's location.\nThe controller will move down when it reaches the indicated point.").. "]" ..
+	"field[2.0,2.0;1,0.1;period;" .. S("Delay").. ";${period}]" ..
+	"tooltip[period;" .. S("Number of seconds to wait between each cycle").. "]" ..
 	"list[current_name;stop;3.0,0.7;1,1;]" ..
-	"label[3.0,1.5;Stop block]"	..
+	"label[3.0,1.5;" .. S("Stop block").. "]"	..
 	"container_end[]" ..
 	"list[current_player;main;0,2.3;8,1;]" ..
 	default.get_hotbar_bg(0,2.3) ..
@@ -99,8 +103,8 @@ local auto_formspec = "size[8,6.2]" ..
 
 if minetest.get_modpath("doc") then
 	auto_formspec = auto_formspec ..
-	"button_exit[7.0,0.5;1,0.1;help;Help]" ..
-	"tooltip[help;Show documentation about this block]"
+	"button_exit[7.0,0.5;1,0.1;help;" .. S("Help") .. "]" ..
+	"tooltip[help;" .. S("Show documentation about this block").. "]"
 end	
 
 -- Needed to make this global so that it could recurse into minetest.after
@@ -121,7 +125,7 @@ digtron.auto_cycle = function(pos)
 		local newpos, status, return_code = digtron.execute_downward_dig_cycle(pos, player)
 		
 		if vector.equals(pos, newpos) then
-			status = status .. string.format("\nCycles remaining: %d\nHalted!", cycle)
+			status = status .. string.format("\n" .. S("Cycles remaining: %d") .. "\n" .. S("Halted!"), cycle)
 			meta:set_string("infotext", status)
 			if return_code == 1 then --return code 1 happens when there's unloaded nodes adjacent, just keep trying.
 				minetest.after(meta:get_int("period"), digtron.auto_cycle, newpos)
@@ -140,7 +144,7 @@ digtron.auto_cycle = function(pos)
 	local newpos, status, return_code = digtron.execute_dig_cycle(pos, player)
 	
 	if vector.equals(pos, newpos) then
-		status = status .. string.format("\nCycles remaining: %d\nHalted!", cycle)
+		status = status .. string.format("\n" .. S("Cycles remaining: %d") .. "\n" .. S("Halted!"), cycle)
 		meta:set_string("infotext", status)
 		if return_code == 1 then --return code 1 happens when there's unloaded nodes adjacent, just keep trying.
 			minetest.after(meta:get_int("period"), digtron.auto_cycle, newpos)
@@ -153,7 +157,7 @@ digtron.auto_cycle = function(pos)
 	meta = minetest.get_meta(newpos)
 	cycle = meta:get_int("cycles") - 1
 	meta:set_int("cycles", cycle)
-	status = status .. string.format("\nCycles remaining: %d", cycle)
+	status = status .. string.format("\n" .. S("Cycles remaining: %d"), cycle)
 	meta:set_string("infotext", status)
 	meta:set_string("lateral_done", nil)
 	
@@ -165,7 +169,7 @@ digtron.auto_cycle = function(pos)
 end
 
 minetest.register_node("digtron:auto_controller", {
-	description = "Digtron Automatic Control Module",
+	description = S("Digtron Automatic Control Module"),
 	_doc_items_longdesc = digtron.doc.auto_controller_longdesc,
     _doc_items_usagehelp = digtron.doc.auto_controller_usagehelp,
 	groups = {cracky = 3, oddly_breakable_by_hand = 3, digtron = 1},
@@ -193,7 +197,7 @@ minetest.register_node("digtron:auto_controller", {
 	on_construct = function(pos)
         local meta = minetest.get_meta(pos)
 		meta:set_float("fuel_burning", 0.0)
-		meta:set_string("infotext", "Heat remaining in controller furnace: 0")
+		meta:set_string("infotext", string.format(S("Heat remaining in controller furnace: %d"), 0))
 		meta:set_string("formspec", auto_formspec)
 		-- Reusing offset and period to keep the digtron node-moving code simple, and the names still fit well
 		meta:set_int("period", digtron.cycle_time)
@@ -277,7 +281,7 @@ minetest.register_node("digtron:auto_controller", {
 	
 	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
 		local meta = minetest.get_meta(pos)
-		meta:set_string("infotext", meta:get_string("infotext") .. "\nInterrupted!")
+		meta:set_string("infotext", meta:get_string("infotext") .. "\n" .. S("Interrupted!"))
 		meta:set_string("waiting", "true")
 		meta:set_string("formspec", auto_formspec)
 	end,
@@ -293,7 +297,7 @@ minetest.register_node("digtron:auto_controller", {
 -- A much simplified control unit that only moves the digtron, and doesn't trigger the diggers or builders.
 -- Handy for shoving a digtron to the side if it's been built a bit off.
 minetest.register_node("digtron:pusher", {
-	description = "Digtron Pusher Module",
+	description = S("Digtron Pusher Module"),
 	_doc_items_longdesc = digtron.doc.pusher_longdesc,
     _doc_items_usagehelp = digtron.doc.pusher_usagehelp,
 	groups = {cracky = 3, oddly_breakable_by_hand=3, digtron = 1},

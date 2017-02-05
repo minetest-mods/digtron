@@ -1,3 +1,7 @@
+-- internationalization boilerplate
+local MP = minetest.get_modpath(minetest.get_current_modname())
+local S, NS = dofile(MP.."/intllib.lua")
+
 -- Note: diggers go in group 3 and have an execute_dig method.
 
 local digger_nodebox = {
@@ -25,19 +29,19 @@ local intermittent_formspec =
 	default.gui_bg ..
 	default.gui_bg_img ..
 	default.gui_slots ..
-	"field[0.5,0.8;1,0.1;period;Periodicity;${period}]" ..
-	"tooltip[period;Digger will dig once every n steps.\nThese steps are globally aligned, all diggers with\nthe same period and offset will dig on the same location.]" ..
-	"field[1.5,0.8;1,0.1;offset;Offset;${offset}]" ..
-	"tooltip[offset;Offsets the start of periodicity counting by this amount.\nFor example, a digger with period 2 and offset 0 digs\nevery even-numbered block and one with period 2 and\noffset 1 digs every odd-numbered block.]" ..
-	"button_exit[2.2,0.5;1,0.1;set;Save]" ..
-	"tooltip[set;Saves settings]"
+	"field[0.5,0.8;1,0.1;period;" .. S("Periodicity") .. ";${period}]" ..
+	"tooltip[period;" .. S("Digger will dig once every n steps.\nThese steps are globally aligned, all diggers with\nthe same period and offset will dig on the same location.") .. "]" ..
+	"field[1.5,0.8;1,0.1;offset;" .. S("Offset") .. ";${offset}]" ..
+	"tooltip[offset;" .. S("Offsets the start of periodicity counting by this amount.\nFor example, a digger with period 2 and offset 0 digs\nevery even-numbered block and one with period 2 and\noffset 1 digs every odd-numbered block.") .. "]" ..
+	"button_exit[2.2,0.5;1,0.1;set;" .. S("Save") .. "]" ..
+	"tooltip[set;" .. S("Saves settings") .. "]"
 
 local intermittent_on_construct = function(pos)
 	local formspec = intermittent_formspec
 	if minetest.get_modpath("doc") then
 		formspec = "size[4.5,1]" .. formspec ..
-		"button_exit[3.2,0.5;1,0.1;help;Help]" ..
-		"tooltip[help;Show documentation about this block]"
+		"button_exit[3.2,0.5;1,0.1;help;" .. S("Help") .. "]" ..
+		"tooltip[help;" .. S("Show documentation about this block") .. "]"
 	else
 		formspec = "size[3.5,1]" .. formspec
 	end
@@ -65,7 +69,7 @@ end,
 
 -- Digs out nodes that are "in front" of the digger head.
 minetest.register_node("digtron:digger", {
-	description = "Digtron Digger Head",
+	description = S("Digtron Digger Head"),
 	_doc_items_longdesc = digtron.doc.digger_longdesc,
     _doc_items_usagehelp = digtron.doc.digger_usagehelp,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 3},
@@ -118,7 +122,7 @@ minetest.register_node("digtron:digger", {
 
 -- Digs out nodes that are "in front" of the digger head.
 minetest.register_node("digtron:intermittent_digger", {
-	description = "Digtron Intermittent Digger Head",
+	description = S("Digtron Intermittent Digger Head"),
 	_doc_items_longdesc = digtron.doc.intermittent_digger_longdesc,
     _doc_items_usagehelp = digtron.doc.intermittent_digger_usagehelp,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 3},
@@ -188,7 +192,7 @@ minetest.register_node("digtron:intermittent_digger", {
 
 -- A special-purpose digger to deal with stuff like sand and gravel in the ceiling. It always digs (no periodicity or offset), but it only digs falling_block nodes
 minetest.register_node("digtron:soft_digger", {
-	description = "Digtron Soft Material Digger Head",
+	description = S("Digtron Soft Material Digger Head"),
 	_doc_items_longdesc = digtron.doc.soft_digger_longdesc,
     _doc_items_usagehelp = digtron.doc.soft_digger_usagehelp,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 3},
@@ -243,7 +247,7 @@ minetest.register_node("digtron:soft_digger", {
 })
 
 minetest.register_node("digtron:intermittent_soft_digger", {
-	description = "Digtron Intermittent Soft Material Digger Head",
+	description = S("Digtron Intermittent Soft Material Digger Head"),
 	_doc_items_longdesc = digtron.doc.intermittent_soft_digger_longdesc,
     _doc_items_usagehelp = digtron.doc.intermittent_soft_digger_usagehelp,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 3},
@@ -316,7 +320,7 @@ minetest.register_node("digtron:intermittent_soft_digger", {
 
 -- Digs out nodes that are "in front" of the digger head and "below" the digger head (can be rotated).
 minetest.register_node("digtron:dual_digger", {
-	description = "Digtron Dual Digger Head",
+	description = S("Digtron Dual Digger Head"),
 	_doc_items_longdesc = digtron.doc.dual_digger_longdesc,
     _doc_items_usagehelp = digtron.doc.dual_digger_usagehelp,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 3},
@@ -393,7 +397,7 @@ minetest.register_node("digtron:dual_digger", {
 
 -- Digs out soft nodes that are "in front" of the digger head and "below" the digger head (can be rotated).
 minetest.register_node("digtron:dual_soft_digger", {
-	description = "Digtron Dual Soft Material Digger Head",
+	description = S("Digtron Dual Soft Material Digger Head"),
 	_doc_items_longdesc = digtron.doc.dual_soft_digger_longdesc,
     _doc_items_usagehelp = digtron.doc.dual_soft_digger_usagehelp,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 3},

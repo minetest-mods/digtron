@@ -1,6 +1,10 @@
+-- internationalization boilerplate
+local MP = minetest.get_modpath(minetest.get_current_modname())
+local S, NS = dofile(MP.."/intllib.lua")
+
 -- A do-nothing "structural" node, to ensure all digtron nodes that are supposed to be connected to each other can be connected to each other.
 minetest.register_node("digtron:structure", {
-	description = "Digtron Structure",
+	description = S("Digtron Structure"),
 	_doc_items_longdesc = digtron.doc.structure_longdesc,
     _doc_items_usagehelp = digtron.doc.structure_usagehelp,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 1},
@@ -33,7 +37,7 @@ minetest.register_node("digtron:structure", {
 
 -- A modest light source that will move with the digtron, handy for working in a tunnel you aren't bothering to install permanent lights in.
 minetest.register_node("digtron:light", {
-	description = "Digtron Light",
+	description = S("Digtron Light"),
 	_doc_items_longdesc = digtron.doc.light_longdesc,
     _doc_items_usagehelp = digtron.doc.light_usagehelp,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 1},
@@ -55,7 +59,7 @@ minetest.register_node("digtron:light", {
 
 -- A simple structural panel
 minetest.register_node("digtron:panel", {
-	description = "Digtron Panel",
+	description = S("Digtron Panel"),
 	_doc_items_longdesc = digtron.doc.panel_longdesc,
     _doc_items_usagehelp = digtron.doc.panel_usagehelp,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 1},
@@ -78,7 +82,7 @@ minetest.register_node("digtron:panel", {
 
 -- A simple structural panel
 minetest.register_node("digtron:edge_panel", {
-	description = "Digtron Edge Panel",
+	description = S("Digtron Edge Panel"),
 	_doc_items_longdesc = digtron.doc.edge_panel_longdesc,
     _doc_items_usagehelp = digtron.doc.edge_panel_usagehelp,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 1},
@@ -107,7 +111,7 @@ minetest.register_node("digtron:edge_panel", {
 })
 
 minetest.register_node("digtron:corner_panel", {
-	description = "Digtron Corner Panel",
+	description = S("Digtron Corner Panel"),
 	_doc_items_longdesc = digtron.doc.corner_panel_longdesc,
     _doc_items_usagehelp = digtron.doc.corner_panel_usagehelp,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 1},
