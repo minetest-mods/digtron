@@ -87,9 +87,9 @@ local auto_formspec = "size[8,6.2]" ..
 	"button_exit[1.7,0.5;1,0.1;execute;" .. S("Set &\nExecute").. "]" ..
 	"tooltip[execute;" .. S("Begins executing the given number of cycles").. "]" ..
 	"field[0.0,2.0;1,0.1;slope;" .. S("Slope").. ";${slope}]" ..
-	"tooltip[slope;" .. S("For diagonal digging. After every X nodes the auto controller moves forward,\nthe controller will add an additional cycle moving the digtron laterally in the\ndirection of the arrows on the side of this controller.\nSet to 0 for no lateral digging.").. "]" ..
+	"tooltip[slope;" .. S("For diagonal digging. After moving forward this number of nodes the auto controller\nwill add an additional cycle moving the digtron laterally in the\ndirection of the arrows on the side of this controller.\nSet to 0 for no lateral digging.").. "]" ..
 	"field[1.0,2.0;1,0.1;offset;" .. S("Offset").. ";${offset}]" ..
-	"tooltip[offset;" .. S("Sets the offset of the lateral motion defined in the Slope field.\nNote: this offset is relative to the controller's location.\nThe controller will move down when it reaches the indicated point.").. "]" ..
+	"tooltip[offset;" .. S("Sets the offset of the lateral motion defined in the Slope field.\nNote: this offset is relative to the controller's location.\nThe controller will move laterally when it reaches the indicated point.").. "]" ..
 	"field[2.0,2.0;1,0.1;period;" .. S("Delay").. ";${period}]" ..
 	"tooltip[period;" .. S("Number of seconds to wait between each cycle").. "]" ..
 	"list[current_name;stop;3.0,0.7;1,1;]" ..
