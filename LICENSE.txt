@@ -11,7 +11,7 @@ Sounds are under various licenses, see the license.txt file in the /sounds direc
 License for Code
 ----------------
 
-Copyright (C) 2016 FaceDeer
+Copyright (C) 2017 FaceDeer
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by

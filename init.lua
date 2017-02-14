@@ -23,14 +23,16 @@ dofile( minetest.get_modpath( "digtron" ) .. "/recipes.lua" )
 local particle_effects = minetest.setting_getbool("enable_particles")
 
 -- this causes digtrons to operate without consuming fuel or building materials.
-local digtron_creative = not minetest.setting_getbool("digtron_uses_resources")
+local digtron_uses_resources = minetest.setting_getbool("digtron_uses_resources")
+if digtron_uses_resources == nil then digtron_uses_resources = true end
+
 -- when true, lava counts as protected nodes.
 local lava_impassible = minetest.setting_getbool("digtron_lava_impassible")
 
 -- when true, diggers deal damage to creatures when they trigger.
 local damage_creatures = minetest.setting_getbool("digtron_damage_creatures")
 
-digtron.creative_mode = digtron_creative -- default false
+digtron.creative_mode = not digtron_uses_resources -- default false
 digtron.particle_effects = particle_effects or particle_effects == nil -- default true
 digtron.lava_impassible = lava_impassible or lava_impassible == nil -- default true
 digtron.diggers_damage_creatures = damage_creatures or damage_creatures == nil -- default true
