@@ -1,5 +1,4 @@
--- A simple special-purpose class, this is used for building up sets of three-dimensional points
--- I only added features to it as I needed them so may not be highly useful outside of this mod's context.
+-- A simple special-purpose class, this is used for building up sets of three-dimensional points for fast reference
 
 Pointset = {}
 Pointset.__index = Pointset
@@ -38,6 +37,18 @@ function Pointset:get(x, y, z)
 	return self.points[x][y][z]
 end
 
+function Pointset:set_pos(pos, value)
+	self:set(pos.x, pos.y, pos.z, value)
+end
+
+function Pointset:set_pos_if_not_in(excluded, pos, value)
+	self:set_if_not_in(excluded, pos.x, pos.y, pos.z, value)
+end
+
+function Pointset:get_pos(pos)
+	return self:get(pos.x, pos.y, pos.z)
+end
+
 function Pointset:pop()
 	-- returns a point that's in the 3D array, and then removes it.
 	local pos = {}
@@ -71,3 +82,20 @@ function Pointset:pop()
 	
 	return pos, val
 end
+
+function Pointset:get_pos_list(value)
+	-- Returns a list of all points with the given value in standard Minetest vector format. If no value is provided, returns all points
+	local outlist = {}
+	for x, ytable in ipairs(self.points) do
+		for y, ztable in ipairs(ytable) do
+			for z, val in ipairs(ztable) do
+				if (value == nil and val ~= nil ) or val == value then
+					table.insert(outlist, {x=x, y=y, z=z})
+				end
+			end
+		end
+	end
+	return outlist
+end
+			
+	
