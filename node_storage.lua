@@ -114,9 +114,6 @@ minetest.register_node("digtron:fuelstore", {
 	
 	-- Only allow fuel items to be placed in fuel
 	allow_metadata_inventory_put = function(pos, listname, index, stack, player)
-		if minetest.is_protected(pos, player:get_player_name()) then
-			return 0
-		end
 		if listname == "fuel" then
 			if minetest.get_craft_result({method="fuel", width=1, items={stack}}).time ~= 0 then
 				return stack:get_count()
@@ -204,9 +201,6 @@ minetest.register_node("digtron:combined_storage", {
 	
 	-- Only allow fuel items to be placed in fuel
 	allow_metadata_inventory_put = function(pos, listname, index, stack, player)
-		if minetest.is_protected(pos, player:get_player_name()) then
-			return 0
-		end
 		if listname == "fuel" then
 			if minetest.get_craft_result({method="fuel", width=1, items={stack}}).time ~= 0 then
 				return stack:get_count()
