@@ -4,8 +4,36 @@ local S, NS = dofile(MP.."/intllib.lua")
 
 -- Note: builders go in group 4 and have both test_build and execute_build methods.
 
-local builder_formspec =
-	"size[8,5.2]" ..
+local builder_formspec = nil
+
+if minetest.get_modpath("doc") then
+	builder_formspec = "size[8,5.2]" ..
+	default.gui_bg ..
+	default.gui_bg_img ..
+	default.gui_slots ..
+	"list[current_name;main;0,0;1,1;]" ..
+	"label[0,0.8;" .. S("Block to build") .. "]" ..
+	"field[1.3,0.8;1,0.1;extrusion;" .. S("Extrusion") .. ";${extrusion}]" ..
+	"tooltip[extrusion;" .. S("Builder will extrude this many blocks in the direction it is facing.\nCan be set from 1 to @1.\nNote that Digtron won't build into unloaded map regions.", digtron.maximum_extrusion) .. "]" ..
+	"field[2.3,0.8;1,0.1;period;" .. S("Periodicity") .. ";${period}]" ..
+	"tooltip[period;" .. S("Builder will build once every n steps.\nThese steps are globally aligned, so all builders with the\nsame period and offset will build on the same location.") .. "]" ..
+	"field[3.3,0.8;1,0.1;offset;" .. S("Offset") .. ";${offset}]" ..
+	"tooltip[offset;" .. S("Offsets the start of periodicity counting by this amount.\nFor example, a builder with period 2 and offset 0 builds\nevery even-numbered block and one with period 2 and\noffset 1 builds every odd-numbered block.") .. "]" ..
+	"button_exit[4.0,0.5;1,0.1;set;" .. S("Save &\nShow") .. "]" ..
+	"tooltip[set;" .. S("Saves settings") .. "]" ..
+	"field[5.3,0.8;1,0.1;build_facing;" .. S("Facing") .. ";${build_facing}]" ..
+	"tooltip[build_facing;" .. S("Value from 0-23. Not all block types make use of this.\nUse the 'Read & Save' button to copy the facing of the block\ncurrently in the builder output location.") .. "]" ..
+	"button_exit[6.0,0.5;1,0.1;read;" .. S("Read &\nSave") .. "]" ..
+	"tooltip[read;" .. S("Reads the facing of the block currently in the build location,\nthen saves all settings.") .. "]" ..
+	"list[current_player;main;0,1.3;8,1;]" ..
+	default.get_hotbar_bg(0,1.3) ..
+	"list[current_player;main;0,2.5;8,3;8]" ..
+	"listring[current_player;main]" ..
+	"listring[current_name;main]" ..
+	"button_exit[7.0,0.5;1,0.1;help;" .. S("Help") .. "]" ..
+	"tooltip[help;" .. S("Show documentation about this block") .. "]"
+else
+	builder_formspec = "size[8,5.2]" ..
 	default.gui_bg ..
 	default.gui_bg_img ..
 	default.gui_slots ..
@@ -28,7 +56,8 @@ local builder_formspec =
 	"list[current_player;main;0,2.5;8,3;8]" ..
 	"listring[current_player;main]" ..
 	"listring[current_name;main]"
-
+end
+	
 -- Builds objects in the targeted node. This is a complicated beastie.
 minetest.register_node("digtron:builder", {
 	description = S("Digtron Builder Module"),
@@ -147,7 +176,7 @@ minetest.register_node("digtron:builder", {
 		end
 		
 		if fields.help and minetest.get_modpath("doc") then --check for mod in case someone disabled it after this digger was built
-			doc.show_entry(sender:get_player_name(), "nodes", "digtron:builder")
+			minetest.after(0.5, doc.show_entry, sender:get_player_name(), "nodes", "digtron:builder", true)
 		end
 
 		digtron.update_builder_item(pos)
