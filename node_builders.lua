@@ -204,8 +204,8 @@ minetest.register_node("digtron:builder", {
 		
 		local extrusion_count = 0
 		local extrusion_target = meta:get_int("extrusion")
-		if extrusion_target == nil or extrusion_target > 100 then
-			extrusion_target = 100 -- failsafe
+		if extrusion_target == nil or extrusion_target < 1 or extrusion_target > 100 then
+			extrusion_target = 1 -- failsafe
 		end
 		
 		local return_items = {}
@@ -255,8 +255,8 @@ minetest.register_node("digtron:builder", {
 		
 		local extrusion_count = 0
 		local extrusion_target = meta:get_int("extrusion")
-		if extrusion_target == nil or extrusion_target > 100 then
-			extrusion_target = 100 -- failsafe
+		if extrusion_target == nil or extrusion_target < 1 or extrusion_target > 100 then
+			extrusion_target = 1 -- failsafe
 		end
 		local built_count = 0
 		
