@@ -97,6 +97,15 @@ minetest.register_lbm({
 	end
 })
 
+minetest.register_lbm({
+	name = "digtron:builder_extrusion_upgrade",
+	nodenames = {"digtron:builder"},
+	action = function(pos, node)
+		local meta = minetest.get_meta(pos)
+		meta:set_int("extrusion", 1)
+	end
+})
+
 if minetest.get_modpath("catacomb") and catacomb ~= nil and catacomb.chamber_protected_nodes ~= nil and catacomb.passage_protected_nodes ~= nil then
 	local digtron_nodes = {
 		minetest.get_content_id("digtron:inventory"),
