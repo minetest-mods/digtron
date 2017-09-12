@@ -100,7 +100,7 @@ minetest.register_node("digtron:loaded_crate", {
 		end
 		
 		if fields.help and minetest.get_modpath("doc") then --check for mod in case someone disabled it after this digger was built
-			doc.show_entry(sender:get_player_name(), "nodes", "digtron:loaded_crate")
+			minetest.after(0.5, doc.show_entry, sender:get_player_name(), "nodes", "digtron:loaded_crate", true)
 		end
 
 		if not (fields.unpack or fields.show) then

@@ -180,7 +180,8 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	-- Note that this test may overestimate the amount of work that will actually need to be done so don't treat its fuel cost as authoritative.
 	local can_build = true
 	local test_build_return_code = nil
-	local test_build_return_item = nil
+	local test_build_return_items = nil
+	local failed_to_find = nil
 	local test_items = {}
 	local test_fuel_items = {}
 	local test_build_fuel_cost = 0		
@@ -189,14 +190,14 @@ digtron.execute_dig_cycle = function(pos, clicker)
 		local targetdef = minetest.registered_nodes[target.name]
 		local test_location = vector.add(location.pos, dir)
 		if targetdef.test_build ~= nil then
-			test_build_return_code, test_build_return_item = targetdef.test_build(location.pos, test_location, layout.inventories, layout.protected, layout.nodes_dug, controlling_coordinate, layout.controller)
+			test_build_return_code, test_build_return_items, failed_to_find = targetdef.test_build(location.pos, test_location, layout.inventories, layout.protected, layout.nodes_dug, controlling_coordinate, layout.controller)
+			for k, return_item in pairs(test_build_return_items) do
+				table.insert(test_items, return_item)
+				test_build_fuel_cost = test_build_fuel_cost + digtron.build_cost
+			end
 			if test_build_return_code > 1 then
 				can_build = false
 				break
-			end
-			if test_build_return_code == 1 then
-				table.insert(test_items, test_build_return_item)
-				test_build_fuel_cost = test_build_fuel_cost + digtron.build_cost
 			end
 		else
 			minetest.log(string.format("%s has builder group but is missing test_build method! This is an error in mod programming, file a bug.", targetdef.name))
@@ -231,7 +232,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 		elseif test_build_return_code == 2 then
 			minetest.sound_play("dingding", {gain=1.0, pos=pos}) -- Insufficient inventory
 			return_string = string.format(S("Digtron has insufficient building materials. Needed: %s") .. "\n",
-				test_build_return_item:get_name())
+				failed_to_find:get_name())
 			return_code = 7
 		end
 		return pos, return_string .. status_text, return_code --Abort, don't dig and don't build.
@@ -281,13 +282,14 @@ digtron.execute_dig_cycle = function(pos, clicker)
 		if targetdef.execute_build ~= nil then
 			--using the old location of the controller as fallback so that any leftovers land with the rest of the digger output. Not that there should be any.
 			local build_return = targetdef.execute_build(location.pos, clicker, layout.inventories, layout.protected, layout.nodes_dug, controlling_coordinate, oldpos)
-			if build_return == false then
+			if build_return < 0 then
 				-- This happens if there's insufficient inventory, but we should have confirmed there was sufficient inventory during test phase.
 				-- So this should never happen. However, "should never happens" happen sometimes. So
 				-- don't interrupt the build cycle as a whole, we've already moved so might as well try to complete as much as possible.
 				strange_failure = true
-			elseif build_return == true and not digtron.creative_mode == true then
-				building_fuel_cost = building_fuel_cost + digtron.build_cost
+				build_return = (build_return * -1) - 1
+			elseif not digtron.creative_mode == true then
+				building_fuel_cost = building_fuel_cost + (digtron.build_cost * build_return)
 			end
 		else
 			minetest.log(string.format("%s has builder group but is missing execute_build method! This is an error in mod programming, file a bug.", targetdef.name))

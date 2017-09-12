@@ -2,16 +2,23 @@
 #though they still check whether they have enough in inventory.
 #It's a separate setting from regular creative mode.
 digtron_uses_resources (Digtron uses resources) bool true
+
 #When true, lava counts as protected blocks.
 digtron_lava_impassible (Lava is impassible to Digtrons) bool true
+
 #When true, diggers deal damage to creatures when they trigger.
 digtron_damage_creatures (Digtrons cause damage) bool true
+
 #How many seconds a digtron waits between cycles.
 #Auto-controllers can make this wait longer, but cannot make it shorter.
 digtron_cycle_time (Minimum Digtron cycle time in seconds) float 1.0 0.0 60.0
+
 #How many Digtron blocks can be moved for each adjacent
 #solid block that the Digtron has traction against
 digtron_traction_factor (Digtron traction factor) float 3.0 0.0 1000.0
+
+#The maximum extrusion setting permitted for a Digtron builder module.
+digtron_maximum_extrusion (Digtron maximum extrusion) int 25 1 100
 
 [Fuel costs]
 

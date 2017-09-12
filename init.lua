@@ -4,6 +4,7 @@ digtron.auto_controller_colorize = "#88000030"
 digtron.pusher_controller_colorize = "#00880030"
 digtron.soft_digger_colorize = "#88880030"
 
+dofile( minetest.get_modpath( "digtron" ) .. "/config.lua" )
 dofile( minetest.get_modpath( "digtron" ) .. "/util.lua" )
 dofile( minetest.get_modpath( "digtron" ) .. "/doc.lua" )
 dofile( minetest.get_modpath( "digtron" ) .. "/awards.lua" )
@@ -18,82 +19,6 @@ dofile( minetest.get_modpath( "digtron" ) .. "/node_controllers.lua" ) -- contro
 dofile( minetest.get_modpath( "digtron" ) .. "/node_axle.lua" ) -- Rotation controller
 dofile( minetest.get_modpath( "digtron" ) .. "/node_crate.lua" ) -- Digtron portability support
 dofile( minetest.get_modpath( "digtron" ) .. "/recipes.lua" )
-
--- Enables the spray of particles out the back of a digger head and puffs of smoke from the controller
-local particle_effects = minetest.settings:get_bool("enable_particles")
-
--- this causes digtrons to operate without consuming fuel or building materials.
-local digtron_uses_resources = minetest.settings:get_bool("digtron_uses_resources")
-if digtron_uses_resources == nil then digtron_uses_resources = true end
-
--- when true, lava counts as protected nodes.
-local lava_impassible = minetest.settings:get_bool("digtron_lava_impassible")
-
--- when true, diggers deal damage to creatures when they trigger.
-local damage_creatures = minetest.settings:get_bool("digtron_damage_creatures")
-
-digtron.creative_mode = not digtron_uses_resources -- default false
-digtron.particle_effects = particle_effects or particle_effects == nil -- default true
-digtron.lava_impassible = lava_impassible or lava_impassible == nil -- default true
-digtron.diggers_damage_creatures = damage_creatures or damage_creatures == nil -- default true
-
--- How many seconds a digtron waits between cycles. Auto-controllers can make this wait longer, but cannot make it shorter.
-local digtron_cycle_time = tonumber(minetest.settings:get("digtron_cycle_time"))
-if digtron_cycle_time == nil or digtron_cycle_time < 0 then
-	digtron.cycle_time = 1.0
-else
-	digtron.cycle_time = digtron_cycle_time
-end
-
--- How many digtron nodes can be moved for each adjacent solid node that the digtron has traction against
-local digtron_traction_factor = tonumber(minetest.settings:get("digtron_traction_factor"))
-if digtron_traction_factor == nil or digtron_traction_factor < 0 then
-	digtron.traction_factor = 3.0
-else
-	digtron.traction_factor = digtron_traction_factor
-end
-
--- fuel costs. For comparison, in the default game:
--- one default tree block is 30 units
--- one coal lump is 40 units
--- one coal block is 370 units (apparently it's slightly more productive making your coal lumps into blocks before burning)
--- one book is 3 units
-
--- how much fuel is required to dig a node if not in one of the following groups.
-local digtron_dig_cost_default = tonumber(minetest.settings:get("digtron_dig_cost_default"))
-if digtron_dig_cost_default == nil or digtron_dig_cost_default < 0 then
-	digtron.dig_cost_default = 0.5
-else
-	digtron.dig_cost_default = digtron_dig_cost_default
-end
--- eg, stone
-local digtron_dig_cost_cracky = tonumber(minetest.settings:get("digtron_dig_cost_cracky"))
-if digtron_dig_cost_cracky == nil or digtron_dig_cost_cracky < 0 then
-	digtron.dig_cost_cracky = 1.0
-else
-	digtron.dig_cost_cracky = digtron_dig_cost_cracky
-end
--- eg, dirt, sand
-local digtron_dig_cost_crumbly = tonumber(minetest.settings:get("digtron_dig_cost_crumbly"))
-if digtron_dig_cost_crumbly == nil or digtron_dig_cost_crumbly < 0 then
-	digtron.dig_cost_crumbly = 0.5
-else
-	digtron.dig_cost_crumbly = digtron_dig_cost_crumbly
-end
--- eg, wood
-local digtron_dig_cost_choppy = tonumber(minetest.settings:get("digtron_dig_cost_choppy"))
-if digtron_dig_cost_choppy == nil or digtron_dig_cost_choppy < 0 then
-	digtron.dig_cost_choppy = 0.75
-else
-	digtron.dig_cost_choppy = digtron_dig_cost_choppy
-end
--- how much fuel is required to build a node
-local digtron_build_cost = tonumber(minetest.settings:get("digtron_build_cost"))
-if digtron_build_cost == nil or digtron_build_cost < 0 then
-	digtron.build_cost = 1.0
-else
-	digtron.build_cost = digtron_build_cost
-end
 
 -- digtron group numbers:
 -- 1 - generic digtron node, nothing special is done with these. They're just dragged along.
@@ -169,6 +94,44 @@ minetest.register_lbm({
 			"field[2.5,2.0;1,0.1;period;Delay;${period}]" ..
 			"tooltip[period;Number of seconds to wait between each cycle]"
 		)		
+	end
+})
+
+-- internationalization boilerplate
+local MP = minetest.get_modpath(minetest.get_current_modname())
+local S, NS = dofile(MP.."/intllib.lua")
+
+minetest.register_lbm({
+	name = "digtron:builder_extrusion_upgrade",
+	nodenames = {"digtron:builder"},
+	action = function(pos, node)
+		local meta = minetest.get_meta(pos)
+		meta:set_int("extrusion", 1)
+		meta:set_string("formspec",
+			"size[8,5.2]" ..
+			default.gui_bg ..
+			default.gui_bg_img ..
+			default.gui_slots ..
+			"list[current_name;main;0.5,0;1,1;]" ..
+			"label[0.5,0.8;" .. S("Block to build") .. "]" ..
+			"field[2.3,0.8;1,0.1;extrusion;" .. S("Extrusion") .. ";${extrusion}]" ..
+			"tooltip[extrusion;" .. S("Builder will extrude this many blocks in the direction it is facing.\nCan be set from 1 to @1.\nNote that Digtron won't build into unloaded map regions.", digtron.maximum_extrusion) .. "]" ..
+			"field[3.3,0.8;1,0.1;period;" .. S("Periodicity") .. ";${period}]" ..
+			"tooltip[period;" .. S("Builder will build once every n steps.\nThese steps are globally aligned, so all builders with the\nsame period and offset will build on the same location.") .. "]" ..
+			"field[4.3,0.8;1,0.1;offset;" .. S("Offset") .. ";${offset}]" ..
+			"tooltip[offset;" .. S("Offsets the start of periodicity counting by this amount.\nFor example, a builder with period 2 and offset 0 builds\nevery even-numbered block and one with period 2 and\noffset 1 builds every odd-numbered block.") .. "]" ..
+			"button_exit[5.0,0.5;1,0.1;set;" .. S("Save &\nShow") .. "]" ..
+			"tooltip[set;" .. S("Saves settings") .. "]" ..
+			"field[6.3,0.8;1,0.1;build_facing;" .. S("Facing") .. ";${build_facing}]" ..
+			"tooltip[build_facing;" .. S("Value from 0-23. Not all block types make use of this.\nUse the 'Read & Save' button to copy the facing of the block\ncurrently in the builder output location.") .. "]" ..
+			"button_exit[7.0,0.5;1,0.1;read;" .. S("Read &\nSave") .. "]" ..
+			"tooltip[read;" .. S("Reads the facing of the block currently in the build location,\nthen saves all settings.") .. "]" ..
+			"list[current_player;main;0,1.3;8,1;]" ..
+			default.get_hotbar_bg(0,1.3) ..
+			"list[current_player;main;0,2.5;8,3;8]" ..
+			"listring[current_player;main]" ..
+			"listring[current_name;main]"
+		)
 	end
 })
 

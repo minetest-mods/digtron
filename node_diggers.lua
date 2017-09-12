@@ -63,7 +63,7 @@ local intermittent_on_receive_fields = function(pos, formname, fields, sender)
 	end
 	if fields.help and minetest.get_modpath("doc") then --check for mod in case someone disabled it after this digger was built
 		local node_name = minetest.get_node(pos).name
-		doc.show_entry(sender:get_player_name(), "nodes", node_name)
+		minetest.after(0.5, doc.show_entry, sender:get_player_name(), "nodes", node_name, true)
 	end
 end,
 

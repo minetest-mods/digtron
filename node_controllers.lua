@@ -275,7 +275,7 @@ minetest.register_node("digtron:auto_controller", {
 		end	
 		
 		if fields.help and minetest.get_modpath("doc") then --check for mod in case someone disabled it after this digger was built
-			doc.show_entry(sender:get_player_name(), "nodes", "digtron:auto_controller")
+			minetest.after(0.5, doc.show_entry, sender:get_player_name(), "nodes", "digtron:auto_controller", true)
 		end
 	end,	
 	
