@@ -14,7 +14,7 @@ if minetest.get_modpath("doc") then
 	"list[current_name;main;0,0;1,1;]" ..
 	"label[0,0.8;" .. S("Block to build") .. "]" ..
 	"field[1.3,0.8;1,0.1;extrusion;" .. S("Extrusion") .. ";${extrusion}]" ..
-	"tooltip[extrusion;" .. S("Builder will extrude this many blocks in the direction it is facing.\nCan be set from 1 to @1.\nNote that Digtron won't build into unloaded map regions.", digtron.maximum_extrusion) .. "]" ..
+	"tooltip[extrusion;" .. S("Builder will extrude this many blocks in the direction it is facing.\nCan be set from 1 to @1.\nNote that Digtron won't build into unloaded map regions.", digtron.config.maximum_extrusion) .. "]" ..
 	"field[2.3,0.8;1,0.1;period;" .. S("Periodicity") .. ";${period}]" ..
 	"tooltip[period;" .. S("Builder will build once every n steps.\nThese steps are globally aligned, so all builders with the\nsame period and offset will build on the same location.") .. "]" ..
 	"field[3.3,0.8;1,0.1;offset;" .. S("Offset") .. ";${offset}]" ..
@@ -40,7 +40,7 @@ else
 	"list[current_name;main;0.5,0;1,1;]" ..
 	"label[0.5,0.8;" .. S("Block to build") .. "]" ..
 	"field[2.3,0.8;1,0.1;extrusion;" .. S("Extrusion") .. ";${extrusion}]" ..
-	"tooltip[extrusion;" .. S("Builder will extrude this many blocks in the direction it is facing.\nCan be set from 1 to @1.\nNote that Digtron won't build into unloaded map regions.", digtron.maximum_extrusion) .. "]" ..
+	"tooltip[extrusion;" .. S("Builder will extrude this many blocks in the direction it is facing.\nCan be set from 1 to @1.\nNote that Digtron won't build into unloaded map regions.", digtron.config.maximum_extrusion) .. "]" ..
 	"field[3.3,0.8;1,0.1;period;" .. S("Periodicity") .. ";${period}]" ..
 	"tooltip[period;" .. S("Builder will build once every n steps.\nThese steps are globally aligned, so all builders with the\nsame period and offset will build on the same location.") .. "]" ..
 	"field[4.3,0.8;1,0.1;offset;" .. S("Offset") .. ";${offset}]" ..
@@ -133,7 +133,7 @@ minetest.register_node("digtron:builder", {
 			-- Should prevent that somehow. But not tonight.
 			meta:set_int("build_facing", math.floor(build_facing))
 		end
-		if extrusion and extrusion > 0 and extrusion <= digtron.maximum_extrusion then
+		if extrusion and extrusion > 0 and extrusion <= digtron.config.maximum_extrusion then
 			meta:set_int("extrusion", math.floor(tonumber(fields.extrusion)))
 		else
 			extrusion = meta:get_int("extrusion")
@@ -296,7 +296,7 @@ minetest.register_node("digtron:builder", {
 
 			local oldnode = minetest.get_node(buildpos)
 
-			if digtron.creative_mode then
+			if not digtron.config.uses_resources then
 				local returned_stack, success = digtron.item_place_node(item_stack, player, buildpos, build_facing)
 				if success == true then
 					minetest.log("action", string.format(S("%s uses Digtron to build %s at (%d, %d, %d), displacing %s"), player:get_player_name(), item_stack:get_name(), buildpos.x, buildpos.y, buildpos.z, oldnode.name))

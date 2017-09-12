@@ -59,10 +59,10 @@ local function neighbour_test(layout, status_text, dir)
 		minetest.sound_play("woopwoopwoop", {gain=1.0, pos=layout.controller})
 	end	
 	
-	if dir and dir.y ~= -1 and layout.traction * digtron.traction_factor < table.getn(layout.all) then
+	if dir and dir.y ~= -1 and layout.traction * digtron.config.traction_factor < table.getn(layout.all) then
 		-- digtrons can't fly, though they can fall
 		minetest.sound_play("squeal", {gain=1.0, pos=layout.controller})
-		return string.format("Digtron has %d blocks but only enough traction to move %d blocks.\n", table.getn(layout.all), layout.traction * digtron.traction_factor)
+		return string.format("Digtron has %d blocks but only enough traction to move %d blocks.\n", table.getn(layout.all), layout.traction * digtron.config.traction_factor)
 			 .. status_text, 2
 	end
 
@@ -137,7 +137,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 				for _, itemname in pairs(dropped) do
 					table.insert(items_dropped, itemname)
 				end
-				if digtron.particle_effects then
+				if digtron.config.particle_effects then
 					table.insert(particle_systems, dig_dust(vector.add(location.pos, dir), target.param2))
 				end
 			end
@@ -164,9 +164,9 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	end
 	
 	if not can_move then
-		-- mark this node as waiting, will clear this flag in digtron.cycle_time seconds
+		-- mark this node as waiting, will clear this flag in digtron.config.cycle_time seconds
 		minetest.get_meta(pos):set_string("waiting", "true")
-		minetest.get_node_timer(pos):start(digtron.cycle_time)
+		minetest.get_node_timer(pos):start(digtron.config.cycle_time)
 		minetest.sound_play("squeal", {gain=1.0, pos=pos})
 		minetest.sound_play("buzzer", {gain=0.5, pos=pos})
 		return pos, S("Digtron is obstructed.") .. "\n" .. status_text, 3 --Abort, don't dig and don't build.
@@ -193,7 +193,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 			test_build_return_code, test_build_return_items, failed_to_find = targetdef.test_build(location.pos, test_location, layout.inventories, layout.protected, layout.nodes_dug, controlling_coordinate, layout.controller)
 			for k, return_item in pairs(test_build_return_items) do
 				table.insert(test_items, return_item)
-				test_build_fuel_cost = test_build_fuel_cost + digtron.build_cost
+				test_build_fuel_cost = test_build_fuel_cost + digtron.config.build_cost
 			end
 			if test_build_return_code > 1 then
 				can_build = false
@@ -222,7 +222,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	
 	if not can_build then
 		minetest.get_meta(pos):set_string("waiting", "true")
-		minetest.get_node_timer(pos):start(digtron.cycle_time)
+		minetest.get_node_timer(pos):start(digtron.config.cycle_time)
 		local return_string = nil
 		local return_code = 5
 		if test_build_return_code == 3 then
@@ -247,7 +247,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	local move_player = move_player_test(layout, clicker)
 	
 	-- damage the weak flesh
-	if digtron.diggers_damage_creatures then
+	if digtron.config.damage_creatures then
 		for k, location in pairs(layout.diggers) do
 			local target = minetest.get_node(location.pos)
 			local targetdef = minetest.registered_nodes[target.name]
@@ -288,8 +288,8 @@ digtron.execute_dig_cycle = function(pos, clicker)
 				-- don't interrupt the build cycle as a whole, we've already moved so might as well try to complete as much as possible.
 				strange_failure = true
 				build_return = (build_return * -1) - 1
-			elseif not digtron.creative_mode == true then
-				building_fuel_cost = building_fuel_cost + (digtron.build_cost * build_return)
+			elseif digtron.config.uses_resources then
+				building_fuel_cost = building_fuel_cost + (digtron.config.build_cost * build_return)
 			end
 		else
 			minetest.log(string.format("%s has builder group but is missing execute_build method! This is an error in mod programming, file a bug.", targetdef.name))
@@ -307,7 +307,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	-- acutally burn the fuel needed
 	local fuel_cost = digging_fuel_cost + building_fuel_cost
 	fuel_burning = fuel_burning - fuel_cost
-	if digtron.particle_effects then
+	if digtron.config.particle_effects then
 		table.insert(particle_systems, burn_smoke(pos, fuel_cost))
 	end
 	if fuel_burning < 0 then
@@ -359,9 +359,9 @@ digtron.execute_move_cycle = function(pos, clicker)
 	-- test if any digtrons are obstructed by non-digtron nodes
 	layout:move_layout_image(dir)
 	if not layout:can_write_layout_image() then
-		-- mark this node as waiting, will clear this flag in digtron.cycle_time seconds
+		-- mark this node as waiting, will clear this flag in digtron.config.cycle_time seconds
 		minetest.get_meta(pos):set_string("waiting", "true")
-		minetest.get_node_timer(pos):start(digtron.cycle_time)
+		minetest.get_node_timer(pos):start(digtron.config.cycle_time)
 		minetest.sound_play("squeal", {gain=1.0, pos=pos})
 		minetest.sound_play("buzzer", {gain=0.5, pos=pos})
 		return pos, S("Digtron is obstructed.") .. "\n" .. status_text, 3 --Abort, don't dig and don't build.
@@ -421,7 +421,7 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 				for _, itemname in pairs(dropped) do
 					table.insert(items_dropped, itemname)
 				end
-				if digtron.particle_effects then
+				if digtron.config.particle_effects then
 					table.insert(particle_systems, dig_dust(vector.add(location.pos, dir), target.param2))
 				end
 			end
@@ -448,9 +448,9 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 	end
 
 	if not can_move then
-		-- mark this node as waiting, will clear this flag in digtron.cycle_time seconds
+		-- mark this node as waiting, will clear this flag in digtron.config.cycle_time seconds
 		minetest.get_meta(pos):set_string("waiting", "true")
-		minetest.get_node_timer(pos):start(digtron.cycle_time)
+		minetest.get_node_timer(pos):start(digtron.config.cycle_time)
 		minetest.sound_play("squeal", {gain=1.0, pos=pos})
 		minetest.sound_play("buzzer", {gain=0.5, pos=pos})
 		return pos, S("Digtron is obstructed.") .. "\n" .. status_text, 3 --Abort, don't dig and don't build.
@@ -465,7 +465,7 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 	local move_player = move_player_test(layout, clicker)
 	
 	-- damage the weak flesh
-	if digtron.diggers_damage_creatures then
+	if digtron.config.damage_creatures then
 		for k, location in pairs(layout.diggers) do
 			local target = minetest.get_node(location.pos)
 			local targetdef = minetest.registered_nodes[target.name]
@@ -495,7 +495,7 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 	
 	-- acutally burn the fuel needed
 	fuel_burning = fuel_burning - digging_fuel_cost
-	if digtron.particle_effects then
+	if digtron.config.particle_effects then
 		table.insert(particle_systems, burn_smoke(pos, digging_fuel_cost))
 	end
 	if fuel_burning < 0 then

@@ -115,7 +115,7 @@ minetest.register_lbm({
 			"list[current_name;main;0.5,0;1,1;]" ..
 			"label[0.5,0.8;" .. S("Block to build") .. "]" ..
 			"field[2.3,0.8;1,0.1;extrusion;" .. S("Extrusion") .. ";${extrusion}]" ..
-			"tooltip[extrusion;" .. S("Builder will extrude this many blocks in the direction it is facing.\nCan be set from 1 to @1.\nNote that Digtron won't build into unloaded map regions.", digtron.maximum_extrusion) .. "]" ..
+			"tooltip[extrusion;" .. S("Builder will extrude this many blocks in the direction it is facing.\nCan be set from 1 to @1.\nNote that Digtron won't build into unloaded map regions.", digtron.config.maximum_extrusion) .. "]" ..
 			"field[3.3,0.8;1,0.1;period;" .. S("Periodicity") .. ";${period}]" ..
 			"tooltip[period;" .. S("Builder will build once every n steps.\nThese steps are globally aligned, so all builders with the\nsame period and offset will build on the same location.") .. "]" ..
 			"field[4.3,0.8;1,0.1;offset;" .. S("Offset") .. ";${offset}]" ..

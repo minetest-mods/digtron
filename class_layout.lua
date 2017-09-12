@@ -86,7 +86,7 @@ function DigtronLayout.create(pos, player)
 			self.water_touching = true
 		elseif minetest.get_item_group(node.name, "lava") ~= 0 then
 			self.lava_touching = true
-			if digtron.lava_impassible == true then
+			if digtron.config.lava_impassible then
 				self.protected:set(testpos.x, testpos.y, testpos.z, true)
 			end
 		end

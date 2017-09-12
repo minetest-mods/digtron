@@ -64,7 +64,7 @@ minetest.register_node("digtron:controller", {
 		
 		-- Start the delay before digtron can run again.
 		minetest.get_meta(newpos):set_string("waiting", "true")
-		minetest.get_node_timer(newpos):start(digtron.cycle_time)
+		minetest.get_node_timer(newpos):start(digtron.config.cycle_time)
 	end,
 	
 	on_timer = function(pos, elapsed)
@@ -200,7 +200,7 @@ minetest.register_node("digtron:auto_controller", {
 		meta:set_string("infotext", string.format(S("Heat remaining in controller furnace: %d"), 0))
 		meta:set_string("formspec", auto_formspec)
 		-- Reusing offset and period to keep the digtron node-moving code simple, and the names still fit well
-		meta:set_int("period", digtron.cycle_time)
+		meta:set_int("period", digtron.config.cycle_time)
 		meta:set_int("offset", 0)
 		meta:set_int("cycles", 0)
 		meta:set_int("slope", 0)
@@ -232,7 +232,7 @@ minetest.register_node("digtron:auto_controller", {
 		local cycles = tonumber(fields.cycles)
 		
 		if period and period > 0 then
-			meta:set_int("period", math.max(digtron.cycle_time, math.floor(period)))
+			meta:set_int("period", math.max(digtron.config.cycle_time, math.floor(period)))
 		end
 
 		if offset then
@@ -335,7 +335,7 @@ minetest.register_node("digtron:pusher", {
 		
 		-- Start the delay before digtron can run again.
 		minetest.get_meta(newpos):set_string("waiting", "true")
-		minetest.get_node_timer(newpos):start(digtron.cycle_time)
+		minetest.get_node_timer(newpos):start(digtron.config.cycle_time)
 	end,
 	
 	on_timer = function(pos, elapsed)

@@ -52,21 +52,21 @@ digtron.mark_diggable = function(pos, nodes_dug)
 			local in_known_group = false
 			local material_cost = 0
 			
-			if digtron.creative_mode ~= true then
+			if digtron.config.uses_resources then
 				if minetest.get_item_group(target.name, "cracky") ~= 0 then
 					in_known_group = true
-					material_cost = math.max(material_cost, digtron.dig_cost_cracky)
+					material_cost = math.max(material_cost, digtron.config.dig_cost_cracky)
 				end
 				if minetest.get_item_group(target.name, "crumbly") ~= 0 then
 					in_known_group = true
-					material_cost = math.max(material_cost, digtron.dig_cost_crumbly)
+					material_cost = math.max(material_cost, digtron.config.dig_cost_crumbly)
 				end
 				if minetest.get_item_group(target.name, "choppy") ~= 0 then
 					in_known_group = true
-					material_cost = math.max(material_cost, digtron.dig_cost_choppy)
+					material_cost = math.max(material_cost, digtron.config.dig_cost_choppy)
 				end
 				if not in_known_group then
-					material_cost = digtron.dig_cost_default
+					material_cost = digtron.config.dig_cost_default
 				end
 			end
 	
