@@ -11,14 +11,14 @@ dofile( minetest.get_modpath( "digtron" ) .. "/awards.lua" )
 dofile( minetest.get_modpath( "digtron" ) .. "/class_pointset.lua" )
 dofile( minetest.get_modpath( "digtron" ) .. "/class_layout.lua" )
 dofile( minetest.get_modpath( "digtron" ) .. "/entities.lua" )
-dofile( minetest.get_modpath( "digtron" ) .. "/node_misc.lua" ) -- contains structure and light nodes
-dofile( minetest.get_modpath( "digtron" ) .. "/node_storage.lua" ) -- contains inventory and fuel storage nodes
-dofile( minetest.get_modpath( "digtron" ) .. "/node_diggers.lua" ) -- contains all diggers
-dofile( minetest.get_modpath( "digtron" ) .. "/node_builders.lua" ) -- contains all builders (there's just one currently)
-dofile( minetest.get_modpath( "digtron" ) .. "/node_controllers.lua" ) -- controllers
-dofile( minetest.get_modpath( "digtron" ) .. "/node_axle.lua" ) -- Rotation controller
-dofile( minetest.get_modpath( "digtron" ) .. "/node_crate.lua" ) -- Digtron portability support
-dofile( minetest.get_modpath( "digtron" ) .. "/recipes.lua" )
+dofile( minetest.get_modpath( "digtron" ) .. "/nodes/node_misc.lua" ) -- contains structure and light nodes
+dofile( minetest.get_modpath( "digtron" ) .. "/nodes/node_storage.lua" ) -- contains inventory and fuel storage nodes
+dofile( minetest.get_modpath( "digtron" ) .. "/nodes/node_diggers.lua" ) -- contains all diggers
+dofile( minetest.get_modpath( "digtron" ) .. "/nodes/node_builders.lua" ) -- contains all builders (there's just one currently)
+dofile( minetest.get_modpath( "digtron" ) .. "/nodes/node_controllers.lua" ) -- controllers
+dofile( minetest.get_modpath( "digtron" ) .. "/nodes/node_axle.lua" ) -- Rotation controller
+dofile( minetest.get_modpath( "digtron" ) .. "/nodes/node_crate.lua" ) -- Digtron portability support
+dofile( minetest.get_modpath( "digtron" ) .. "/nodes/recipes.lua" )
 
 -- digtron group numbers:
 -- 1 - generic digtron node, nothing special is done with these. They're just dragged along.

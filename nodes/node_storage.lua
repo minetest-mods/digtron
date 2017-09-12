@@ -8,7 +8,7 @@ minetest.register_node("digtron:inventory", {
 	description = S("Digtron Inventory Storage"),
 	_doc_items_longdesc = digtron.doc.inventory_longdesc,
     _doc_items_usagehelp = digtron.doc.inventory_usagehelp,
-	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 2, tubedevice = 1, tubedevice_receiver = 1},
+	groups = {cracky = 3, oddly_breakable_by_hand=3, digtron = 2, tubedevice = 1, tubedevice_receiver = 1},
 	drop = "digtron:inventory",
 	sounds = digtron.metal_sounds,
 	paramtype2= "facedir",
