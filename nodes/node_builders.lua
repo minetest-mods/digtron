@@ -169,10 +169,15 @@ minetest.register_node("digtron:builder", {
 			end
 
 		elseif fields.read then
-			local meta = minetest.get_meta(pos)
 			local facing = minetest.get_node(pos).param2
 			local buildpos = digtron.find_new_pos(pos, facing)
-			meta:set_int("build_facing", minetest.get_node(buildpos).param2)
+			local target_node = minetest.get_node(buildpos)
+			if target_node.name ~= "air" and minetest.get_item_group(target_node.name, "digtron") == 0 then
+				local meta = minetest.get_meta(pos)
+				local inv = meta:get_inventory()
+				inv:set_stack("main", 1, target_node.name)
+				meta:set_int("build_facing", target_node.param2)
+			end
 		end
 		
 		if fields.help and minetest.get_modpath("doc") then --check for mod in case someone disabled it after this digger was built
