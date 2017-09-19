@@ -4,6 +4,22 @@ digtron.auto_controller_colorize = "#88000030"
 digtron.pusher_controller_colorize = "#00880030"
 digtron.soft_digger_colorize = "#88880030"
 
+-- A global dictionary is used here so that other substitutions can be added easily by other mods, if necessary
+digtron.builder_read_item_substitutions = {
+	["default:torch_ceiling"] = "default:torch",
+	["default:torch_wall"] = "default:torch",
+	["default:dirt_with_grass"] = "default:dirt",
+	["default:dirt_with_grass_footsteps"] = "default:dirt",
+	["default:dirt_with_dry_grass"] = "default:dirt",
+	["default:dirt_with_rainforest_litter"] = "default:dirt",
+	["default:dirt_with_snow"] = "default:dirt",
+	["default:furnace_active"] = "default:furnace",
+	["farming:soil"] = "default:dirt",
+	["farming:soil_wet"] = "default:dirt",
+	["farming:desert_sand_soil"] = "default:desert_sand",
+	["farming:desert_sand_soil_wet"] = "default:desert_sand",
+}
+
 dofile( minetest.get_modpath( "digtron" ) .. "/config.lua" )
 dofile( minetest.get_modpath( "digtron" ) .. "/util.lua" )
 dofile( minetest.get_modpath( "digtron" ) .. "/doc.lua" )

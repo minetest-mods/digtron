@@ -175,7 +175,8 @@ minetest.register_node("digtron:builder", {
 			if target_node.name ~= "air" and minetest.get_item_group(target_node.name, "digtron") == 0 then
 				local meta = minetest.get_meta(pos)
 				local inv = meta:get_inventory()
-				inv:set_stack("main", 1, target_node.name)
+				local target_name = digtron.builder_read_item_substitutions[target_node.name] or target_node.name
+				inv:set_stack("main", 1, target_name)
 				meta:set_int("build_facing", target_node.param2)
 			end
 		end
