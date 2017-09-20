@@ -172,6 +172,7 @@ minetest.register_node("digtron:auto_controller", {
 	description = S("Digtron Automatic Control Module"),
 	_doc_items_longdesc = digtron.doc.auto_controller_longdesc,
     _doc_items_usagehelp = digtron.doc.auto_controller_usagehelp,
+	_digtron_formspec = auto_formspec,
 	groups = {cracky = 3, oddly_breakable_by_hand = 3, digtron = 1},
 	drop = "digtron:auto_controller",
 	sounds = digtron.metal_sounds,
@@ -289,7 +290,6 @@ minetest.register_node("digtron:auto_controller", {
 	on_timer = function(pos, elapsed)
 		minetest.get_meta(pos):set_string("waiting", nil)
 	end,
-
 })
 
 ---------------------------------------------------------------------------------------------------------------

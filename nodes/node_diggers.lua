@@ -36,17 +36,17 @@ local intermittent_formspec =
 	"button_exit[2.2,0.5;1,0.1;set;" .. S("Save") .. "]" ..
 	"tooltip[set;" .. S("Saves settings") .. "]"
 
-local intermittent_on_construct = function(pos)
-	local formspec = intermittent_formspec
-	if minetest.get_modpath("doc") then
-		formspec = "size[4.5,1]" .. formspec ..
+if minetest.get_modpath("doc") then
+	intermittent_formspec = "size[4.5,1]" .. intermittent_formspec ..
 		"button_exit[3.2,0.5;1,0.1;help;" .. S("Help") .. "]" ..
 		"tooltip[help;" .. S("Show documentation about this block") .. "]"
 	else
-		formspec = "size[3.5,1]" .. formspec
+		intermittent_formspec = "size[3.5,1]" .. intermittent_formspec
 	end
+
+local intermittent_on_construct = function(pos)
     local meta = minetest.get_meta(pos)
-    meta:set_string("formspec", formspec)
+    meta:set_string("formspec", intermittent_formspec)
 	meta:set_int("period", 1) 
 	meta:set_int("offset", 0) 
 end
@@ -72,6 +72,7 @@ minetest.register_node("digtron:digger", {
 	description = S("Digtron Digger Head"),
 	_doc_items_longdesc = digtron.doc.digger_longdesc,
     _doc_items_usagehelp = digtron.doc.digger_usagehelp,
+	_digtron_formspec = intermittent_formspec,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 3},
 	drop = "digtron:digger",
 	sounds = digtron.metal_sounds,
@@ -125,6 +126,7 @@ minetest.register_node("digtron:intermittent_digger", {
 	description = S("Digtron Intermittent Digger Head"),
 	_doc_items_longdesc = digtron.doc.intermittent_digger_longdesc,
     _doc_items_usagehelp = digtron.doc.intermittent_digger_usagehelp,
+	_digtron_formspec = intermittent_formspec,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 3},
 	drop = "digtron:intermittent_digger",
 	sounds = digtron.metal_sounds,
@@ -250,6 +252,7 @@ minetest.register_node("digtron:intermittent_soft_digger", {
 	description = S("Digtron Intermittent Soft Material Digger Head"),
 	_doc_items_longdesc = digtron.doc.intermittent_soft_digger_longdesc,
     _doc_items_usagehelp = digtron.doc.intermittent_soft_digger_usagehelp,
+	_digtron_formspec = intermittent_formspec,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 3},
 	drop = "digtron:intermittent_soft_digger",
 	sounds = digtron.metal_sounds,
@@ -283,7 +286,7 @@ minetest.register_node("digtron:intermittent_soft_digger", {
 	on_construct = intermittent_on_construct,
 	
 	on_receive_fields = intermittent_on_receive_fields,
-
+	
 	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate, lateral_dig)
 		if lateral_dig == true then
 			return 0, {}
