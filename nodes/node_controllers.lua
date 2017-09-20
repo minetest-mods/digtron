@@ -45,7 +45,7 @@ minetest.register_node("digtron:controller", {
 	on_construct = function(pos)
         local meta = minetest.get_meta(pos)
 		meta:set_float("fuel_burning", 0.0)
-		meta:set_string("infotext", string.format(S("Heat remaining in controller furnace: %d"), 0))
+		meta:set_string("infotext", S("Heat remaining in controller furnace: @1", 0))
 	end,
 	
 	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
@@ -125,7 +125,7 @@ digtron.auto_cycle = function(pos)
 		local newpos, status, return_code = digtron.execute_downward_dig_cycle(pos, player)
 		
 		if vector.equals(pos, newpos) then
-			status = status .. string.format("\n" .. S("Cycles remaining: %d") .. "\n" .. S("Halted!"), cycle)
+			status = status .. "\n" .. S("Cycles remaining: @1", cycle) .. "\n" .. S("Halted!")
 			meta:set_string("infotext", status)
 			if return_code == 1 then --return code 1 happens when there's unloaded nodes adjacent, just keep trying.
 				minetest.after(meta:get_int("period"), digtron.auto_cycle, newpos)
@@ -144,7 +144,7 @@ digtron.auto_cycle = function(pos)
 	local newpos, status, return_code = digtron.execute_dig_cycle(pos, player)
 	
 	if vector.equals(pos, newpos) then
-		status = status .. string.format("\n" .. S("Cycles remaining: %d") .. "\n" .. S("Halted!"), cycle)
+		status = status .. "\n" .. S("Cycles remaining: @1", cycle) .. "\n" .. S("Halted!")
 		meta:set_string("infotext", status)
 		if return_code == 1 then --return code 1 happens when there's unloaded nodes adjacent, just keep trying.
 			minetest.after(meta:get_int("period"), digtron.auto_cycle, newpos)
@@ -157,7 +157,7 @@ digtron.auto_cycle = function(pos)
 	meta = minetest.get_meta(newpos)
 	cycle = meta:get_int("cycles") - 1
 	meta:set_int("cycles", cycle)
-	status = status .. string.format("\n" .. S("Cycles remaining: %d"), cycle)
+	status = status .. "\n" .. S("Cycles remaining: @1", cycle)
 	meta:set_string("infotext", status)
 	meta:set_string("lateral_done", nil)
 	
@@ -198,7 +198,7 @@ minetest.register_node("digtron:auto_controller", {
 	on_construct = function(pos)
         local meta = minetest.get_meta(pos)
 		meta:set_float("fuel_burning", 0.0)
-		meta:set_string("infotext", string.format(S("Heat remaining in controller furnace: %d"), 0))
+		meta:set_string("infotext", S("Heat remaining in controller furnace: @1", 0))
 		meta:set_string("formspec", auto_formspec)
 		-- Reusing offset and period to keep the digtron node-moving code simple, and the names still fit well
 		meta:set_int("period", digtron.config.cycle_time)

@@ -62,7 +62,7 @@ local function neighbour_test(layout, status_text, dir)
 	if dir and dir.y ~= -1 and layout.traction * digtron.config.traction_factor < table.getn(layout.all) then
 		-- digtrons can't fly, though they can fall
 		minetest.sound_play("squeal", {gain=1.0, pos=layout.controller})
-		return string.format("Digtron has %d blocks but only enough traction to move %d blocks.\n", table.getn(layout.all), layout.traction * digtron.config.traction_factor)
+		return S("Digtron has @1 blocks but only enough traction to move @2 blocks.\n", table.getn(layout.all), layout.traction * digtron.config.traction_factor)
 			 .. status_text, 2
 	end
 
@@ -107,7 +107,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	local facing = minetest.get_node(pos).param2
 	local dir = minetest.facedir_to_dir(facing)
 	local fuel_burning = meta:get_float("fuel_burning") -- get amount of burned fuel left over from last cycle
-	local status_text = string.format(S("Heat remaining in controller furnace: %d"), math.max(0, fuel_burning))
+	local status_text = S("Heat remaining in controller furnace: @1", math.max(0, fuel_burning))
 	
 	local layout = DigtronLayout.create(pos, clicker)
 
@@ -231,8 +231,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 			return_code = 6
 		elseif test_build_return_code == 2 then
 			minetest.sound_play("dingding", {gain=1.0, pos=pos}) -- Insufficient inventory
-			return_string = string.format(S("Digtron has insufficient building materials. Needed: %s") .. "\n",
-				failed_to_find:get_name())
+			return_string = S("Digtron has insufficient building materials. Needed: @1", failed_to_find:get_name()) .. "\n"
 			return_code = 7
 		end
 		return pos, return_string .. status_text, return_code --Abort, don't dig and don't build.
@@ -314,7 +313,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 		fuel_burning = fuel_burning + digtron.burn(layout.fuelstores, -fuel_burning, false)
 	end
 	meta:set_float("fuel_burning", fuel_burning)
-	status_text = status_text .. string.format(S("Heat remaining in controller furnace: %d"), math.max(0, fuel_burning))
+	status_text = status_text .. S("Heat remaining in controller furnace: @1", math.max(0, fuel_burning))
 
 	-- Eyecandy
 	for _, particles in pairs(particle_systems) do
@@ -326,7 +325,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	local node_to_dig, whether_to_dig = layout.nodes_dug:pop()
 	while node_to_dig ~= nil do
 		if whether_to_dig == true then
-			minetest.log("action", string.format(S("%s uses Digtron to dig %s at (%d, %d, %d)"), clicker:get_player_name(), minetest.get_node(node_to_dig).name, node_to_dig.x, node_to_dig.y, node_to_dig.z))
+			minetest.log("action", string.format("%s uses Digtron to dig %s at (%d, %d, %d)", clicker:get_player_name(), minetest.get_node(node_to_dig).name, node_to_dig.x, node_to_dig.y, node_to_dig.z))
 			minetest.remove_node(node_to_dig)
 		end
 		-- all of the digtron's nodes wind up in nodes_dug, so this is an ideal place to stick
@@ -391,7 +390,7 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 	local facing = minetest.get_node(pos).param2
 	local dir = digtron.facedir_to_down_dir(facing)
 	local fuel_burning = meta:get_float("fuel_burning") -- get amount of burned fuel left over from last cycle
-	local status_text = string.format(S("Heat remaining in controller furnace: %d"), math.max(0, fuel_burning))
+	local status_text = S("Heat remaining in controller furnace: @1", math.max(0, fuel_burning))
 	
 	local layout = DigtronLayout.create(pos, clicker)
 
@@ -502,7 +501,7 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 		fuel_burning = fuel_burning + digtron.burn(layout.fuelstores, -fuel_burning, false)
 	end
 	meta:set_float("fuel_burning", fuel_burning)
-	status_text = status_text .. string.format(S("Heat remaining in controller furnace: %d"), math.max(0, fuel_burning))
+	status_text = status_text .. S("Heat remaining in controller furnace: @1", math.max(0, fuel_burning))
 
 	-- Eyecandy
 	for _, particles in pairs(particle_systems) do
@@ -514,7 +513,7 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 	local node_to_dig, whether_to_dig = layout.nodes_dug:pop()
 	while node_to_dig ~= nil do
 		if whether_to_dig == true then
-			minetest.log("action", string.format(S("%s uses Digtron to dig %s at (%d, %d, %d)"), clicker:get_player_name(), minetest.get_node(node_to_dig).name, node_to_dig.x, node_to_dig.y, node_to_dig.z))
+			minetest.log("action", string.format("%s uses Digtron to dig %s at (%d, %d, %d)", clicker:get_player_name(), minetest.get_node(node_to_dig).name, node_to_dig.x, node_to_dig.y, node_to_dig.z))
 			minetest.remove_node(node_to_dig)
 		end
 		-- all of the digtron's nodes wind up in nodes_dug, so this is an ideal place to stick

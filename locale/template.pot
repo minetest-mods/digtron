@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-09-10 19:05-0600\n"
+"POT-Creation-Date: 2017-09-19 23:37-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -890,378 +890,28 @@ msgid ""
 "pass through the structure as it's being built."
 msgstr ""
 
-#: node_axle.lua:6
-msgid "Digtron Rotation Axle"
-msgstr ""
-
-#: node_axle.lua:57
-#: util_execute_cycle.lua:172
-#: util_execute_cycle.lua:367
-#: util_execute_cycle.lua:456
-msgid "Digtron is obstructed."
-msgstr ""
-
-#: node_builders.lua:13
-msgid "Block to build"
-msgstr ""
-
-#: node_builders.lua:14
-msgid "Extrusion"
-msgstr ""
-
-#: node_builders.lua:15
-msgid ""
-"Builder will extrude this many blocks in the direction it is facing.\n"
-"Can be set from 1 to @1.\n"
-"Note that Digtron won't build into unloaded map regions."
-msgstr ""
-
-#: node_builders.lua:16
-#: node_diggers.lua:32
-msgid "Periodicity"
-msgstr ""
-
-#: node_builders.lua:17
-msgid ""
-"Builder will build once every n steps.\n"
-"These steps are globally aligned, so all builders with the\n"
-"same period and offset will build on the same location."
-msgstr ""
-
-#: node_builders.lua:18
-#: node_controllers.lua:91
-#: node_diggers.lua:34
-msgid "Offset"
-msgstr ""
-
-#: node_builders.lua:19
-msgid ""
-"Offsets the start of periodicity counting by this amount.\n"
-"For example, a builder with period 2 and offset 0 builds\n"
-"every even-numbered block and one with period 2 and\n"
-"offset 1 builds every odd-numbered block."
-msgstr ""
-
-#: node_builders.lua:20
-msgid ""
-"Save &\n"
-"Show"
-msgstr ""
-
-#: node_builders.lua:21
-#: node_diggers.lua:37
-msgid "Saves settings"
-msgstr ""
-
-#: node_builders.lua:22
-msgid "Facing"
-msgstr ""
-
-#: node_builders.lua:23
-msgid ""
-"Value from 0-23. Not all block types make use of this.\n"
-"Use the 'Read & Save' button to copy the facing of the block\n"
-"currently in the builder output location."
-msgstr ""
-
-#: node_builders.lua:24
-msgid ""
-"Read &\n"
-"Save"
-msgstr ""
-
-#: node_builders.lua:25
-msgid ""
-"Reads the facing of the block currently in the build location,\n"
-"then saves all settings."
-msgstr ""
-
-#: node_builders.lua:34
-#: node_controllers.lua:106
-#: node_crate.lua:62
-#: node_diggers.lua:43
-msgid "Help"
-msgstr ""
-
-#: node_builders.lua:35
-#: node_controllers.lua:107
-#: node_crate.lua:63
-#: node_diggers.lua:44
-msgid "Show documentation about this block"
-msgstr ""
-
-#: node_builders.lua:40
-msgid "Digtron Builder Module"
-msgstr ""
-
-#: node_builders.lua:279
-#: node_builders.lua:294
-#, lua-format
-msgid "%s uses Digtron to build %s at (%d, %d, %d), displacing %s"
-msgstr ""
-
-#: node_controllers.lua:20
-msgid "Digtron Control Module"
-msgstr ""
-
-#: node_controllers.lua:48
-#: node_controllers.lua:200
-#: util_execute_cycle.lua:110
-#: util_execute_cycle.lua:317
-#: util_execute_cycle.lua:394
-#: util_execute_cycle.lua:505
-#, lua-format
-msgid "Heat remaining in controller furnace: %d"
-msgstr ""
-
-#: node_controllers.lua:83
-msgid "Cycles"
-msgstr ""
-
-#: node_controllers.lua:84
-msgid ""
-"When triggered, this controller will try to run for the given number of "
-"cycles.\n"
-"The cycle count will decrement as it runs, so if it gets halted by a "
-"problem\n"
-"you can fix the problem and restart."
-msgstr ""
-
-#: node_controllers.lua:85
-msgid "Set"
-msgstr ""
-
-#: node_controllers.lua:86
-msgid "Saves the cycle setting without starting the controller running"
-msgstr ""
-
-#: node_controllers.lua:87
-msgid ""
-"Set &\n"
-"Execute"
-msgstr ""
-
-#: node_controllers.lua:88
-msgid "Begins executing the given number of cycles"
-msgstr ""
-
-#: node_controllers.lua:89
-msgid "Slope"
-msgstr ""
-
-#: node_controllers.lua:90
-msgid ""
-"For diagonal digging. After moving forward this number of nodes the auto "
-"controller\n"
-"will add an additional cycle moving the digtron laterally in the\n"
-"direction of the arrows on the side of this controller.\n"
-"Set to 0 for no lateral digging."
-msgstr ""
-
-#: node_controllers.lua:92
-msgid ""
-"Sets the offset of the lateral motion defined in the Slope field.\n"
-"Note: this offset is relative to the controller's location.\n"
-"The controller will move laterally when it reaches the indicated point."
-msgstr ""
-
-#: node_controllers.lua:93
-msgid "Delay"
-msgstr ""
-
-#: node_controllers.lua:94
-msgid "Number of seconds to wait between each cycle"
-msgstr ""
-
-#: node_controllers.lua:96
-msgid "Stop block"
-msgstr ""
-
-#: node_controllers.lua:128
-#: node_controllers.lua:147
-#: node_controllers.lua:160
-#, lua-format
-msgid "Cycles remaining: %d"
-msgstr ""
-
-#: node_controllers.lua:128
-#: node_controllers.lua:147
-msgid "Halted!"
-msgstr ""
-
-#: node_controllers.lua:172
-msgid "Digtron Automatic Control Module"
-msgstr ""
-
-#: node_controllers.lua:284
-msgid "Interrupted!"
-msgstr ""
-
-#: node_controllers.lua:300
-msgid "Digtron Pusher Module"
-msgstr ""
-
-#: node_crate.lua:6
-msgid "Digtron Crate (Empty)"
-msgstr ""
-
-#: node_crate.lua:22
-msgid "Digtron can't be packaged, it contains protected blocks"
-msgstr ""
-
-#: node_crate.lua:42
-#: node_crate.lua:43
-msgid "Crated Digtron"
-msgstr ""
-
-#: node_crate.lua:55
-#: node_crate.lua:70
-msgid "Digtron Name"
-msgstr ""
-
-#: node_crate.lua:56
-#: node_crate.lua:71
-msgid ""
-"Save\n"
-"Title"
-msgstr ""
-
-#: node_crate.lua:57
-#: node_crate.lua:72
-msgid "Saves the title of this Digtron"
-msgstr ""
-
-#: node_crate.lua:58
-#: node_crate.lua:73
-msgid ""
-"Show\n"
-"Blocks"
-msgstr ""
-
-#: node_crate.lua:59
-#: node_crate.lua:74
-msgid "Shows which blocks the packed Digtron will occupy if unpacked"
-msgstr ""
-
-#: node_crate.lua:60
-#: node_crate.lua:75
-msgid "Unpack"
-msgstr ""
-
-#: node_crate.lua:61
-#: node_crate.lua:76
-msgid "Attempts to unpack the Digtron on this location"
-msgstr ""
-
-#: node_crate.lua:80
-msgid "Digtron Crate (Loaded)"
-msgstr ""
-
-#: node_crate.lua:114
-msgid ""
-"Unable to read layout from crate metadata, regrettably this Digtron may be "
-"corrupted or lost."
-msgstr ""
-
-#: node_crate.lua:145
-msgid "Unable to deploy Digtron due to protected blocks in target area"
-msgstr ""
-
-#: node_crate.lua:151
-msgid "Unable to deploy Digtron due to obstruction in target area"
-msgstr ""
-
-#: node_diggers.lua:33
-msgid ""
-"Digger will dig once every n steps.\n"
-"These steps are globally aligned, all diggers with\n"
-"the same period and offset will dig on the same location."
-msgstr ""
-
-#: node_diggers.lua:35
-msgid ""
-"Offsets the start of periodicity counting by this amount.\n"
-"For example, a digger with period 2 and offset 0 digs\n"
-"every even-numbered block and one with period 2 and\n"
-"offset 1 digs every odd-numbered block."
-msgstr ""
-
-#: node_diggers.lua:36
-msgid "Save"
-msgstr ""
-
-#: node_diggers.lua:72
-msgid "Digtron Digger Head"
-msgstr ""
-
-#: node_diggers.lua:125
-msgid "Digtron Intermittent Digger Head"
-msgstr ""
-
-#: node_diggers.lua:195
-msgid "Digtron Soft Material Digger Head"
-msgstr ""
-
-#: node_diggers.lua:250
-msgid "Digtron Intermittent Soft Material Digger Head"
-msgstr ""
-
-#: node_diggers.lua:323
-msgid "Digtron Dual Digger Head"
-msgstr ""
-
-#: node_diggers.lua:400
-msgid "Digtron Dual Soft Material Digger Head"
-msgstr ""
-
-#: node_misc.lua:7
-msgid "Digtron Structure"
-msgstr ""
-
-#: node_misc.lua:40
-msgid "Digtron Light"
-msgstr ""
-
-#: node_misc.lua:62
-msgid "Digtron Panel"
-msgstr ""
-
-#: node_misc.lua:85
-msgid "Digtron Edge Panel"
-msgstr ""
-
-#: node_misc.lua:114
-msgid "Digtron Corner Panel"
-msgstr ""
-
-#: node_storage.lua:8
-msgid "Digtron Inventory Storage"
-msgstr ""
-
-#: node_storage.lua:34
-#: node_storage.lua:187
-msgid "Inventory items"
-msgstr ""
-
-#: node_storage.lua:77
-msgid "Digtron Fuel Storage"
-msgstr ""
-
-#: node_storage.lua:103
-#: node_storage.lua:189
-msgid "Fuel items"
-msgstr ""
-
-#: node_storage.lua:163
-msgid "Digtron Combined Storage"
-msgstr ""
-
-#: recipes.lua:6
-msgid "Digtron Core"
-msgstr ""
-
 #: util_execute_cycle.lua:51
 msgid "Digtron is adjacent to unloaded nodes."
+msgstr ""
+
+#: util_execute_cycle.lua:65
+msgid "Digtron has @1 blocks but only enough traction to move @2 blocks.\n"
+msgstr ""
+
+#: util_execute_cycle.lua:110
+#: util_execute_cycle.lua:316
+#: util_execute_cycle.lua:393
+#: util_execute_cycle.lua:504
+#: nodes\node_controllers.lua:48
+#: nodes\node_controllers.lua:201
+msgid "Heat remaining in controller furnace: @1"
+msgstr ""
+
+#: util_execute_cycle.lua:172
+#: util_execute_cycle.lua:366
+#: util_execute_cycle.lua:455
+#: nodes\node_axle.lua:57
+msgid "Digtron is obstructed."
 msgstr ""
 
 #: util_execute_cycle.lua:220
@@ -1274,18 +924,354 @@ msgid ""
 msgstr ""
 
 #: util_execute_cycle.lua:234
-#, lua-format
-msgid "Digtron has insufficient building materials. Needed: %s"
+msgid "Digtron has insufficient building materials. Needed: @1"
 msgstr ""
 
-#: util_execute_cycle.lua:304
+#: util_execute_cycle.lua:303
 msgid ""
 "Digtron unexpectedly failed to execute one or more build operations, likely "
 "due to an inventory error."
 msgstr ""
 
-#: util_execute_cycle.lua:329
-#: util_execute_cycle.lua:517
-#, lua-format
-msgid "%s uses Digtron to dig %s at (%d, %d, %d)"
+#: nodes\node_axle.lua:6
+msgid "Digtron Rotation Axle"
+msgstr ""
+
+#: nodes\node_builders.lua:18
+msgid "Block to build"
+msgstr ""
+
+#: nodes\node_builders.lua:19
+msgid "Extrusion"
+msgstr ""
+
+#: nodes\node_builders.lua:20
+msgid ""
+"Builder will extrude this many blocks in the direction it is facing.\n"
+"Can be set from 1 to @1.\n"
+"Note that Digtron won't build into unloaded map regions."
+msgstr ""
+
+#: nodes\node_builders.lua:21
+#: nodes\node_diggers.lua:32
+msgid "Periodicity"
+msgstr ""
+
+#: nodes\node_builders.lua:22
+msgid ""
+"Builder will build once every n steps.\n"
+"These steps are globally aligned, so all builders with the\n"
+"same period and offset will build on the same location."
+msgstr ""
+
+#: nodes\node_builders.lua:23
+#: nodes\node_controllers.lua:91
+#: nodes\node_diggers.lua:34
+msgid "Offset"
+msgstr ""
+
+#: nodes\node_builders.lua:24
+msgid ""
+"Offsets the start of periodicity counting by this amount.\n"
+"For example, a builder with period 2 and offset 0 builds\n"
+"every even-numbered block and one with period 2 and\n"
+"offset 1 builds every odd-numbered block."
+msgstr ""
+
+#: nodes\node_builders.lua:25
+#: nodes\node_diggers.lua:36
+msgid ""
+"Save &\n"
+"Show"
+msgstr ""
+
+#: nodes\node_builders.lua:26
+#: nodes\node_diggers.lua:37
+msgid "Saves settings"
+msgstr ""
+
+#: nodes\node_builders.lua:27
+msgid "Facing"
+msgstr ""
+
+#: nodes\node_builders.lua:28
+msgid ""
+"Value from 0-23. Not all block types make use of this.\n"
+"Use the 'Read & Save' button to copy the facing of the block\n"
+"currently in the builder output location."
+msgstr ""
+
+#: nodes\node_builders.lua:29
+msgid ""
+"Read &\n"
+"Save"
+msgstr ""
+
+#: nodes\node_builders.lua:30
+msgid ""
+"Reads the facing of the block currently in the build location,\n"
+"then saves all settings."
+msgstr ""
+
+#: nodes\node_builders.lua:39
+#: nodes\node_controllers.lua:106
+#: nodes\node_crate.lua:62
+#: nodes\node_diggers.lua:41
+msgid "Help"
+msgstr ""
+
+#: nodes\node_builders.lua:40
+#: nodes\node_controllers.lua:107
+#: nodes\node_crate.lua:63
+#: nodes\node_diggers.lua:42
+msgid "Show documentation about this block"
+msgstr ""
+
+#: nodes\node_builders.lua:45
+msgid "Digtron Builder Module"
+msgstr ""
+
+#: nodes\node_controllers.lua:20
+msgid "Digtron Control Module"
+msgstr ""
+
+#: nodes\node_controllers.lua:83
+msgid "Cycles"
+msgstr ""
+
+#: nodes\node_controllers.lua:84
+msgid ""
+"When triggered, this controller will try to run for the given number of "
+"cycles.\n"
+"The cycle count will decrement as it runs, so if it gets halted by a "
+"problem\n"
+"you can fix the problem and restart."
+msgstr ""
+
+#: nodes\node_controllers.lua:85
+msgid "Set"
+msgstr ""
+
+#: nodes\node_controllers.lua:86
+msgid "Saves the cycle setting without starting the controller running"
+msgstr ""
+
+#: nodes\node_controllers.lua:87
+msgid ""
+"Set &\n"
+"Execute"
+msgstr ""
+
+#: nodes\node_controllers.lua:88
+msgid "Begins executing the given number of cycles"
+msgstr ""
+
+#: nodes\node_controllers.lua:89
+msgid "Slope"
+msgstr ""
+
+#: nodes\node_controllers.lua:90
+msgid ""
+"For diagonal digging. After moving forward this number of nodes the auto "
+"controller\n"
+"will add an additional cycle moving the digtron laterally in the\n"
+"direction of the arrows on the side of this controller.\n"
+"Set to 0 for no lateral digging."
+msgstr ""
+
+#: nodes\node_controllers.lua:92
+msgid ""
+"Sets the offset of the lateral motion defined in the Slope field.\n"
+"Note: this offset is relative to the controller's location.\n"
+"The controller will move laterally when it reaches the indicated point."
+msgstr ""
+
+#: nodes\node_controllers.lua:93
+msgid "Delay"
+msgstr ""
+
+#: nodes\node_controllers.lua:94
+msgid "Number of seconds to wait between each cycle"
+msgstr ""
+
+#: nodes\node_controllers.lua:96
+msgid "Stop block"
+msgstr ""
+
+#: nodes\node_controllers.lua:128
+#: nodes\node_controllers.lua:147
+#: nodes\node_controllers.lua:160
+msgid "Cycles remaining: @1"
+msgstr ""
+
+#: nodes\node_controllers.lua:128
+#: nodes\node_controllers.lua:147
+msgid "Halted!"
+msgstr ""
+
+#: nodes\node_controllers.lua:172
+msgid "Digtron Automatic Control Module"
+msgstr ""
+
+#: nodes\node_controllers.lua:285
+msgid "Interrupted!"
+msgstr ""
+
+#: nodes\node_controllers.lua:300
+msgid "Digtron Pusher Module"
+msgstr ""
+
+#: nodes\node_crate.lua:6
+msgid "Digtron Crate (Empty)"
+msgstr ""
+
+#: nodes\node_crate.lua:22
+msgid "Digtron can't be packaged, it contains protected blocks"
+msgstr ""
+
+#: nodes\node_crate.lua:42
+#: nodes\node_crate.lua:43
+msgid "Crated Digtron"
+msgstr ""
+
+#: nodes\node_crate.lua:55
+#: nodes\node_crate.lua:70
+msgid "Digtron Name"
+msgstr ""
+
+#: nodes\node_crate.lua:56
+#: nodes\node_crate.lua:71
+msgid ""
+"Save\n"
+"Title"
+msgstr ""
+
+#: nodes\node_crate.lua:57
+#: nodes\node_crate.lua:72
+msgid "Saves the title of this Digtron"
+msgstr ""
+
+#: nodes\node_crate.lua:58
+#: nodes\node_crate.lua:73
+msgid ""
+"Show\n"
+"Blocks"
+msgstr ""
+
+#: nodes\node_crate.lua:59
+#: nodes\node_crate.lua:74
+msgid "Shows which blocks the packed Digtron will occupy if unpacked"
+msgstr ""
+
+#: nodes\node_crate.lua:60
+#: nodes\node_crate.lua:75
+msgid "Unpack"
+msgstr ""
+
+#: nodes\node_crate.lua:61
+#: nodes\node_crate.lua:76
+msgid "Attempts to unpack the Digtron on this location"
+msgstr ""
+
+#: nodes\node_crate.lua:80
+msgid "Digtron Crate (Loaded)"
+msgstr ""
+
+#: nodes\node_crate.lua:115
+msgid ""
+"Unable to read layout from crate metadata, regrettably this Digtron may be "
+"corrupted or lost."
+msgstr ""
+
+#: nodes\node_crate.lua:146
+msgid "Unable to deploy Digtron due to protected blocks in target area"
+msgstr ""
+
+#: nodes\node_crate.lua:152
+msgid "Unable to deploy Digtron due to obstruction in target area"
+msgstr ""
+
+#: nodes\node_diggers.lua:33
+msgid ""
+"Digger will dig once every n steps.\n"
+"These steps are globally aligned, all diggers with\n"
+"the same period and offset will dig on the same location."
+msgstr ""
+
+#: nodes\node_diggers.lua:35
+msgid ""
+"Offsets the start of periodicity counting by this amount.\n"
+"For example, a digger with period 2 and offset 0 digs\n"
+"every even-numbered block and one with period 2 and\n"
+"offset 1 digs every odd-numbered block."
+msgstr ""
+
+#: nodes\node_diggers.lua:75
+msgid "Digtron Digger Head"
+msgstr ""
+
+#: nodes\node_diggers.lua:129
+msgid "Digtron Intermittent Digger Head"
+msgstr ""
+
+#: nodes\node_diggers.lua:200
+msgid "Digtron Soft Material Digger Head"
+msgstr ""
+
+#: nodes\node_diggers.lua:255
+msgid "Digtron Intermittent Soft Material Digger Head"
+msgstr ""
+
+#: nodes\node_diggers.lua:329
+msgid "Digtron Dual Digger Head"
+msgstr ""
+
+#: nodes\node_diggers.lua:406
+msgid "Digtron Dual Soft Material Digger Head"
+msgstr ""
+
+#: nodes\node_misc.lua:7
+msgid "Digtron Structure"
+msgstr ""
+
+#: nodes\node_misc.lua:40
+msgid "Digtron Light"
+msgstr ""
+
+#: nodes\node_misc.lua:62
+msgid "Digtron Panel"
+msgstr ""
+
+#: nodes\node_misc.lua:85
+msgid "Digtron Edge Panel"
+msgstr ""
+
+#: nodes\node_misc.lua:114
+msgid "Digtron Corner Panel"
+msgstr ""
+
+#: nodes\node_storage.lua:11
+#: nodes\node_storage.lua:171
+msgid "Inventory items"
+msgstr ""
+
+#: nodes\node_storage.lua:22
+msgid "Digtron Inventory Storage"
+msgstr ""
+
+#: nodes\node_storage.lua:82
+#: nodes\node_storage.lua:173
+msgid "Fuel items"
+msgstr ""
+
+#: nodes\node_storage.lua:93
+msgid "Digtron Fuel Storage"
+msgstr ""
+
+#: nodes\node_storage.lua:184
+msgid "Digtron Combined Storage"
+msgstr ""
+
+#: nodes\recipes.lua:6
+msgid "Digtron Core"
 msgstr ""

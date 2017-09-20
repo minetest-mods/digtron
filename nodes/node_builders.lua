@@ -262,7 +262,7 @@ minetest.register_node("digtron:builder", {
 			if not digtron.config.uses_resources then
 				local returned_stack, success = digtron.item_place_node(item_stack, player, buildpos, build_facing)
 				if success == true then
-					minetest.log("action", string.format(S("%s uses Digtron to build %s at (%d, %d, %d), displacing %s"), player:get_player_name(), item_stack:get_name(), buildpos.x, buildpos.y, buildpos.z, oldnode.name))
+					minetest.log("action", string.format("%s uses Digtron to build %s at (%d, %d, %d), displacing %s", player:get_player_name(), item_stack:get_name(), buildpos.x, buildpos.y, buildpos.z, oldnode.name))
 					nodes_dug:set(buildpos.x, buildpos.y, buildpos.z, false)
 					built_count = built_count + 1
 				else
@@ -277,7 +277,7 @@ minetest.register_node("digtron:builder", {
 			end
 			local returned_stack, success = digtron.item_place_node(item_stack, player, buildpos, build_facing)
 			if success == true then
-				minetest.log("action", string.format(S("%s uses Digtron to build %s at (%d, %d, %d), displacing %s"), player:get_player_name(), item_stack:get_name(), buildpos.x, buildpos.y, buildpos.z, oldnode.name))
+				minetest.log("action", string.format("%s uses Digtron to build %s at (%d, %d, %d), displacing %s", player:get_player_name(), item_stack:get_name(), buildpos.x, buildpos.y, buildpos.z, oldnode.name))
 				--flag this node as *not* to be dug.
 				nodes_dug:set(buildpos.x, buildpos.y, buildpos.z, false)
 				digtron.award_item_built(item_stack:get_name(), player:get_player_name())
