@@ -123,33 +123,7 @@ minetest.register_node("digtron:builder", {
 		end
 		
 		if fields.set then
-			local buildpos = digtron.find_new_pos(pos, minetest.get_node(pos).param2)
-			local x_pos = math.floor((buildpos.x+offset)/period)*period - offset
-			minetest.add_entity({x=x_pos, y=buildpos.y, z=buildpos.z}, "digtron:marker")
-			if x_pos >= buildpos.x then
-				minetest.add_entity({x=x_pos - period, y=buildpos.y, z=buildpos.z}, "digtron:marker")
-			end
-			if x_pos <= buildpos.x then
-				minetest.add_entity({x=x_pos + period, y=buildpos.y, z=buildpos.z}, "digtron:marker")
-			end
-
-			local y_pos = math.floor((buildpos.y+offset)/period)*period - offset
-			minetest.add_entity({x=buildpos.x, y=y_pos, z=buildpos.z}, "digtron:marker_vertical")
-			if y_pos >= buildpos.y then
-				minetest.add_entity({x=buildpos.x, y=y_pos - period, z=buildpos.z}, "digtron:marker_vertical")
-			end
-			if y_pos <= buildpos.y then
-				minetest.add_entity({x=buildpos.x, y=y_pos + period, z=buildpos.z}, "digtron:marker_vertical")
-			end
-
-			local z_pos = math.floor((buildpos.z+offset)/period)*period - offset
-			minetest.add_entity({x=buildpos.x, y=buildpos.y, z=z_pos}, "digtron:marker"):setyaw(1.5708)
-			if z_pos >= buildpos.z then
-				minetest.add_entity({x=buildpos.x, y=buildpos.y, z=z_pos - period}, "digtron:marker"):setyaw(1.5708)
-			end
-			if z_pos <= buildpos.z then
-				minetest.add_entity({x=buildpos.x, y=buildpos.y, z=z_pos + period}, "digtron:marker"):setyaw(1.5708)
-			end
+			digtron.show_offset_markers(pos, offset, period)
 
 		elseif fields.read then
 			local facing = minetest.get_node(pos).param2
