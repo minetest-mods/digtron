@@ -6,9 +6,13 @@ DigtronLayout.__index = DigtronLayout
 
 local get_node_image = function(pos, node)
 	local node_image = {node=node, pos={x=pos.x, y=pos.y, z=pos.z}}
-	node_image.paramtype2 = minetest.registered_nodes[node.name].paramtype2
+	local node_def = minetest.registered_nodes[node.name]
+	node_image.paramtype2 = node_def.paramtype2
 	local meta = minetest.get_meta(pos)
 	node_image.meta = meta:to_table()
+	if node_image.meta ~= nil then
+		node_image.meta.fields.formspec = node_def._digtron_formspec -- causes formspec to be automatically upgraded whenever Digtron moves
+	end
 	
 	-- Record what kind of thing we've got in a builder node so its facing can be rotated properly
 	if minetest.get_item_group(node.name, "digtron") == 4 then
