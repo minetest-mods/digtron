@@ -4,58 +4,40 @@ local S, NS = dofile(MP.."/intllib.lua")
 
 -- Note: builders go in group 4 and have both test_build and execute_build methods.
 
-local builder_formspec = nil
-
+local displace_due_to_help_button = 1.0
 if minetest.get_modpath("doc") then
-	builder_formspec = "size[8,5.2]" ..
+	displace_due_to_help_button = 0.0
+end
+
+local builder_formspec =
+	"size[8,5.2]" ..
 	default.gui_bg ..
 	default.gui_bg_img ..
 	default.gui_slots ..
-	"list[current_name;main;0,0;1,1;]" ..
-	"label[0,0.8;" .. S("Block to build") .. "]" ..
-	"field[1.3,0.8;1,0.1;extrusion;" .. S("Extrusion") .. ";${extrusion}]" ..
-	"tooltip[extrusion;" .. S("Builder will extrude this many blocks in the direction it is facing.\nCan be set from 1 to @1.\nNote that Digtron won't build into unloaded map regions.", digtron.maximum_extrusion) .. "]" ..
-	"field[2.3,0.8;1,0.1;period;" .. S("Periodicity") .. ";${period}]" ..
+	"list[current_name;main;".. tostring(displace_due_to_help_button/2) ..",0;1,1;]" ..
+	"label[" .. tostring(displace_due_to_help_button/2).. ",0.8;" .. S("Block to build") .. "]" ..
+	"field[" .. tostring(displace_due_to_help_button + 1.3) ..",0.8;1,0.1;extrusion;" .. S("Extrusion") .. ";${extrusion}]" ..
+	"tooltip[extrusion;" .. S("Builder will extrude this many blocks in the direction it is facing.\nCan be set from 1 to @1.\nNote that Digtron won't build into unloaded map regions.", digtron.config.maximum_extrusion) .. "]" ..
+	"field[" .. tostring(displace_due_to_help_button + 2.3) ..",0.8;1,0.1;period;" .. S("Periodicity") .. ";${period}]" ..
 	"tooltip[period;" .. S("Builder will build once every n steps.\nThese steps are globally aligned, so all builders with the\nsame period and offset will build on the same location.") .. "]" ..
-	"field[3.3,0.8;1,0.1;offset;" .. S("Offset") .. ";${offset}]" ..
+	"field[" .. tostring(displace_due_to_help_button + 3.3) ..",0.8;1,0.1;offset;" .. S("Offset") .. ";${offset}]" ..
 	"tooltip[offset;" .. S("Offsets the start of periodicity counting by this amount.\nFor example, a builder with period 2 and offset 0 builds\nevery even-numbered block and one with period 2 and\noffset 1 builds every odd-numbered block.") .. "]" ..
-	"button_exit[4.0,0.5;1,0.1;set;" .. S("Save &\nShow") .. "]" ..
+	"button_exit[" .. tostring(displace_due_to_help_button + 4.0) ..",0.5;1,0.1;set;" .. S("Save &\nShow") .. "]" ..
 	"tooltip[set;" .. S("Saves settings") .. "]" ..
-	"field[5.3,0.8;1,0.1;build_facing;" .. S("Facing") .. ";${build_facing}]" ..
+	"field[" .. tostring(displace_due_to_help_button + 5.3) .. ",0.8;1,0.1;build_facing;" .. S("Facing") .. ";${build_facing}]" ..
 	"tooltip[build_facing;" .. S("Value from 0-23. Not all block types make use of this.\nUse the 'Read & Save' button to copy the facing of the block\ncurrently in the builder output location.") .. "]" ..
-	"button_exit[6.0,0.5;1,0.1;read;" .. S("Read &\nSave") .. "]" ..
-	"tooltip[read;" .. S("Reads the facing of the block currently in the build location,\nthen saves all settings.") .. "]" ..
-	"list[current_player;main;0,1.3;8,1;]" ..
-	default.get_hotbar_bg(0,1.3) ..
-	"list[current_player;main;0,2.5;8,3;8]" ..
-	"listring[current_player;main]" ..
-	"listring[current_name;main]" ..
-	"button_exit[7.0,0.5;1,0.1;help;" .. S("Help") .. "]" ..
-	"tooltip[help;" .. S("Show documentation about this block") .. "]"
-else
-	builder_formspec = "size[8,5.2]" ..
-	default.gui_bg ..
-	default.gui_bg_img ..
-	default.gui_slots ..
-	"list[current_name;main;0.5,0;1,1;]" ..
-	"label[0.5,0.8;" .. S("Block to build") .. "]" ..
-	"field[2.3,0.8;1,0.1;extrusion;" .. S("Extrusion") .. ";${extrusion}]" ..
-	"tooltip[extrusion;" .. S("Builder will extrude this many blocks in the direction it is facing.\nCan be set from 1 to @1.\nNote that Digtron won't build into unloaded map regions.", digtron.maximum_extrusion) .. "]" ..
-	"field[3.3,0.8;1,0.1;period;" .. S("Periodicity") .. ";${period}]" ..
-	"tooltip[period;" .. S("Builder will build once every n steps.\nThese steps are globally aligned, so all builders with the\nsame period and offset will build on the same location.") .. "]" ..
-	"field[4.3,0.8;1,0.1;offset;" .. S("Offset") .. ";${offset}]" ..
-	"tooltip[offset;" .. S("Offsets the start of periodicity counting by this amount.\nFor example, a builder with period 2 and offset 0 builds\nevery even-numbered block and one with period 2 and\noffset 1 builds every odd-numbered block.") .. "]" ..
-	"button_exit[5.0,0.5;1,0.1;set;" .. S("Save &\nShow") .. "]" ..
-	"tooltip[set;" .. S("Saves settings") .. "]" ..
-	"field[6.3,0.8;1,0.1;build_facing;" .. S("Facing") .. ";${build_facing}]" ..
-	"tooltip[build_facing;" .. S("Value from 0-23. Not all block types make use of this.\nUse the 'Read & Save' button to copy the facing of the block\ncurrently in the builder output location.") .. "]" ..
-	"button_exit[7.0,0.5;1,0.1;read;" .. S("Read &\nSave") .. "]" ..
+	"button_exit[" .. tostring(displace_due_to_help_button + 6.0) ..",0.5;1,0.1;read;" .. S("Read &\nSave") .. "]" ..
 	"tooltip[read;" .. S("Reads the facing of the block currently in the build location,\nthen saves all settings.") .. "]" ..
 	"list[current_player;main;0,1.3;8,1;]" ..
 	default.get_hotbar_bg(0,1.3) ..
 	"list[current_player;main;0,2.5;8,3;8]" ..
 	"listring[current_player;main]" ..
 	"listring[current_name;main]"
+
+if minetest.get_modpath("doc") then
+	builder_formspec = builder_formspec ..
+		"button_exit[7.0,0.5;1,0.1;help;" .. S("Help") .. "]" ..
+		"tooltip[help;" .. S("Show documentation about this block") .. "]"
 end
 	
 -- Builds objects in the targeted node. This is a complicated beastie.
@@ -63,6 +45,7 @@ minetest.register_node("digtron:builder", {
 	description = S("Digtron Builder Module"),
 	_doc_items_longdesc = digtron.doc.builder_longdesc,
     _doc_items_usagehelp = digtron.doc.builder_usagehelp,
+	_digtron_formspec = builder_formspec,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 4},
 	drop = "digtron:builder",
 	sounds = digtron.metal_sounds,
@@ -133,46 +116,26 @@ minetest.register_node("digtron:builder", {
 			-- Should prevent that somehow. But not tonight.
 			meta:set_int("build_facing", math.floor(build_facing))
 		end
-		if extrusion and extrusion > 0 and extrusion <= digtron.maximum_extrusion then
+		if extrusion and extrusion > 0 and extrusion <= digtron.config.maximum_extrusion then
 			meta:set_int("extrusion", math.floor(tonumber(fields.extrusion)))
 		else
 			extrusion = meta:get_int("extrusion")
 		end
 		
 		if fields.set then
-			local buildpos = digtron.find_new_pos(pos, minetest.get_node(pos).param2)
-			local x_pos = math.floor((buildpos.x+offset)/period)*period - offset
-			minetest.add_entity({x=x_pos, y=buildpos.y, z=buildpos.z}, "digtron:marker")
-			if x_pos >= buildpos.x then
-				minetest.add_entity({x=x_pos - period, y=buildpos.y, z=buildpos.z}, "digtron:marker")
-			end
-			if x_pos <= buildpos.x then
-				minetest.add_entity({x=x_pos + period, y=buildpos.y, z=buildpos.z}, "digtron:marker")
-			end
-
-			local y_pos = math.floor((buildpos.y+offset)/period)*period - offset
-			minetest.add_entity({x=buildpos.x, y=y_pos, z=buildpos.z}, "digtron:marker_vertical")
-			if y_pos >= buildpos.y then
-				minetest.add_entity({x=buildpos.x, y=y_pos - period, z=buildpos.z}, "digtron:marker_vertical")
-			end
-			if y_pos <= buildpos.y then
-				minetest.add_entity({x=buildpos.x, y=y_pos + period, z=buildpos.z}, "digtron:marker_vertical")
-			end
-
-			local z_pos = math.floor((buildpos.z+offset)/period)*period - offset
-			minetest.add_entity({x=buildpos.x, y=buildpos.y, z=z_pos}, "digtron:marker"):setyaw(1.5708)
-			if z_pos >= buildpos.z then
-				minetest.add_entity({x=buildpos.x, y=buildpos.y, z=z_pos - period}, "digtron:marker"):setyaw(1.5708)
-			end
-			if z_pos <= buildpos.z then
-				minetest.add_entity({x=buildpos.x, y=buildpos.y, z=z_pos + period}, "digtron:marker"):setyaw(1.5708)
-			end
+			digtron.show_offset_markers(pos, offset, period)
 
 		elseif fields.read then
-			local meta = minetest.get_meta(pos)
 			local facing = minetest.get_node(pos).param2
 			local buildpos = digtron.find_new_pos(pos, facing)
-			meta:set_int("build_facing", minetest.get_node(buildpos).param2)
+			local target_node = minetest.get_node(buildpos)
+			if target_node.name ~= "air" and minetest.get_item_group(target_node.name, "digtron") == 0 then
+				local meta = minetest.get_meta(pos)
+				local inv = meta:get_inventory()
+				local target_name = digtron.builder_read_item_substitutions[target_node.name] or target_node.name
+				inv:set_stack("main", 1, target_name)
+				meta:set_int("build_facing", target_node.param2)
+			end
 		end
 		
 		if fields.help and minetest.get_modpath("doc") then --check for mod in case someone disabled it after this digger was built
@@ -296,10 +259,10 @@ minetest.register_node("digtron:builder", {
 
 			local oldnode = minetest.get_node(buildpos)
 
-			if digtron.creative_mode then
+			if not digtron.config.uses_resources then
 				local returned_stack, success = digtron.item_place_node(item_stack, player, buildpos, build_facing)
 				if success == true then
-					minetest.log("action", string.format(S("%s uses Digtron to build %s at (%d, %d, %d), displacing %s"), player:get_player_name(), item_stack:get_name(), buildpos.x, buildpos.y, buildpos.z, oldnode.name))
+					minetest.log("action", string.format("%s uses Digtron to build %s at (%d, %d, %d), displacing %s", player:get_player_name(), item_stack:get_name(), buildpos.x, buildpos.y, buildpos.z, oldnode.name))
 					nodes_dug:set(buildpos.x, buildpos.y, buildpos.z, false)
 					built_count = built_count + 1
 				else
@@ -314,7 +277,7 @@ minetest.register_node("digtron:builder", {
 			end
 			local returned_stack, success = digtron.item_place_node(item_stack, player, buildpos, build_facing)
 			if success == true then
-				minetest.log("action", string.format(S("%s uses Digtron to build %s at (%d, %d, %d), displacing %s"), player:get_player_name(), item_stack:get_name(), buildpos.x, buildpos.y, buildpos.z, oldnode.name))
+				minetest.log("action", string.format("%s uses Digtron to build %s at (%d, %d, %d), displacing %s", player:get_player_name(), item_stack:get_name(), buildpos.x, buildpos.y, buildpos.z, oldnode.name))
 				--flag this node as *not* to be dug.
 				nodes_dug:set(buildpos.x, buildpos.y, buildpos.z, false)
 				digtron.award_item_built(item_stack:get_name(), player:get_player_name())

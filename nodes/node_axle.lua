@@ -51,7 +51,7 @@ minetest.register_node("digtron:axle", {
 			meta = minetest.get_meta(pos)
 			meta:set_string("waiting", "true")
 			meta:set_string("infotext", nil)
-			minetest.get_node_timer(pos):start(digtron.cycle_time*2)
+			minetest.get_node_timer(pos):start(digtron.config.cycle_time*2)
 		else
 			minetest.sound_play("buzzer", {gain=1.0, pos=pos})
 			meta:set_string("infotext", S("Digtron is obstructed."))
