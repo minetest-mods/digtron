@@ -94,6 +94,12 @@ function DigtronLayout.create(pos, player)
 				self.protected:set(testpos.x, testpos.y, testpos.z, true)
 			end
 		end
+
+		local is_protected = false
+		if minetest.is_protected(testpos, player:get_player_name()) and not minetest.check_player_privs(player, "protection_bypass") then
+			self.protected:set(testpos.x, testpos.y, testpos.z, true)
+			is_protected = true
+		end
 		
 		local group_number = minetest.get_item_group(node.name, "digtron")
 		if group_number > 0 then
@@ -116,7 +122,7 @@ function DigtronLayout.create(pos, player)
 				table.insert(self.fuelstores, node_image)
 			end
 			
-			if minetest.is_protected(pos, player:get_player_name()) and not minetest.check_player_privs(player, "protection_bypass") then
+			if is_protected then
 				self.contains_protected_node = true
 			end
 			
