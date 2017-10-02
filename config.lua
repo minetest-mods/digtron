@@ -7,20 +7,20 @@ local print_settingtypes = false
 local function setting(stype, name, default, description)
 	local value
 	if stype == "bool" then
-		value = minetest.setting_getbool(CONFIG_FILE_PREFIX..name)
+		value = minetest.settings:get_bool(CONFIG_FILE_PREFIX..name)
 	elseif stype == "string" then
-		value = minetest.setting_get(CONFIG_FILE_PREFIX..name)
+		value = minetest.settings:get(CONFIG_FILE_PREFIX..name)
 	elseif stype == "int" or stype == "float" then
-		value = tonumber(minetest.setting_get(CONFIG_FILE_PREFIX..name))
+		value = tonumber(minetest.settings:get(CONFIG_FILE_PREFIX..name))
 	end
 	if value == nil then
 		value = default
 	end
 	digtron.config[name] = value
-	
+
 	if print_settingtypes then
 		minetest.debug(CONFIG_FILE_PREFIX..name.." ("..description..") "..stype.." "..tostring(default))
-	end	
+	end
 end
 
 setting("bool", "uses_resources", true, "Digtron uses resources when active")
