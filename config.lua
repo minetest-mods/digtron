@@ -52,3 +52,8 @@ setting("float", "dig_cost_crumbly", 0.5, "Crumbly dig cost")
 setting("float", "dig_cost_choppy", 0.75, "Choppy dig cost")
 -- how much fuel is required to build a node
 setting("float", "build_cost", 1.0, "Build cost")
+
+-- How much charge (an RE battery holds 10000 EU) is equivalent to 1 unit of heat produced by burning coal
+-- With 100, the battery is 2.5 better than a coal lump, yet 3.7 less powerful than a coal block
+-- Being rechargeable should pay off for this "average" performance.
+setting("int", "power_ratio", 100, "The electrical charge to 1 coal heat unit conversion ratio")

@@ -5,3 +5,4 @@ hopper?
 awards?
 catacomb?
 intllib?
+technic?

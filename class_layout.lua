@@ -36,6 +36,7 @@ function DigtronLayout.create(pos, player)
 	self.all = {}
 	self.inventories = {}
 	self.fuelstores = {}
+	self.battery_holders = {}
 	self.diggers = {}
 	self.builders = {}
 	self.extents = {}
@@ -120,6 +121,8 @@ function DigtronLayout.create(pos, player)
 			elseif group_number == 6 then
 				table.insert(self.inventories, node_image)
 				table.insert(self.fuelstores, node_image)
+			elseif group_number == 7 then
+				table.insert(self.battery_holders, node_image)
 			end
 			
 			if is_protected then
