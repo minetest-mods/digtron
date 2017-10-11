@@ -91,6 +91,15 @@ minetest.register_craft({
 })
 
 minetest.register_craft({
+	output = "digtron:battery_holder",
+	recipe = {
+			{"","default:chest",""},
+			{"","digtron:digtron_core",""},
+			{"","default:steel_ingot",""}
+			}
+})
+
+minetest.register_craft({
 	output = "digtron:combined_storage",
 	recipe = {
 			{"","default:furnace",""},

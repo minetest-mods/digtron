@@ -21,7 +21,7 @@ local inventory_formspec =
 minetest.register_node("digtron:inventory", {
 	description = S("Digtron Inventory Storage"),
 	_doc_items_longdesc = digtron.doc.inventory_longdesc,
-    _doc_items_usagehelp = digtron.doc.inventory_usagehelp,
+	_doc_items_usagehelp = digtron.doc.inventory_usagehelp,
 	_digtron_formspec = inventory_formspec,
 	groups = {cracky = 3, oddly_breakable_by_hand=3, digtron = 2, tubedevice = 1, tubedevice_receiver = 1},
 	drop = "digtron:inventory",
@@ -92,7 +92,7 @@ local fuelstore_formspec =
 minetest.register_node("digtron:fuelstore", {
 	description = S("Digtron Fuel Storage"),
 	_doc_items_longdesc = digtron.doc.fuelstore_longdesc,
-    _doc_items_usagehelp = digtron.doc.fuelstore_usagehelp,
+	_doc_items_usagehelp = digtron.doc.fuelstore_usagehelp,
 	_digtron_formspec = fuelstore_formspec,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 5, tubedevice = 1, tubedevice_receiver = 1},
 	drop = "digtron:fuelstore",

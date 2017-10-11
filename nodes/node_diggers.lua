@@ -205,7 +205,7 @@ minetest.register_node("digtron:soft_digger", {
 	sounds = digtron.metal_sounds,
 	paramtype = "light",
 	paramtype2= "facedir",
-	is_ground_content = false,	
+	is_ground_content = false,
 	drawtype="nodebox",
 	node_box = {
 		type = "fixed",

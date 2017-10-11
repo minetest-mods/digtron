@@ -159,8 +159,10 @@ digtron.get_controlling_coordinate = function(pos, facedir)
 	end
 end
 
--- Searches fuel store inventories for burnable items and burns them until target is reached or surpassed (or there's nothing left to burn). Returns the total fuel value burned
--- if the "test" parameter is set to true, doesn't actually take anything out of inventories. We can get away with this sort of thing for fuel but not for builder inventory because there's just one
+-- Searches fuel store inventories for burnable items and burns them until target is reached or surpassed 
+-- (or there's nothing left to burn). Returns the total fuel value burned
+-- if the "test" parameter is set to true, doesn't actually take anything out of inventories.
+-- We can get away with this sort of thing for fuel but not for builder inventory because there's just one
 -- controller node burning stuff, not multiple build heads drawing from inventories in turn. Much simpler.
 digtron.burn = function(fuelstore_positions, target, test)
 	local current_burned = 0
@@ -194,6 +196,91 @@ digtron.burn = function(fuelstore_positions, target, test)
 	end
 	return current_burned
 end
+
+-- Consume energy from the batteries
+-- The same as burning coal, except that instead of destroying the items in the inventory, we merely drain 
+-- the charge in them, leaving them empty. The charge is converted into "coal heat units" by a downscaling 
+-- factor, since if taken at face value (10000 EU), the batteries would be the ultimate power source barely
+-- ever needing replacement.
+digtron.tap_batteries = function(battery_positions, target, test)
+	local current_burned = 0
+	-- 1 coal block is 370 PU
+	-- 1 coal lump is 40 PU
+	-- An RE battery holds 10000 EU of charge
+	-- local power_ratio = 100 -- How much charge equals 1 unit of PU from coal
+	-- setting Moved to digtron.config.power_ratio
+	
+	if (battery_positions == nil) then
+		return 0
+	end
+	
+	for k, location in pairs(battery_positions) do
+		if current_burned > target then
+			break
+		end
+		local inv = minetest.get_inventory({type="node", pos=location.pos})
+		local invlist = inv:get_list("batteries")
+		
+		if (invlist == nil) then
+			break
+		end
+		
+		for i, itemstack in pairs(invlist) do
+			
+			local meta = minetest.deserialize(itemstack:get_metadata())
+			if (meta =~ nil) then
+				local power_available = math.floor(meta.charge / digtron.config.power_ratio)
+				minetest.chat_send_all("Charge reported: "..meta.charge.." which is enough for "..power_available.." power")
+				if power_available ~= 0 then
+					local actual_burned = power_available -- we just take all we have from the battery, since they aren't stackable
+					if test ~= true then
+						-- don't bother recording the items if we're just testing, nothing is actually being removed.
+						local charge_left = meta.charge - power_available * digtron.config.power_ratio
+						local properties = itemstack:get_tool_capabilities()
+						-- itemstack = technic.set_RE_wear(itemstack, charge_left, properties.groupcaps.fleshy.uses)
+						-- we only need half the function, so why bother using it in the first place
+
+						-- Charge is stored separately, but shown as wear level
+						-- This calls for recalculating the value.
+						local charge_level
+						if charge_left == 0 then
+							charge_level = 0
+						else
+							charge_level = 65536 - math.floor(charge_left / properties.groupcaps.fleshy.uses * 65535)
+							if charge_level > 65535 then charge_level = 65535 end
+							if charge_level < 1 then charge_level = 1 end
+						end
+						itemstack:set_wear(charge_level)
+						
+						meta.charge = charge_left
+						itemstack:set_metadata(minetest.serialize(meta))
+
+					end
+					current_burned = current_burned + actual_burned
+				end
+			
+			end
+			
+			if current_burned > target then
+				break
+			end
+		end
+		
+		if (current_burned == 0) then
+			minetest.chat_send_all("Batteries not found!")
+		end
+		
+		if test ~= true then
+			-- only update the list if we're doing this for real.
+			inv:set_list("batteries", invlist)
+		end
+	end
+	return current_burned
+end
+
+
+
+
 
 digtron.remove_builder_item = function(pos)
 	local objects = minetest.env:get_objects_inside_radius(pos, 0.5)
