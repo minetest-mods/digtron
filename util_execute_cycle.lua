@@ -207,9 +207,6 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	
 	local test_fuel_needed = test_build_fuel_cost + digging_fuel_cost - fuel_burning
 	local test_fuel_burned = 0
--- 	if test_fuel_needed > 0 then
--- 		test_fuel_burned = digtron.burn(layout.fuelstores, test_fuel_needed, true)
--- 	end
 	                                        
 	if test_fuel_needed > 0 then
 		-- check for the available electrical power
@@ -315,16 +312,6 @@ digtron.execute_dig_cycle = function(pos, clicker)
 		minetest.sound_play("buzzer", {gain=0.5, pos=pos})
 		status_text = S("Digtron unexpectedly failed to execute one or more build operations, likely due to an inventory error.") .. "\n"
 	end
-	
--- 	-- acutally burn the fuel needed
--- 	local fuel_cost = digging_fuel_cost + building_fuel_cost
--- 	fuel_burning = fuel_burning - fuel_cost
--- 	if digtron.config.particle_effects then
--- 		table.insert(particle_systems, burn_smoke(pos, fuel_cost))
--- 	end
--- 	if fuel_burning < 0 then
--- 		fuel_burning = fuel_burning + digtron.burn(layout.fuelstores, -fuel_burning, false)
--- 	end
 	                                        
 	-- actually burn the fuel needed
 	fuel_burning = fuel_burning - digging_fuel_cost
@@ -522,15 +509,6 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 	
 	local status_text = ""
 	
--- 	-- acutally burn the fuel needed
--- 	fuel_burning = fuel_burning - digging_fuel_cost
--- 	if digtron.config.particle_effects then
--- 		table.insert(particle_systems, burn_smoke(pos, digging_fuel_cost))
--- 	end
--- 	if fuel_burning < 0 then
--- 		fuel_burning = fuel_burning + digtron.burn(layout.fuelstores, -fuel_burning, false)
--- 	end
-	                                        
 	-- actually burn the fuel needed
 	fuel_burning = fuel_burning - digging_fuel_cost
 	if digtron.particle_effects and exhaust == 1 then
@@ -545,7 +523,6 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 		end
 	end
 
-	                                        
 	meta:set_float("fuel_burning", fuel_burning)
 	meta:set_int("on_coal", exhaust)
 	status_text = status_text .. S("Heat remaining in controller furnace: @1", math.max(0, fuel_burning))

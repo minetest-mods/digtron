@@ -4,6 +4,14 @@ if not minetest.get_modpath("doc") then
 	return
 end
 
+local coal_fuel = minetest.get_craft_result({method="fuel", width=1, items={"default:coal_lump"}}).time
+local dig_stone_count = coal_fuel/digtron.config.dig_cost_cracky
+local dig_dirt_count = coal_fuel/digtron.config.dig_cost_crumbly
+local dig_wood_count = coal_fuel/digtron.config.dig_cost_choppy
+local build_count = coal_fuel/digtron.config.build_cost
+
+local battery_ratio = (10000/digtron.config.power_ratio) / coal_fuel
+
 -- internationalization boilerplate
 local MP = minetest.get_modpath(minetest.get_current_modname())
 local S, NS = dofile(MP.."/intllib.lua")
@@ -51,16 +59,18 @@ if pipeworks_enabled then
 	S("Inventory modules are compatible with Pipeworks blocks. When a Digtron moves one of the inventory modules adjacent to a pipe it will automatically hook up to it, and disconnect again when it moves on.")
 end
 
+local standard_fuel_doc = S("When a control unit is triggered, it will tally up how much fuel is required for the next cycle and then burn items from the fuel hopper until a sufficient amount of heat has been generated to power the operation. Any leftover heat will be retained by the control unit for use in the next cycle; this is the \"heat remaining in controller furnace\". This means you don't have to worry too much about what kinds of fuel you put in the fuel store, none will be wasted (unless you dig away a control unit with some heat remaining in it, that heat does get wasted)."
+.."\n\n"..
+"By using one lump of coal as fuel a digtron can:\n"..
+"\tBuild @1 blocks\n"..
+"\tDig @2 stone blocks\n"..
+"\tDig @3 wood blocks\n"..
+"\tDig @4 dirt or sand blocks", math.floor(build_count), math.floor(dig_stone_count), math.floor(dig_wood_count), math.floor(dig_dirt_count))
+
+
 digtron.doc.fuelstore_longdesc = S("Stores fuel to run a Digtron")
-digtron.doc.fuelstore_usagehelp = S("Digtrons have an appetite. Build operations and dig operations require a certain amount of fuel, and that fuel comes from fuel hopper modules. Note that movement does not require fuel, only digging and building."
-.."\n\n"..
-"When a control unit is triggered, it will tally up how much fuel is required for the next cycle and then burn items from the fuel hopper until a sufficient amount of heat has been generated to power the operation. Any leftover heat will be retained by the control unit for use in the next cycle; this is the \"heat remaining in controller furnace\". This means you don't have to worry too much about what kinds of fuel you put in the hopper, none will be wasted (unless you dig away a control unit with some heat remaining in it, that heat does get wasted)."
-.."\n\n"..
-"The fuel costs for digging and building can be configured in the init.lua file. By default using one lump of coal as fuel a digtron can:\n"..
-"\tBuild 40 blocks\n"..
-"\tDig 40 stone blocks\n"..
-"\tDig 60 wood blocks\n"..
-"\tDig 80 dirt or sand blocks")
+digtron.doc.fuelstore_usagehelp = S("Digtrons have an appetite. Build operations and dig operations require a certain amount of fuel, and that fuel comes from fuel store modules. Note that movement does not require fuel, only digging and building.")
+.."\n\n".. standard_fuel_doc
 
 if hoppers_enabled then
 	digtron.doc.fuelstore_usagehelp = digtron.doc.fuelstore_usagehelp
@@ -76,26 +86,26 @@ end
 
 
 -- Battery holders
-digtron.doc.batteryholder_longdesc = S("Holds RE batteries to run a Digtron")
-digtron.doc.batteryholder_usagehelp = S("Digtrons have an appetite, and it can be satisfied by electricity as well. Build operations and dig operations require a certain amount of power, and that power comes from the batteries place in the holder. Note that movement does not consume charge, only digging and building."
+digtron.doc.battery_holder_longdesc = S("Holds RE batteries to run a Digtron")
+digtron.doc.battery_holder_usagehelp = S("Digtrons have an appetite, and it can be satisfied by electricity as well. Build operations and dig operations require a certain amount of power, and that power comes from the batteries place in the holder. Note that movement does not consume charge, only digging and building."
 .."\n\n"..
 "When a control unit is triggered, it will tally up how much power is required for the next cycle and then discharge the batteries in the battery holder until a sufficient amount of heat has been generated to power the operation. Any leftover heat will be retained by the control unit for use in the next cycle; this is the \"heat remaining in controller furnace\". Thus no power is wasted (unless you dig away a control unit with some heat remaining in it, that heat does get wasted), and the discharged batteries can be taken away to be recharged."
 .."\n\n"..
-"The fuel costs for digging and building can be configured in the init.lua file. By default using one lump of coal as fuel a digtron can:\n"..
-"\tBuild 40 blocks\n"..
-"\tDig 40 stone blocks\n"..
-"\tDig 60 wood blocks\n"..
-"\tDig 80 dirt or sand blocks")
+"One fully charged battery can:\n"..
+"\tBuild @1 blocks\n"..
+"\tDig @2 stone blocks\n"..
+"\tDig @3 wood blocks\n"..
+"\tDig @4 dirt or sand blocks", math.floor(build_count*battery_ratio), math.floor(dig_stone_count*battery_ratio), math.floor(dig_wood_count*battery_ratio), math.floor(dig_dirt_count*battery_ratio))
 
 if pipeworks_enabled then
-	digtron.doc.batteryholder_usagehelp = digtron.doc.batteryholder_usagehelp
+	digtron.doc.battery_holder_usagehelp = digtron.doc.battery_holder_usagehelp
 	.."\n\n"..
 	S("Fuel modules are compatible with Pipeworks blocks. When a Digtron moves one of the inventory modules adjacent to a pipe it will automatically hook up to it, and disconnect again when it moves on.")
 end
 	
 
 digtron.doc.combined_storage_longdesc = S("Stores fuel for a Digtron and also has an inventory for building materials")
-digtron.doc.combined_storage_usagehelp = S("For smaller jobs the two dedicated modules may simply be too much of a good thing, wasting precious Digtron space to give unneeded capacity. The combined storage module is the best of both worlds, splitting its internal space between building material inventory and fuel storage. It has 3/4 building material capacity and 1/4 fuel storage capacity.")
+digtron.doc.combined_storage_usagehelp = S("For smaller jobs the two dedicated modules may simply be too much of a good thing, wasting precious Digtron space to give unneeded capacity. The combined storage module is the best of both worlds, splitting its internal space between building material inventory and fuel storage. It has 3/4 building material capacity and 1/4 fuel storage capacity.") .. "\n\n" .. standard_fuel_doc
 
 if hoppers_enabled then
 	digtron.doc.combined_storage_usagehelp = digtron.doc.combined_storage_usagehelp

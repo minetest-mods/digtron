@@ -226,11 +226,9 @@ digtron.tap_batteries = function(battery_positions, target, test)
 		end
 		
 		for i, itemstack in pairs(invlist) do
-			
 			local meta = minetest.deserialize(itemstack:get_metadata())
-			if (meta =~ nil) then
+			if (meta ~= nil) then
 				local power_available = math.floor(meta.charge / digtron.config.power_ratio)
-				minetest.chat_send_all("Charge reported: "..meta.charge.." which is enough for "..power_available.." power")
 				if power_available ~= 0 then
 					local actual_burned = power_available -- we just take all we have from the battery, since they aren't stackable
 					if test ~= true then
@@ -265,11 +263,7 @@ digtron.tap_batteries = function(battery_positions, target, test)
 				break
 			end
 		end
-		
-		if (current_burned == 0) then
-			minetest.chat_send_all("Batteries not found!")
-		end
-		
+				
 		if test ~= true then
 			-- only update the list if we're doing this for real.
 			inv:set_list("batteries", invlist)

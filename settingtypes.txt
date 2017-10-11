@@ -36,3 +36,8 @@ digtron_dig_cost_choppy (Fuel cost for digging choppy blocks) float 0.75 0.0 100
 digtron_dig_cost_default (Fuel cost for digging other block types) float 0.5 0.0 100.0
 #How much fuel is required to build a block
 digtron_build_cost (Fuel cost to build one block) float 1.0 0.0 100.0
+
+#If the [technic] mod is installed Digtron can draw power from technic batteries.
+#A full battery holds 10000 electrical units. This is divided by the power ratio
+#setting to convert it into fuel units.
+digtron_power_ratio (Electrical charge to coal heat conversion ratio) int 1 1000 100

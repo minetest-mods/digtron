@@ -75,7 +75,6 @@ minetest.register_node("digtron:digger", {
 	description = S("Digtron Digger Head"),
 	_doc_items_longdesc = digtron.doc.digger_longdesc,
     _doc_items_usagehelp = digtron.doc.digger_usagehelp,
-	_digtron_formspec = intermittent_formspec,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 3},
 	drop = "digtron:digger",
 	sounds = digtron.metal_sounds,

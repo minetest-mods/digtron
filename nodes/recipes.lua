@@ -90,14 +90,17 @@ minetest.register_craft({
 			}
 })
 
-minetest.register_craft({
-	output = "digtron:battery_holder",
-	recipe = {
-			{"","default:chest",""},
-			{"","digtron:digtron_core",""},
-			{"","default:steel_ingot",""}
-			}
-})
+if minetest.get_modpath("technic") then
+	-- no need for this recipe if technic is not installed, avoid cluttering crafting guides
+	minetest.register_craft({
+		output = "digtron:battery_holder",
+		recipe = {
+				{"","default:chest",""},
+				{"","digtron:digtron_core",""},
+				{"","default:steel_ingot",""}
+				}
+	})
+end
 
 minetest.register_craft({
 	output = "digtron:combined_storage",
