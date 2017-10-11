@@ -315,7 +315,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	                                        
 	-- actually burn the fuel needed
 	fuel_burning = fuel_burning - digging_fuel_cost
-	if digtron.particle_effects and exhaust == 1 then
+	if digtron.config.particle_effects and exhaust == 1 then
 		table.insert(particle_systems, burn_smoke(pos, digging_fuel_cost))
 	end
 	if fuel_burning < 0 then
@@ -511,7 +511,7 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 	
 	-- actually burn the fuel needed
 	fuel_burning = fuel_burning - digging_fuel_cost
-	if digtron.particle_effects and exhaust == 1 then
+	if digtron.config.particle_effects and exhaust == 1 then
 		table.insert(particle_systems, burn_smoke(pos, digging_fuel_cost))
 	end
 	if fuel_burning < 0 then
