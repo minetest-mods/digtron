@@ -39,6 +39,8 @@ dofile( digtron_modpath .. "/nodes/node_axle.lua" ) -- Rotation controller
 dofile( digtron_modpath .. "/nodes/node_crate.lua" ) -- Digtron portability support
 dofile( digtron_modpath .. "/nodes/recipes.lua" )
 
+dofile( digtron_modpath .. "/nodes/node_power_connector.lua")
+
 dofile( digtron_modpath .. "/upgrades.lua" ) -- various LBMs for upgrading older versions of Digtron.
 
 -- digtron group numbers:

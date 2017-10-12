@@ -36,7 +36,8 @@ function DigtronLayout.create(pos, player)
 	self.all = {}
 	self.inventories = {}
 	self.fuelstores = {}
-	self.battery_holders = {}
+	self.battery_holders = {} -- technic batteries
+	self.power_connectors = {} -- technic power cable
 	self.diggers = {}
 	self.builders = {}
 	self.extents = {}
@@ -123,6 +124,8 @@ function DigtronLayout.create(pos, player)
 				table.insert(self.fuelstores, node_image)
 			elseif group_number == 7 then
 				table.insert(self.battery_holders, node_image)
+			elseif group_number == 8 then
+				table.insert(self.power_connectors, node_image)
 			end
 			
 			if is_protected then
@@ -320,6 +323,14 @@ function DigtronLayout.write_layout_image(self, player)
 		local old_meta = minetest.get_meta(oldpos)
 		local old_def = minetest.registered_nodes[old_node.name]
 		minetest.remove_node(oldpos)
+		
+		for _, callback in ipairs(minetest.registered_on_dignodes) do
+			-- Copy pos and node because callback can modify them
+			local pos_copy = {x=oldpos.x, y=oldpos.y, z=oldpos.z}
+			local oldnode_copy = {name=old_node.name, param1=old_node.param1, param2=old_node.param2}
+			callback(pos_copy, oldnode_copy, player)
+		end
+		
 		minetest.log("action", string.format("%s removes Digtron component %s at (%d, %d, %d)", player:get_player_name(), old_node.name, oldpos.x, oldpos.y, oldpos.z))
 		if old_def.after_dig_node ~= nil then
 			old_def.after_dig_node(oldpos, old_node, old_meta, player)
@@ -329,9 +340,20 @@ function DigtronLayout.write_layout_image(self, player)
 
 	-- create the new one
 	for k, node_image in pairs(self.all) do
-		minetest.set_node(node_image.pos, node_image.node)
-		minetest.get_meta(node_image.pos):from_table(node_image.meta)
+		local new_pos = node_image.pos
+		local new_node = node_image.node
+		local old_node = minetest.get_node(new_pos)
+		minetest.set_node(new_pos, new_node)
+		minetest.get_meta(new_pos):from_table(node_image.meta)
 		minetest.log("action", string.format("%s adds Digtron component %s at (%d, %d, %d)", player:get_player_name(), node_image.node.name, node_image.pos.x, node_image.pos.y, node_image.pos.z))
+
+		for _, callback in ipairs(minetest.registered_on_placenodes) do
+			-- Copy pos and node because callback can modify them
+			local pos_copy = {x=new_pos.x, y=new_pos.y, z=new_pos.z}
+			local oldnode_copy = {name=old_node.name, param1=old_node.param1, param2=old_node.param2}
+			local newnode_copy = {name=new_node.name, param1=new_node.param1, param2=new_node.param2}
+			callback(pos_copy, newnode_copy, player, oldnode_copy)
+		end
 
 		local new_def = minetest.registered_nodes[node_image.node.name]
 		if new_def.after_place_node ~= nil then

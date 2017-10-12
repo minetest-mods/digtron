@@ -30,7 +30,16 @@ minetest.register_node("digtron:empty_crate", {
 		
 		-- destroy everything. Note that this includes the empty crate, which will be bundled up with the layout.
 		for _, node_image in pairs(layout.all) do
-			minetest.remove_node(node_image.pos)
+			local old_pos = node_image.pos
+			local old_node = node_image.node
+			minetest.remove_node(old_pos)
+			
+			for _, callback in ipairs(minetest.registered_on_dignodes) do
+				-- Copy pos and node because callback can modify them
+				local pos_copy = {x=old_pos.x, y=old_pos.y, z=old_pos.z}
+				local oldnode_copy = {name=old_node.name, param1=old_node.param1, param2=old_node.param2}
+				callback(pos_copy, oldnode_copy, clicker)
+			end			
 		end
 		
 		-- Create the loaded crate node
