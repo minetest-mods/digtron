@@ -189,6 +189,13 @@ digtron.doc.soft_digger_usagehelp = S("This specialized digger head is designed 
 
 ---------------------------------------------------------------------
 
+digtron.doc.power_connector_longdesc = S("High-voltage power connector allowing a Digtron to be powered from a Technic power network.")
+digtron.doc.power_connector_usagehelp = S("A power connector node automatically hooks into adjacent high-voltage (HV) power cables, but it must be configured to set how much power it will draw from the attached network. Right-click on the power connector to bring up a form that shows the current estimated maximum power usage of the Digtron the power connector is part of and a field where a power value can be entered. The estimated maximum power usage is the amount of power this Digtron will use in the worst case situation, with all of its digger heads digging the toughest material and all of its builder heads building a block simultaneously."
+.."\n\n"..
+"You can set the power connector's usage lower than this, and if the Digtron is unable to get sufficient power from the network it will use on-board batteries or burnable fuel to make up the shortfall.")
+
+---------------------------------------------------------------------
+
 digtron.doc.structure_longdesc = S("Structural component for a Digtron array")
 digtron.doc.structure_usagehelp = S("These blocks allow otherwise-disconnected sections of digtron blocks to be linked together. They are not usually necessary for simple diggers but more elaborate builder arrays might have builder blocks that can't be placed directly adjacent to other digtron blocks and these blocks can serve to keep them connected to the controller."
 .."\n\n"..

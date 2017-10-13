@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-10-10 20:55-0600\n"
+"POT-Creation-Date: 2017-10-12 23:21-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -703,10 +703,33 @@ msgid ""
 msgstr ""
 
 #: doc.lua:192
-msgid "Structural component for a Digtron array"
+msgid ""
+"High-voltage power connector allowing a Digtron to be powered from a Technic "
+"power network."
 msgstr ""
 
 #: doc.lua:193
+msgid ""
+"A power connector node automatically hooks into adjacent high-voltage (HV) "
+"power cables, but it must be configured to set how much power it will draw "
+"from the attached network. Right-click on the power connector to bring up a "
+"form that shows the current estimated maximum power usage of the Digtron the "
+"power connector is part of and a field where a power value can be entered. "
+"The estimated maximum power usage is the amount of power this Digtron will "
+"use in the worst case situation, with all of its digger heads digging the "
+"toughest material and all of its builder heads building a block "
+"simultaneously.\n"
+"\n"
+"You can set the power connector's usage lower than this, and if the Digtron "
+"is unable to get sufficient power from the network it will use on-board "
+"batteries or burnable fuel to make up the shortfall."
+msgstr ""
+
+#: doc.lua:199
+msgid "Structural component for a Digtron array"
+msgstr ""
+
+#: doc.lua:200
 msgid ""
 "These blocks allow otherwise-disconnected sections of digtron blocks to be "
 "linked together. They are not usually necessary for simple diggers but more "
@@ -721,11 +744,11 @@ msgid ""
 "you ride your mighty mechanical leviathan through the landscape."
 msgstr ""
 
-#: doc.lua:199
+#: doc.lua:206
 msgid "Digtron light source"
 msgstr ""
 
-#: doc.lua:200
+#: doc.lua:207
 msgid ""
 "A light source that moves along with the digging machine. Convenient if "
 "you're digging a tunnel that you don't intend to outfit with torches or "
@@ -733,53 +756,53 @@ msgid ""
 "protective lens tends to get grimy while burrowing through the earth."
 msgstr ""
 
-#: doc.lua:202
+#: doc.lua:209
 msgid "Digtron panel"
 msgstr ""
 
-#: doc.lua:203
+#: doc.lua:210
 msgid ""
 "A structural panel that can be made part of a Digtron to provide shelter for "
 "an operator, keep sand out of the Digtron's innards, or just to look cool."
 msgstr ""
 
-#: doc.lua:205
+#: doc.lua:212
 msgid "Digtron edge panel"
 msgstr ""
 
-#: doc.lua:206
+#: doc.lua:213
 msgid ""
 "A pair of structural panels that can be made part of a Digtron to provide "
 "shelter for an operator, keep sand out of the Digtron's innards, or just to "
 "look cool."
 msgstr ""
 
-#: doc.lua:208
+#: doc.lua:215
 msgid "Digtron corner panel"
 msgstr ""
 
-#: doc.lua:209
+#: doc.lua:216
 msgid ""
 "A trio of structural panels that can be made part of a Digtron to provide "
 "shelter for an operator, keep sand out of the Digtron's innards, or just to "
 "look cool."
 msgstr ""
 
-#: doc.lua:213
+#: doc.lua:220
 msgid "Digtron"
 msgstr ""
 
-#: doc.lua:214
+#: doc.lua:221
 msgid ""
 "The Digtron system is a set of blocks used to construct tunnel-boring and "
 "construction machines."
 msgstr ""
 
-#: doc.lua:221
+#: doc.lua:228
 msgid "Summary"
 msgstr ""
 
-#: doc.lua:222
+#: doc.lua:229
 msgid ""
 "Digtron blocks can be used to construct highly customizable and modular "
 "tunnel-boring machines, bridge-builders, road-pavers, wall-o-matics, and "
@@ -801,11 +824,11 @@ msgid ""
 "edges and corners don't count."
 msgstr ""
 
-#: doc.lua:235
+#: doc.lua:242
 msgid "Concepts"
 msgstr ""
 
-#: doc.lua:237
+#: doc.lua:244
 msgid ""
 "Several general concepts are important when building more sophisticated "
 "diggers.\n"
@@ -844,11 +867,11 @@ msgid ""
 "when moving in any direction."
 msgstr ""
 
-#: doc.lua:251
+#: doc.lua:258
 msgid "Audio cues"
 msgstr ""
 
-#: doc.lua:253
+#: doc.lua:260
 msgid ""
 "When a digging machine is unable to complete a cycle it will make one of "
 "several noises to indicate what the problem is. It will also set its "
@@ -894,11 +917,11 @@ msgid ""
 "caution when opening the door to clear the obstruction."
 msgstr ""
 
-#: doc.lua:271
+#: doc.lua:278
 msgid "Tips and Tricks"
 msgstr ""
 
-#: doc.lua:273
+#: doc.lua:280
 msgid ""
 "To more easily visualize the operation of a Digtron, imagine that its cycle "
 "of operation follows these steps in order:\n"
@@ -929,35 +952,35 @@ msgid "Digtron has @1 blocks but only enough traction to move @2 blocks.\n"
 msgstr ""
 
 #: util_execute_cycle.lua:110
-#: util_execute_cycle.lua:332
-#: util_execute_cycle.lua:409
-#: util_execute_cycle.lua:528
+#: util_execute_cycle.lua:349
+#: util_execute_cycle.lua:426
+#: util_execute_cycle.lua:545
 #: nodes\node_controllers.lua:48
 #: nodes\node_controllers.lua:201
 msgid "Heat remaining in controller furnace: @1"
 msgstr ""
 
 #: util_execute_cycle.lua:173
-#: util_execute_cycle.lua:382
-#: util_execute_cycle.lua:472
+#: util_execute_cycle.lua:399
+#: util_execute_cycle.lua:489
 #: nodes\node_axle.lua:57
 msgid "Digtron is obstructed."
 msgstr ""
 
-#: util_execute_cycle.lua:230
+#: util_execute_cycle.lua:245
 msgid "Digtron needs more fuel."
 msgstr ""
 
-#: util_execute_cycle.lua:240
+#: util_execute_cycle.lua:255
 msgid ""
 "Digtron connected to at least one builder with no output material assigned."
 msgstr ""
 
-#: util_execute_cycle.lua:244
+#: util_execute_cycle.lua:259
 msgid "Digtron has insufficient building materials. Needed: @1"
 msgstr ""
 
-#: util_execute_cycle.lua:313
+#: util_execute_cycle.lua:328
 msgid ""
 "Digtron unexpectedly failed to execute one or more build operations, likely "
 "due to an inventory error."
@@ -1053,14 +1076,14 @@ msgstr ""
 
 #: nodes\node_builders.lua:39
 #: nodes\node_controllers.lua:106
-#: nodes\node_crate.lua:62
+#: nodes\node_crate.lua:80
 #: nodes\node_diggers.lua:41
 msgid "Help"
 msgstr ""
 
 #: nodes\node_builders.lua:40
 #: nodes\node_controllers.lua:107
-#: nodes\node_crate.lua:63
+#: nodes\node_crate.lua:81
 #: nodes\node_diggers.lua:42
 msgid "Show documentation about this block"
 msgstr ""
@@ -1159,73 +1182,73 @@ msgstr ""
 msgid "Digtron Pusher Module"
 msgstr ""
 
-#: nodes\node_crate.lua:6
+#: nodes\node_crate.lua:8
 msgid "Digtron Crate (Empty)"
 msgstr ""
 
-#: nodes\node_crate.lua:22
+#: nodes\node_crate.lua:24
 msgid "Digtron can't be packaged, it contains protected blocks"
 msgstr ""
 
-#: nodes\node_crate.lua:42
-#: nodes\node_crate.lua:43
+#: nodes\node_crate.lua:60
+#: nodes\node_crate.lua:61
 msgid "Crated Digtron"
 msgstr ""
 
-#: nodes\node_crate.lua:55
-#: nodes\node_crate.lua:70
+#: nodes\node_crate.lua:73
+#: nodes\node_crate.lua:88
 msgid "Digtron Name"
 msgstr ""
 
-#: nodes\node_crate.lua:56
-#: nodes\node_crate.lua:71
+#: nodes\node_crate.lua:74
+#: nodes\node_crate.lua:89
 msgid ""
 "Save\n"
 "Title"
 msgstr ""
 
-#: nodes\node_crate.lua:57
-#: nodes\node_crate.lua:72
+#: nodes\node_crate.lua:75
+#: nodes\node_crate.lua:90
 msgid "Saves the title of this Digtron"
 msgstr ""
 
-#: nodes\node_crate.lua:58
-#: nodes\node_crate.lua:73
+#: nodes\node_crate.lua:76
+#: nodes\node_crate.lua:91
 msgid ""
 "Show\n"
 "Blocks"
 msgstr ""
 
-#: nodes\node_crate.lua:59
-#: nodes\node_crate.lua:74
+#: nodes\node_crate.lua:77
+#: nodes\node_crate.lua:92
 msgid "Shows which blocks the packed Digtron will occupy if unpacked"
 msgstr ""
 
-#: nodes\node_crate.lua:60
-#: nodes\node_crate.lua:75
+#: nodes\node_crate.lua:78
+#: nodes\node_crate.lua:93
 msgid "Unpack"
 msgstr ""
 
-#: nodes\node_crate.lua:61
-#: nodes\node_crate.lua:76
+#: nodes\node_crate.lua:79
+#: nodes\node_crate.lua:94
 msgid "Attempts to unpack the Digtron on this location"
 msgstr ""
 
-#: nodes\node_crate.lua:80
+#: nodes\node_crate.lua:98
 msgid "Digtron Crate (Loaded)"
 msgstr ""
 
-#: nodes\node_crate.lua:115
+#: nodes\node_crate.lua:133
 msgid ""
 "Unable to read layout from crate metadata, regrettably this Digtron may be "
 "corrupted or lost."
 msgstr ""
 
-#: nodes\node_crate.lua:146
+#: nodes\node_crate.lua:164
 msgid "Unable to deploy Digtron due to protected blocks in target area"
 msgstr ""
 
-#: nodes\node_crate.lua:152
+#: nodes\node_crate.lua:170
 msgid "Unable to deploy Digtron due to obstruction in target area"
 msgstr ""
 
@@ -1286,6 +1309,32 @@ msgstr ""
 
 #: nodes\node_misc.lua:114
 msgid "Digtron Corner Panel"
+msgstr ""
+
+#: nodes\node_power_connector.lua:15
+msgid ""
+"Maximize\n"
+"Power"
+msgstr ""
+
+#: nodes\node_power_connector.lua:16
+msgid ""
+"Maximum Power\n"
+"Required: @1"
+msgstr ""
+
+#: nodes\node_power_connector.lua:17
+msgid ""
+"Refresh\n"
+"Max"
+msgstr ""
+
+#: nodes\node_power_connector.lua:27
+msgid "Digtron HV Power Connector"
+msgstr ""
+
+#: nodes\node_power_connector.lua:67
+msgid "Digtron Power @1/@2"
 msgstr ""
 
 #: nodes\node_storage.lua:11
