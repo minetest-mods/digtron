@@ -1,6 +1,8 @@
 DigtronLayout = {}
 DigtronLayout.__index = DigtronLayout
 
+local modpath_awards = minetest.get_modpath("awards")
+
 -------------------------------------------------------------------------
 -- Creation
 
@@ -147,8 +149,9 @@ function DigtronLayout.create(pos, player)
 			to_test:set_if_not_in(tested, testpos.x, testpos.y - 1, testpos.z, true)
 			to_test:set_if_not_in(tested, testpos.x, testpos.y, testpos.z + 1, true)
 			to_test:set_if_not_in(tested, testpos.x, testpos.y, testpos.z - 1, true)
-		elseif minetest.registered_nodes[node.name].buildable_to ~= true then
+		elseif not minetest.registered_nodes[node.name] or minetest.registered_nodes[node.name].buildable_to ~= true then
 			-- Tracks whether the digtron is hovering in mid-air. If any part of the digtron array touches something solid it gains traction.
+			-- Allowing unknown nodes to provide traction, since they're not buildable_to either
 			self.traction = self.traction + 1
 		end
 		
@@ -324,6 +327,13 @@ function DigtronLayout.write_layout_image(self, player)
 		local old_def = minetest.registered_nodes[old_node.name]
 		minetest.remove_node(oldpos)
 		
+		if modpath_awards then
+			-- We're about to tell the awards mod that we're digging a node, but we
+			-- don't want it to count toward any actual awards. Pre-decrement.
+			local data = awards.players[player:get_player_name()]
+			awards.increment_item_counter(data, "count", old_node.name, -1)
+		end
+		
 		for _, callback in ipairs(minetest.registered_on_dignodes) do
 			-- Copy pos and node because callback can modify them
 			local pos_copy = {x=oldpos.x, y=oldpos.y, z=oldpos.z}
@@ -347,6 +357,13 @@ function DigtronLayout.write_layout_image(self, player)
 		minetest.get_meta(new_pos):from_table(node_image.meta)
 		minetest.log("action", string.format("%s adds Digtron component %s at (%d, %d, %d)", player:get_player_name(), node_image.node.name, node_image.pos.x, node_image.pos.y, node_image.pos.z))
 
+		if modpath_awards then
+			-- We're about to tell the awards mod that we're placing a node, but we
+			-- don't want it to count toward any actual awards. Pre-decrement.
+			local data = awards.players[player:get_player_name()]
+			awards.increment_item_counter(data, "place", new_node.name, -1)
+		end
+		
 		for _, callback in ipairs(minetest.registered_on_placenodes) do
 			-- Copy pos and node because callback can modify them
 			local pos_copy = {x=new_pos.x, y=new_pos.y, z=new_pos.z}

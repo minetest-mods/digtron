@@ -2,6 +2,8 @@
 local MP = minetest.get_modpath(minetest.get_current_modname())
 local S, NS = dofile(MP.."/intllib.lua")
 
+local modpath_awards = minetest.get_modpath("awards")
+
 minetest.register_node("digtron:empty_crate", {
 	description = S("Digtron Crate (Empty)"),
 	_doc_items_longdesc = digtron.doc.empty_crate_longdesc,
@@ -33,6 +35,13 @@ minetest.register_node("digtron:empty_crate", {
 			local old_pos = node_image.pos
 			local old_node = node_image.node
 			minetest.remove_node(old_pos)
+			
+			if modpath_awards then
+				-- We're about to tell the awards mod that we're digging a node, but we
+				-- don't want it to count toward any actual awards. Pre-decrement.
+				local data = awards.players[clicker:get_player_name()]
+				awards.increment_item_counter(data, "count", old_node.name, -1)
+			end
 			
 			for _, callback in ipairs(minetest.registered_on_dignodes) do
 				-- Copy pos and node because callback can modify them
