@@ -107,7 +107,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	local facing = minetest.get_node(pos).param2
 	local dir = minetest.facedir_to_dir(facing)
 	local fuel_burning = meta:get_float("fuel_burning") -- get amount of burned fuel left over from last cycle
-	local status_text = S("Heat remaining in controller furnace: @1", math.max(0, fuel_burning))
+	local status_text = S("Heat remaining in controller furnace: @1", math.floor(math.max(0, fuel_burning)))
 	local exhaust = meta:get_int("on_coal")
 	
 	local layout = DigtronLayout.create(pos, clicker)
@@ -207,10 +207,25 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	
 	local test_fuel_needed = test_build_fuel_cost + digging_fuel_cost - fuel_burning
 	local test_fuel_burned = 0
-	                                        
-	if test_fuel_needed > 0 then
-		-- check for the available electrical power
-	      test_fuel_burned = digtron.tap_batteries(layout.battery_holders, test_fuel_needed, true)
+
+	local power_from_cables = 0
+	if minetest.get_modpath("technic") then
+		local power_inputs = {}
+		for _, power_connector in pairs(layout.power_connectors) do
+			if power_connector.meta.fields.HV_network and power_connector.meta.fields.HV_EU_input then
+				power_inputs[power_connector.meta.fields.HV_network] = tonumber(power_connector.meta.fields.HV_EU_input)
+			end
+		end
+		for _, power in pairs(power_inputs) do
+			power_from_cables = power_from_cables + power
+		end
+		power_from_cables = power_from_cables / digtron.config.power_ratio
+		test_fuel_burned = power_from_cables
+		
+		if test_fuel_needed - test_fuel_burned > 0 then
+			-- check for the available electrical power
+			test_fuel_burned = test_fuel_burned + digtron.tap_batteries(layout.battery_holders, test_fuel_needed, true)
+		end
 	end
 	if (test_fuel_needed < test_fuel_burned) then
 		exhaust = 0 -- all power needs met by electricity, don't blow smoke
@@ -312,11 +327,13 @@ digtron.execute_dig_cycle = function(pos, clicker)
 		minetest.sound_play("buzzer", {gain=0.5, pos=pos})
 		status_text = S("Digtron unexpectedly failed to execute one or more build operations, likely due to an inventory error.") .. "\n"
 	end
-	                                        
+	
+	local total_fuel_cost = math.max(digging_fuel_cost + building_fuel_cost - power_from_cables, 0)
+	
 	-- actually burn the fuel needed
-	fuel_burning = fuel_burning - digging_fuel_cost
+	fuel_burning = fuel_burning - total_fuel_cost
 	if digtron.config.particle_effects and exhaust == 1 then
-		table.insert(particle_systems, burn_smoke(pos, digging_fuel_cost))
+		table.insert(particle_systems, burn_smoke(pos, total_fuel_cost))
 	end
 	if fuel_burning < 0 then
 		-- we tap into the batteries either way
@@ -329,7 +346,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	                                        
 	meta:set_float("fuel_burning", fuel_burning)
 	meta:set_int("on_coal", exhaust)
-	status_text = status_text .. S("Heat remaining in controller furnace: @1", math.max(0, fuel_burning))
+	status_text = status_text .. S("Heat remaining in controller furnace: @1", math.floor(math.max(0, fuel_burning)))
 
 	-- Eyecandy
 	for _, particles in pairs(particle_systems) do
@@ -406,7 +423,7 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 	local facing = minetest.get_node(pos).param2
 	local dir = digtron.facedir_to_down_dir(facing)
 	local fuel_burning = meta:get_float("fuel_burning") -- get amount of burned fuel left over from last cycle
-	local status_text = S("Heat remaining in controller furnace: @1", math.max(0, fuel_burning))
+	local status_text = S("Heat remaining in controller furnace: @1", math.floor(math.max(0, fuel_burning)))
 	local exhaust = meta:get_int("on_coal")
 	                                        
 	local layout = DigtronLayout.create(pos, clicker)
@@ -525,7 +542,7 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 
 	meta:set_float("fuel_burning", fuel_burning)
 	meta:set_int("on_coal", exhaust)
-	status_text = status_text .. S("Heat remaining in controller furnace: @1", math.max(0, fuel_burning))
+	status_text = status_text .. S("Heat remaining in controller furnace: @1", math.floor(math.max(0, fuel_burning)))
 
 	-- Eyecandy
 	for _, particles in pairs(particle_systems) do

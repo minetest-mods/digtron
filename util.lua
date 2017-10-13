@@ -46,7 +46,7 @@ digtron.mark_diggable = function(pos, nodes_dug)
 	end
 
 	local targetdef = minetest.registered_nodes[target.name]
-	if targetdef.can_dig == nil or targetdef.can_dig(pos, player) then 
+	if targetdef == nil or targetdef.can_dig == nil or targetdef.can_dig(pos, player) then 
 		nodes_dug:set(pos.x, pos.y, pos.z, true)
 		if target.name ~= "air" then
 			local in_known_group = false
