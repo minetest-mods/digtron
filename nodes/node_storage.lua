@@ -2,6 +2,7 @@
 local MP = minetest.get_modpath(minetest.get_current_modname())
 local S, NS = dofile(MP.."/intllib.lua")
 
+local pipeworks_path = minetest.get_modpath("pipeworks")
 
 local inventory_formspec = 
 	"size[8,9.3]" ..
@@ -55,7 +56,7 @@ minetest.register_node("digtron:inventory", {
 	-- Pipeworks compatibility
 	----------------------------------------------------------------
 
-	tube = (function() if minetest.get_modpath("pipeworks") then return {
+	tube = (function() if pipeworks_path then return {
 		insert_object = function(pos, node, stack, direction)
 			local meta = minetest.get_meta(pos)
 			local inv = meta:get_inventory()
@@ -70,8 +71,8 @@ minetest.register_node("digtron:inventory", {
 		connect_sides = {left = 1, right = 1, back = 1, front = 1, bottom = 1, top = 1}
 	} end end)(),
 	
-	after_place_node = (function() if minetest.get_modpath("pipeworks") then return pipeworks.after_place end end)(),
-	after_dig_node = (function() if minetest.get_modpath("pipeworks") then return pipeworks.after_dig end end)()
+	after_place_node = (function() if pipeworks_path then return pipeworks.after_place end end)(),
+	after_dig_node = (function() if pipeworks_path then return pipeworks.after_dig end end)()
 })
 
 local fuelstore_formspec = 
@@ -138,7 +139,7 @@ minetest.register_node("digtron:fuelstore", {
 	-- Pipeworks compatibility
 	----------------------------------------------------------------
 
-	tube = (function() if minetest.get_modpath("pipeworks") then return {
+	tube = (function() if pipeworks_path then return {
 		insert_object = function(pos, node, stack, direction)
 			if minetest.get_craft_result({method="fuel", width=1, items={stack}}).time ~= 0 then
 				local meta = minetest.get_meta(pos)
@@ -159,8 +160,8 @@ minetest.register_node("digtron:fuelstore", {
 		connect_sides = {left = 1, right = 1, back = 1, front = 1, bottom = 1, top = 1}
 	} end end)(),
 	
-	after_place_node = (function() if minetest.get_modpath("pipeworks") then return pipeworks.after_place end end)(),
-	after_dig_node = (function() if minetest.get_modpath("pipeworks")then return pipeworks.after_dig end end)()
+	after_place_node = (function() if pipeworks_path then return pipeworks.after_place end end)(),
+	after_dig_node = (function() if pipeworks_path then return pipeworks.after_dig end end)()
 })
 
 local combined_storage_formspec =
@@ -241,7 +242,7 @@ minetest.register_node("digtron:combined_storage", {
 		
 	-- Pipeworks compatibility
 	----------------------------------------------------------------
-	tube = (function() if minetest.get_modpath("pipeworks") then return {
+	tube = (function() if pipeworks_path then return {
 		insert_object = function(pos, node, stack, direction)
 			local meta = minetest.get_meta(pos)
 			local inv = meta:get_inventory()
@@ -262,8 +263,8 @@ minetest.register_node("digtron:combined_storage", {
 		connect_sides = {left = 1, right = 1, back = 1, front = 1, bottom = 1, top = 1}
 	} end end)(),
 	
-	after_place_node = (function() if minetest.get_modpath("pipeworks") then return pipeworks.after_place end end)(),
-	after_dig_node = (function() if minetest.get_modpath("pipeworks") then return pipeworks.after_dig end end)()
+	after_place_node = (function() if pipeworks_path then return pipeworks.after_place end end)(),
+	after_dig_node = (function() if pipeworks_path then return pipeworks.after_dig end end)()
 })
 
 -- Hopper compatibility

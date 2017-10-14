@@ -52,7 +52,7 @@ minetest.register_node("digtron:light", {
 	node_box = {
 		type = "wallmounted",
 		wall_top = {-0.25, 0.3125, -0.25, 0.25, 0.5, 0.25},
-		wall_bottom = {-0.25, -0.3125, -0.25, 0.25, -0.5, 0.25},
+		wall_bottom = {-0.25, -0.5, -0.25, 0.25, -0.3125, 0.25},
 		wall_side = {-0.5, -0.25, -0.25, -0.1875, 0.25, 0.25},
 	},
 })

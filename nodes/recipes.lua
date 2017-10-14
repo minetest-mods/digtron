@@ -147,6 +147,15 @@ minetest.register_craft({
 			}
 })
 
+minetest.register_craft({
+	output = "digtron:inventory_ejector",
+	recipe = {
+			{"default:steel_ingot","default:steel_ingot","default:steel_ingot"},
+			{"","digtron:digtron_core",""},
+			{"","default:steel_ingot",""}
+			}
+})
+
 -- Structural
 
 minetest.register_craft({

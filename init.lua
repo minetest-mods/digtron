@@ -31,15 +31,18 @@ dofile( digtron_modpath .. "/class_layout.lua" )
 dofile( digtron_modpath .. "/entities.lua" )
 dofile( digtron_modpath .. "/nodes/node_misc.lua" ) -- contains structure and light nodes
 dofile( digtron_modpath .. "/nodes/node_storage.lua" ) -- contains inventory and fuel storage nodes
-dofile( digtron_modpath .. "/nodes/node_battery_holder.lua" ) -- holds rechargeable batteries from the technic mod
 dofile( digtron_modpath .. "/nodes/node_diggers.lua" ) -- contains all diggers
 dofile( digtron_modpath .. "/nodes/node_builders.lua" ) -- contains all builders (there's just one currently)
 dofile( digtron_modpath .. "/nodes/node_controllers.lua" ) -- controllers
 dofile( digtron_modpath .. "/nodes/node_axle.lua" ) -- Rotation controller
 dofile( digtron_modpath .. "/nodes/node_crate.lua" ) -- Digtron portability support
-dofile( digtron_modpath .. "/nodes/recipes.lua" )
+dofile( digtron_modpath .. "/nodes/node_item_ejector.lua" ) -- ejects non-building, non-fuel items from inventories
 
+--Technic
+dofile( digtron_modpath .. "/nodes/node_battery_holder.lua" ) -- holds rechargeable batteries from the technic mod
 dofile( digtron_modpath .. "/nodes/node_power_connector.lua")
+
+dofile( digtron_modpath .. "/nodes/recipes.lua" )
 
 dofile( digtron_modpath .. "/upgrades.lua" ) -- various LBMs for upgrading older versions of Digtron.
 
