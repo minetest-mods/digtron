@@ -12,7 +12,7 @@ local get_node_image = function(pos, node)
 	node_image.paramtype2 = node_def.paramtype2
 	local meta = minetest.get_meta(pos)
 	node_image.meta = meta:to_table()
-	if node_image.meta ~= nil then
+	if node_image.meta ~= nil and node_def._digtron_formspec ~= nil then
 		node_image.meta.fields.formspec = node_def._digtron_formspec -- causes formspec to be automatically upgraded whenever Digtron moves
 	end
 	
