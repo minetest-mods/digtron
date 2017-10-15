@@ -106,7 +106,7 @@ minetest.register_node("digtron:digger", {
 	},
 
 	-- returns fuel_cost, item_produced
-	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate, lateral_dig)
+	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate, lateral_dig, player)
 		local facing = minetest.get_node(pos).param2
 		local digpos = digtron.find_new_pos(pos, facing)
 
@@ -114,7 +114,7 @@ minetest.register_node("digtron:digger", {
 			return 0, {}
 		end
 		
-		return digtron.mark_diggable(digpos, nodes_dug)
+		return digtron.mark_diggable(digpos, nodes_dug, player)
 	end,
 	
 	damage_creatures = function(player, pos, controlling_coordinate)
@@ -164,7 +164,7 @@ minetest.register_node("digtron:intermittent_digger", {
 	on_receive_fields = intermittent_on_receive_fields,
 
 	-- returns fuel_cost, item_produced
-	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate, lateral_dig)
+	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate, lateral_dig, player)
 		if lateral_dig == true then
 			return 0, {}
 		end
@@ -181,7 +181,7 @@ minetest.register_node("digtron:intermittent_digger", {
 			return 0, {}
 		end
 		
-		return digtron.mark_diggable(digpos, nodes_dug)
+		return digtron.mark_diggable(digpos, nodes_dug, player)
 	end,
 	
 	damage_creatures = function(player, pos, controlling_coordinate)
@@ -229,7 +229,7 @@ minetest.register_node("digtron:soft_digger", {
 		"digtron_plate.png^digtron_motor.png^[colorize:" .. digtron.soft_digger_colorize,
 	},
 	
-	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate, lateral_dig)
+	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate, lateral_dig, player)
 		local facing = minetest.get_node(pos).param2
 		local digpos = digtron.find_new_pos(pos, facing)
 		
@@ -238,7 +238,7 @@ minetest.register_node("digtron:soft_digger", {
 		end
 			
 		if digtron.is_soft_material(digpos) then
-			return digtron.mark_diggable(digpos, nodes_dug)
+			return digtron.mark_diggable(digpos, nodes_dug, player)
 		end
 		
 		return 0, {}
@@ -289,7 +289,7 @@ minetest.register_node("digtron:intermittent_soft_digger", {
 	
 	on_receive_fields = intermittent_on_receive_fields,
 	
-	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate, lateral_dig)
+	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate, lateral_dig, player)
 		if lateral_dig == true then
 			return 0, {}
 		end
@@ -307,7 +307,7 @@ minetest.register_node("digtron:intermittent_soft_digger", {
 		end
 		
 		if digtron.is_soft_material(digpos) then
-			return digtron.mark_diggable(digpos, nodes_dug)
+			return digtron.mark_diggable(digpos, nodes_dug, player)
 		end
 		
 		return 0, {}
@@ -367,7 +367,7 @@ minetest.register_node("digtron:dual_digger", {
 	},
 
 	-- returns fuel_cost, items_produced
-	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate, lateral_dig)
+	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate, lateral_dig, player)
 		local facing = minetest.get_node(pos).param2
 		local digpos = digtron.find_new_pos(pos, facing)
 		local digdown = digtron.find_new_pos_downward(pos, facing)
@@ -376,14 +376,14 @@ minetest.register_node("digtron:dual_digger", {
 		local cost = 0
 		
 		if protected_nodes:get(digpos.x, digpos.y, digpos.z) ~= true then
-			local forward_cost, forward_items = digtron.mark_diggable(digpos, nodes_dug)
+			local forward_cost, forward_items = digtron.mark_diggable(digpos, nodes_dug, player)
 			for _, item in pairs(forward_items) do
 				table.insert(items, item)
 			end
 			cost = cost + forward_cost
 		end
 		if protected_nodes:get(digdown.x, digdown.y, digdown.z) ~= true then
-			local down_cost, down_items = digtron.mark_diggable(digdown, nodes_dug)
+			local down_cost, down_items = digtron.mark_diggable(digdown, nodes_dug, player)
 			for _, item in pairs(down_items) do
 				table.insert(items, item)
 			end
@@ -444,7 +444,7 @@ minetest.register_node("digtron:dual_soft_digger", {
 	},
 
 	-- returns fuel_cost, items_produced
-	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate, lateral_dig)
+	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate, lateral_dig, player)
 		local facing = minetest.get_node(pos).param2
 		local digpos = digtron.find_new_pos(pos, facing)
 		local digdown = digtron.find_new_pos_downward(pos, facing)
@@ -453,14 +453,14 @@ minetest.register_node("digtron:dual_soft_digger", {
 		local cost = 0
 		
 		if protected_nodes:get(digpos.x, digpos.y, digpos.z) ~= true and digtron.is_soft_material(digpos) then
-			local forward_cost, forward_items = digtron.mark_diggable(digpos, nodes_dug)
+			local forward_cost, forward_items = digtron.mark_diggable(digpos, nodes_dug, player)
 			for _, item in pairs(forward_items) do
 				table.insert(items, item)
 			end
 			cost = cost + forward_cost
 		end
 		if protected_nodes:get(digdown.x, digdown.y, digdown.z) ~= true and digtron.is_soft_material(digdown) then
-			local down_cost, down_items = digtron.mark_diggable(digdown, nodes_dug)
+			local down_cost, down_items = digtron.mark_diggable(digdown, nodes_dug, player)
 			for _, item in pairs(down_items) do
 				table.insert(items, item)
 			end

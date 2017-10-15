@@ -31,7 +31,7 @@ digtron.find_new_pos_downward = function(pos, facing)
 	return vector.add(pos, digtron.facedir_to_down_dir(facing))
 end
 
-digtron.mark_diggable = function(pos, nodes_dug)
+digtron.mark_diggable = function(pos, nodes_dug, player)
 	-- mark the node as dug, if the player provided would have been able to dig it.
 	-- Don't *actually* dig the node yet, though, because if we dig a node with sand over it the sand will start falling
 	-- and then destroy whatever node we place there subsequently (either by a builder head or by moving a digtron node)
