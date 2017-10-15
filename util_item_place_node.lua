@@ -74,9 +74,6 @@ digtron.item_place_node = function(itemstack, placer, place_to, param2)
 			pointed_thing.under = vector.add(place_to, minetest.facedir_to_dir(param2))
 		elseif def.paramtype2 == "wallmounted" then
 			pointed_thing.under = vector.add(place_to, minetest.wallmounted_to_dir(param2))
-		else
-			minetest.log("error", "[digtron] the node " .. itemstack:get_name() .. " had an unrecognized paramtype2, " .. dump(def.paramtype2))
-			pointed_thing.under = {x=place_to.x, y=place_to.y - 1, z=place_to.z}
 		end
 	
 		-- pass a copy of the item stack parameter because on_place might modify it directly and then we can't tell if we succeeded or not
