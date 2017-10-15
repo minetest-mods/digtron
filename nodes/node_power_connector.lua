@@ -27,7 +27,6 @@ minetest.register_node("digtron:power_connector", {
 	description = S("Digtron HV Power Connector"),
 	_doc_items_longdesc = digtron.doc.power_connector_longdesc,
     _doc_items_usagehelp = digtron.doc.power_connector_usagehelp,
-	_digtron_formspec = get_formspec_string(0,0),
 	groups = connector_groups,
 	tiles = {"digtron_plate.png^digtron_power_connector_top.png^digtron_digger_yb_frame.png", "digtron_plate.png^digtron_digger_yb_frame.png",
 		"digtron_plate.png^digtron_digger_yb_frame.png^digtron_power_connector_side.png", "digtron_plate.png^digtron_digger_yb_frame.png^digtron_power_connector_side.png",
