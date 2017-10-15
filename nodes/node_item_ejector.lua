@@ -9,7 +9,7 @@ minetest.register_node("digtron:inventory_ejector", {
 	_doc_items_longdesc = digtron.doc.inventory_ejector_longdesc,
     _doc_items_usagehelp = digtron.doc.inventory_ejector_usagehelp,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 1, tubedevice = 1},
-	tiles = {"digtron_plate.png", "digtron_plate.png", "digtron_plate.png", "digtron_plate.png", "digtron_plate.png^digtron_output.png", "digtron_plate.png"},
+	tiles = {"digtron_plate.png", "digtron_plate.png", "digtron_plate.png", "digtron_plate.png", "digtron_plate.png^digtron_output.png", "digtron_plate.png^digtron_output_back.png"},
 	drawtype = "nodebox",
 	sounds = digtron.metal_sounds,
 	paramtype = "light",
