@@ -1,6 +1,7 @@
 -- The default minetest.item_place_node from item.lua was hard to work with given some of the details
--- of how it handled pointed_thing. It also didn't work right with default:torch. It was simpler to
--- just copy it here and chop out the special cases that were causing problems.
+-- of how it handled pointed_thing. It also didn't work right with default:torch and seeds. It was simpler to
+-- just copy it here and chop out the special cases that were causing problems, and add some special handling.
+-- for nodes that define on_place
 
 -- This specific file is therefore licensed under the LGPL 2.1
 
@@ -57,9 +58,8 @@ local function check_attached_node(p, n)
 end
 
 digtron.item_place_node = function(itemstack, placer, place_to, param2)
-	local item = itemstack:peek_item()
 	local def = itemstack:get_definition()
-	if def.type ~= "node" then
+	if not def or def.type ~= "node" then
 		return itemstack, false
 	end
 
@@ -67,7 +67,34 @@ digtron.item_place_node = function(itemstack, placer, place_to, param2)
 	pointed_thing.type = "node"
 	pointed_thing.above = {x=place_to.x, y=place_to.y, z=place_to.z}
 	pointed_thing.under = {x=place_to.x, y=place_to.y - 1, z=place_to.z}
-
+	
+	-- Handle node-specific on_place calls as best we can.
+	if def.on_place then
+		if def.paramtype2 == "facedir" then
+			pointed_thing.under = vector.add(place_to, minetest.facedir_to_dir(param2))
+		elseif def.paramtype2 == "wallmounted" then
+			pointed_thing.under = vector.add(place_to, minetest.wallmounted_to_dir(param2))
+		else
+			minetest.log("error", "[digtron] the node " .. itemstack:get_name() .. " had an unrecognized paramtype2, " .. dump(def.paramtype2))
+			pointed_thing.under = {x=place_to.x, y=place_to.y - 1, z=place_to.z}
+		end
+	
+		-- pass a copy of the item stack parameter because on_place might modify it directly and then we can't tell if we succeeded or not
+		-- though note that some mods do "creative_mode" handling within their own on_place methods, which makes it impossible for Digtron
+		-- to know what to do in that case - if you're in creative_mode Digtron will place such items but it will think it failed and not
+		-- deduct them from inventory no matter what Digtron's settings are. Unfortunate, but not very harmful and I have no workaround.
+		local returnstack, success = def.on_place(ItemStack(itemstack), placer, pointed_thing)
+		if returnstack:get_count() < itemstack:get_count() then success = true end -- some mods neglect to return a success condition
+		if success then
+			-- Override the param2 value to force it to be what Digtron wants
+			local placed_node = minetest.get_node(place_to)
+			placed_node.param2 = param2
+			minetest.set_node(place_to, placed_node)
+		end
+		
+		return returnstack, success
+	end
+	
 	local oldnode = minetest.get_node_or_nil(place_to)
 
 	--this should never happen, digtron is testing for adjacent unloaded nodes before getting here.
@@ -91,17 +118,6 @@ digtron.item_place_node = function(itemstack, placer, place_to, param2)
 		return itemstack, false
 	end
 	
-	-- digtron HACK! the default torch mod uses "on_place" to change its model to the correct one,
-	-- not "after_place_node". It probably should be using after_place_node, but until then I must
-	-- adapt as best I can to the quirks of default.
-	if newnode.name == "default:torch" then
-		if newnode.param2 == 0 then
-			newnode.name = "default:torch_ceiling"
-		elseif newnode.param2 > 1 then
-			newnode.name = "default:torch_wall"
-		end
-	end
-
 	-- Add node and update
 	minetest.add_node(place_to, newnode)
 
