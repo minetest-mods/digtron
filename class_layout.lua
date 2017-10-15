@@ -319,32 +319,22 @@ function DigtronLayout.can_write_layout_image(self)
 end
 
 function DigtronLayout.write_layout_image(self, player)
+
+	-- We need to call on_dignode and on_placenode for dug and placed nodes,
+	-- but that triggers falling nodes (sand and whatnot) and destroys Digtrons
+	-- if done during mid-write. So we need to defer the calls until after the
+	-- Digtron has been fully written.
+	
+	local dug_nodes = {}
+	local placed_nodes = {}
+
 	-- destroy the old digtron
 	local oldpos, _ = self.old_pos_pointset:pop()
 	while oldpos ~= nil do
 		local old_node = minetest.get_node(oldpos)
 		local old_meta = minetest.get_meta(oldpos)
-		local old_def = minetest.registered_nodes[old_node.name]
 		minetest.remove_node(oldpos)
-		
-		if modpath_awards then
-			-- We're about to tell the awards mod that we're digging a node, but we
-			-- don't want it to count toward any actual awards. Pre-decrement.
-			local data = awards.players[player:get_player_name()]
-			awards.increment_item_counter(data, "count", old_node.name, -1)
-		end
-		
-		for _, callback in ipairs(minetest.registered_on_dignodes) do
-			-- Copy pos and node because callback can modify them
-			local pos_copy = {x=oldpos.x, y=oldpos.y, z=oldpos.z}
-			local oldnode_copy = {name=old_node.name, param1=old_node.param1, param2=old_node.param2}
-			callback(pos_copy, oldnode_copy, player)
-		end
-		
-		minetest.log("action", string.format("%s removes Digtron component %s at (%d, %d, %d)", player:get_player_name(), old_node.name, oldpos.x, oldpos.y, oldpos.z))
-		if old_def.after_dig_node ~= nil then
-			old_def.after_dig_node(oldpos, old_node, old_meta, player)
-		end
+		table.insert(dug_nodes, {oldpos, old_node, old_meta})
 		oldpos, _ = self.old_pos_pointset:pop()
 	end		
 
@@ -355,7 +345,44 @@ function DigtronLayout.write_layout_image(self, player)
 		local old_node = minetest.get_node(new_pos)
 		minetest.set_node(new_pos, new_node)
 		minetest.get_meta(new_pos):from_table(node_image.meta)
-		minetest.log("action", string.format("%s adds Digtron component %s at (%d, %d, %d)", player:get_player_name(), node_image.node.name, node_image.pos.x, node_image.pos.y, node_image.pos.z))
+		
+		table.insert(placed_nodes, {new_pos, new_node, old_node})
+	end
+	
+	
+	for _, dug_node in pairs(dug_nodes) do
+		local old_pos = dug_node[1]
+		local old_node = dug_node[2]
+		local old_meta = dug_node[3]
+
+		minetest.log("action", string.format("%s removes Digtron component %s at (%d, %d, %d)", player:get_player_name(), old_node.name, old_pos.x, old_pos.y, old_pos.z))
+		
+		if modpath_awards then
+			-- We're about to tell the awards mod that we're digging a node, but we
+			-- don't want it to count toward any actual awards. Pre-decrement.
+			local data = awards.players[player:get_player_name()]
+			awards.increment_item_counter(data, "count", old_node.name, -1)
+		end
+		
+		for _, callback in ipairs(minetest.registered_on_dignodes) do
+			-- Copy pos and node because callback can modify them
+			local pos_copy = {x=old_pos.x, y=old_pos.y, z=old_pos.z}
+			local oldnode_copy = {name=old_node.name, param1=old_node.param1, param2=old_node.param2}
+			callback(pos_copy, oldnode_copy, player)
+		end
+
+		local old_def = minetest.registered_nodes[old_node.name]
+		if old_def ~= nil and old_def.after_dig_node ~= nil then
+			old_def.after_dig_node(old_pos, old_node, old_meta, player)
+		end
+	end
+	
+	for _, placed_node in pairs(placed_nodes) do
+		local new_pos = placed_node[1]
+		local new_node = placed_node[2]
+		local old_node = placed_node[3]
+	
+		minetest.log("action", string.format("%s adds Digtron component %s at (%d, %d, %d)", player:get_player_name(), new_node.name, new_pos.x, new_pos.y, new_pos.z))
 
 		if modpath_awards then
 			-- We're about to tell the awards mod that we're placing a node, but we
@@ -372,10 +399,11 @@ function DigtronLayout.write_layout_image(self, player)
 			callback(pos_copy, newnode_copy, player, oldnode_copy)
 		end
 
-		local new_def = minetest.registered_nodes[node_image.node.name]
-		if new_def.after_place_node ~= nil then
-			new_def.after_place_node(node_image.pos, player)
+		local new_def = minetest.registered_nodes[new_node.name]
+		if new_def ~= nil and new_def.after_place_node ~= nil then
+			new_def.after_place_node(new_pos, player)
 		end
+
 	end
 end
 
