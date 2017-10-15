@@ -69,7 +69,7 @@ digtron.item_place_node = function(itemstack, placer, place_to, param2)
 	pointed_thing.under = {x=place_to.x, y=place_to.y - 1, z=place_to.z}
 	
 	-- Handle node-specific on_place calls as best we can.
-	if def.on_place then
+	if def.on_place and def.on_place ~= minetest.nodedef_default.on_place then
 		if def.paramtype2 == "facedir" then
 			pointed_thing.under = vector.add(place_to, minetest.facedir_to_dir(param2))
 		elseif def.paramtype2 == "wallmounted" then
