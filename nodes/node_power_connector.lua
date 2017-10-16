@@ -70,7 +70,7 @@ minetest.register_node("digtron:power_connector", {
 		local layout = DigtronLayout.create(pos, sender)
 		local max_cost = 0
 		for _, node_image in pairs(layout.builders) do
-			max_cost = max_cost + digtron.config.build_cost
+			max_cost = max_cost + (digtron.config.build_cost * (node_image.meta.fields.extrusion or 1))
 		end 
 		for _, node_image in pairs(layout.diggers) do
 			max_cost = max_cost + max_dig_cost

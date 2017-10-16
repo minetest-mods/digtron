@@ -28,6 +28,14 @@ digtron.facedir_to_dir_map = {
 	1, 4, 3, 2,
 }
 
+local function has_prefix(str, prefix)
+	return str:sub(1, string.len(prefix)) == prefix
+end
+
+local function blacklisted_on_place(item_name)
+	if has_prefix(item_name, "stairs:slab_") then return true end
+end
+
 local function copy_pointed_thing(pointed_thing)
 	return {
 		type  = pointed_thing.type,
@@ -69,7 +77,7 @@ digtron.item_place_node = function(itemstack, placer, place_to, param2)
 	pointed_thing.under = {x=place_to.x, y=place_to.y - 1, z=place_to.z}
 	
 	-- Handle node-specific on_place calls as best we can.
-	if def.on_place and def.on_place ~= minetest.nodedef_default.on_place then
+	if def.on_place and def.on_place ~= minetest.nodedef_default.on_place and not blacklisted_on_place(itemstack:get_name()) then
 		if def.paramtype2 == "facedir" then
 			pointed_thing.under = vector.add(place_to, minetest.facedir_to_dir(param2))
 		elseif def.paramtype2 == "wallmounted" then
