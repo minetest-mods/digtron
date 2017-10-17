@@ -100,6 +100,9 @@ if minetest.get_modpath("catacomb") and catacomb ~= nil and catacomb.chamber_pro
 		minetest.get_content_id("digtron:panel"),
 		minetest.get_content_id("digtron:edge_panel"),
 		minetest.get_content_id("digtron:corner_panel"),
+		minetest.get_content_id("digtron:battery_holder"),
+		minetest.get_content_id("digtron:inventory_ejector"),
+		minetest.get_content_id("digtron:power_connector"),
 	}
 	for _, node_id in pairs(digtron_nodes) do
 		catacomb.chamber_protected_nodes[node_id] = true
