@@ -32,8 +32,18 @@ local function has_prefix(str, prefix)
 	return str:sub(1, string.len(prefix)) == prefix
 end
 
-local function blacklisted_on_place(item_name)
-	if has_prefix(item_name, "stairs:slab_") then return true end
+local function whitelisted_on_place(item_name)
+	for listed_item, value in pairs(digtron.builder_on_place_items) do
+		if item_name == listed_item then return value end
+	end
+	
+	for prefix, value in pairs(digtron.builder_on_place_prefixes) do
+		if has_prefix(item_name, prefix) then return value end
+	end
+	
+	if minetest.get_item_group(item_name, "digtron_on_place") > 0 then return true end
+	
+	return false
 end
 
 local function copy_pointed_thing(pointed_thing)
@@ -77,7 +87,7 @@ digtron.item_place_node = function(itemstack, placer, place_to, param2)
 	pointed_thing.under = {x=place_to.x, y=place_to.y - 1, z=place_to.z}
 	
 	-- Handle node-specific on_place calls as best we can.
-	if def.on_place and def.on_place ~= minetest.nodedef_default.on_place and not blacklisted_on_place(itemstack:get_name()) then
+	if def.on_place and def.on_place ~= minetest.nodedef_default.on_place and whitelisted_on_place(itemstack:get_name()) then
 		if def.paramtype2 == "facedir" then
 			pointed_thing.under = vector.add(place_to, minetest.facedir_to_dir(param2))
 		elseif def.paramtype2 == "wallmounted" then
@@ -128,7 +138,7 @@ digtron.item_place_node = function(itemstack, placer, place_to, param2)
 
 	local take_item = true
 
-	-- Run callback
+	-- Run callback, using genuine player for per-node definition.
 	if def.after_place_node then
 		-- Deepcopy place_to and pointed_thing because callback can modify it
 		local place_to_copy = {x=place_to.x, y=place_to.y, z=place_to.z}
@@ -139,7 +149,10 @@ digtron.item_place_node = function(itemstack, placer, place_to, param2)
 		end
 	end
 
-	-- Run script hook
+	-- Run script hook, using fake_player to take the blame.
+	-- Note that fake_player:update is called in the DigtronLayout class's "create" function,
+	-- which is called before Digtron does any of this building stuff, so it's not necessary
+	-- to update it here.
 	local _, callback
 	for _, callback in ipairs(minetest.registered_on_placenodes) do
 		-- Deepcopy pos, node and pointed_thing because callback can modify them
@@ -147,7 +160,7 @@ digtron.item_place_node = function(itemstack, placer, place_to, param2)
 		local newnode_copy = {name=newnode.name, param1=newnode.param1, param2=newnode.param2}
 		local oldnode_copy = {name=oldnode.name, param1=oldnode.param1, param2=oldnode.param2}
 		local pointed_thing_copy = copy_pointed_thing(pointed_thing)
-		if callback(place_to_copy, newnode_copy, placer, oldnode_copy, itemstack, pointed_thing_copy) then
+		if callback(place_to_copy, newnode_copy, digtron.fake_player, oldnode_copy, itemstack, pointed_thing_copy) then
 			take_item = false
 		end
 	end

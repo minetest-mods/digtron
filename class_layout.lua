@@ -327,6 +327,11 @@ function DigtronLayout.write_layout_image(self, player)
 	
 	local dug_nodes = {}
 	local placed_nodes = {}
+	
+	-- fake_player will be passed to callbacks to prevent actual player from "taking the blame" for this action.
+	-- For example, the hunger mod shouldn't be making the player hungry when he moves Digtron.
+	digtron.fake_player:update(self.controller, player:get_player_name())
+	-- note that the actual player is still passed to the per-node after_place_node and after_dig_node, should they exist.
 
 	-- destroy the old digtron
 	local oldpos, _ = self.old_pos_pointset:pop()
@@ -357,18 +362,11 @@ function DigtronLayout.write_layout_image(self, player)
 
 		minetest.log("action", string.format("%s removes Digtron component %s at (%d, %d, %d)", player:get_player_name(), old_node.name, old_pos.x, old_pos.y, old_pos.z))
 		
-		if modpath_awards then
-			-- We're about to tell the awards mod that we're digging a node, but we
-			-- don't want it to count toward any actual awards. Pre-decrement.
-			local data = awards.players[player:get_player_name()]
-			awards.increment_item_counter(data, "count", old_node.name, -1)
-		end
-		
 		for _, callback in ipairs(minetest.registered_on_dignodes) do
 			-- Copy pos and node because callback can modify them
 			local pos_copy = {x=old_pos.x, y=old_pos.y, z=old_pos.z}
 			local oldnode_copy = {name=old_node.name, param1=old_node.param1, param2=old_node.param2}
-			callback(pos_copy, oldnode_copy, player)
+			callback(pos_copy, oldnode_copy, digtron.fake_player)
 		end
 
 		local old_def = minetest.registered_nodes[old_node.name]
@@ -384,19 +382,12 @@ function DigtronLayout.write_layout_image(self, player)
 	
 		minetest.log("action", string.format("%s adds Digtron component %s at (%d, %d, %d)", player:get_player_name(), new_node.name, new_pos.x, new_pos.y, new_pos.z))
 
-		if modpath_awards then
-			-- We're about to tell the awards mod that we're placing a node, but we
-			-- don't want it to count toward any actual awards. Pre-decrement.
-			local data = awards.players[player:get_player_name()]
-			awards.increment_item_counter(data, "place", new_node.name, -1)
-		end
-		
 		for _, callback in ipairs(minetest.registered_on_placenodes) do
 			-- Copy pos and node because callback can modify them
 			local pos_copy = {x=new_pos.x, y=new_pos.y, z=new_pos.z}
 			local oldnode_copy = {name=old_node.name, param1=old_node.param1, param2=old_node.param2}
 			local newnode_copy = {name=new_node.name, param1=new_node.param1, param2=new_node.param2}
-			callback(pos_copy, newnode_copy, player, oldnode_copy)
+			callback(pos_copy, newnode_copy, digtron.fake_player, oldnode_copy)
 		end
 
 		local new_def = minetest.registered_nodes[new_node.name]
