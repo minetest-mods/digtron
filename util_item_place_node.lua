@@ -99,7 +99,7 @@ digtron.item_place_node = function(itemstack, placer, place_to, param2)
 		-- to know what to do in that case - if you're in creative_mode Digtron will place such items but it will think it failed and not
 		-- deduct them from inventory no matter what Digtron's settings are. Unfortunate, but not very harmful and I have no workaround.
 		local returnstack, success = def.on_place(ItemStack(itemstack), placer, pointed_thing)
-		if returnstack:get_count() < itemstack:get_count() then success = true end -- some mods neglect to return a success condition
+		if returnstack and returnstack:get_count() < itemstack:get_count() then success = true end -- some mods neglect to return a success condition
 		if success then
 			-- Override the param2 value to force it to be what Digtron wants
 			local placed_node = minetest.get_node(place_to)
