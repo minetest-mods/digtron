@@ -31,7 +31,8 @@ digtron.builder_on_place_items = {
 
 -- Then a string prefix is checked, returning this value. Useful for enabling on_placed on a mod-wide basis.
 digtron.builder_on_place_prefixes = {
-	["farming:"] = true, 
+	["farming:"] = true,
+	["farming_plus:"] = true,
 	["crops:"] = true, 
 }
 

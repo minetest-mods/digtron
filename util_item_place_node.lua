@@ -77,7 +77,7 @@ end
 
 digtron.item_place_node = function(itemstack, placer, place_to, param2)
 	local def = itemstack:get_definition()
-	if not def or def.type ~= "node" then
+	if not def then
 		return itemstack, false
 	end
 
