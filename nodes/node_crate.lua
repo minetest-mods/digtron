@@ -62,10 +62,10 @@ minetest.register_node("digtron:empty_crate", {
 	end,
 })
 
-local loaded_formspec
-
-if minetest.get_modpath("doc") then
-	loaded_formspec =
+local modpath_doc = minetest.get_modpath("doc")
+local loaded_formspec_string
+if modpath_doc then
+	loaded_formspec_string =
 	"size[4.1,1.5]" ..
 	default.gui_bg ..
 	default.gui_bg_img ..
@@ -80,7 +80,7 @@ if minetest.get_modpath("doc") then
 	"button_exit[3.0,1.2;1,0.1;help;" .. S("Help") .. "]" ..
 	"tooltip[help;" .. S("Show documentation about this block") .. "]"
 else
-	loaded_formspec =
+	loaded_formspec_string =
 	"size[4,1.5]" ..
 	default.gui_bg ..
 	default.gui_bg_img ..
@@ -92,6 +92,11 @@ else
 	"tooltip[save;" .. S("Shows which blocks the packed Digtron will occupy if unpacked") .. "]" ..
 	"button_exit[2.5,1.2;1,0.1;unpack;" .. S("Unpack") .. "]" ..
 	"tooltip[unpack;" .. S("Attempts to unpack the Digtron on this location") .. "]"
+end
+
+
+local loaded_formspec = function(pos, meta)
+	return loaded_formspec_string
 end
 
 minetest.register_node("digtron:loaded_crate", {
@@ -107,7 +112,7 @@ minetest.register_node("digtron:loaded_crate", {
 	
 	on_construct = function(pos)
 		local meta = minetest.get_meta(pos)
-		meta:set_string("formspec", loaded_formspec)
+		meta:set_string("formspec", loaded_formspec(pos, meta))
 	end,
 	
 	on_receive_fields = function(pos, formname, fields, sender)
@@ -202,7 +207,7 @@ minetest.register_node("digtron:loaded_crate", {
 			meta:set_string("crated_layout", deserialized.layout)
 			meta:set_string("title", deserialized.title)
 			meta:set_string("infotext", deserialized.title)
-			meta:set_string("formspec", loaded_formspec)
+			--meta:set_string("formspec", loaded_formspec(pos, meta)) -- not needed, on_construct handles this
 			
 			itemstack:take_item(1)
 			return itemstack

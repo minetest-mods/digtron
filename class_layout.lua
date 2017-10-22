@@ -13,7 +13,7 @@ local get_node_image = function(pos, node)
 	local meta = minetest.get_meta(pos)
 	node_image.meta = meta:to_table()
 	if node_image.meta ~= nil and node_def._digtron_formspec ~= nil then
-		node_image.meta.fields.formspec = node_def._digtron_formspec -- causes formspec to be automatically upgraded whenever Digtron moves
+		node_image.meta.fields.formspec = node_def._digtron_formspec(pos, meta) -- causes formspec to be automatically upgraded whenever Digtron moves
 	end
 	
 	-- Record what kind of thing we've got in a builder node so its facing can be rotated properly
@@ -42,6 +42,7 @@ function DigtronLayout.create(pos, player)
 	self.power_connectors = {} -- technic power cable
 	self.diggers = {}
 	self.builders = {}
+	self.auto_ejectors = {}
 	self.extents = {}
 	self.water_touching = false
 	self.lava_touching = false
@@ -128,6 +129,8 @@ function DigtronLayout.create(pos, player)
 				table.insert(self.battery_holders, node_image)
 			elseif group_number == 8 then
 				table.insert(self.power_connectors, node_image)
+			elseif group_number == 9 and node_image.meta.fields["autoeject"] == "true" then
+				table.insert(self.auto_ejectors, node_image)
 			end
 			
 			if is_protected then

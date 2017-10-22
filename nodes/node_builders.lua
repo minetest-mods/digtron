@@ -9,7 +9,7 @@ if minetest.get_modpath("doc") then
 	displace_due_to_help_button = 0.0
 end
 
-local builder_formspec =
+local builder_formspec_string =
 	"size[8,5.2]" ..
 	default.gui_bg ..
 	default.gui_bg_img ..
@@ -35,9 +35,13 @@ local builder_formspec =
 	"listring[current_name;main]"
 
 if minetest.get_modpath("doc") then
-	builder_formspec = builder_formspec ..
+	builder_formspec_string = builder_formspec_string ..
 		"button_exit[7.0,0.5;1,0.1;help;" .. S("Help") .. "]" ..
 		"tooltip[help;" .. S("Show documentation about this block") .. "]"
+end
+	
+local builder_formspec = function(pos, meta)
+	return builder_formspec_string
 end
 	
 -- Builds objects in the targeted node. This is a complicated beastie.
@@ -84,7 +88,7 @@ minetest.register_node("digtron:builder", {
 	
 	on_construct = function(pos)
         local meta = minetest.get_meta(pos)
-        meta:set_string("formspec", builder_formspec)
+        meta:set_string("formspec", builder_formspec(pos, meta))
 		meta:set_int("period", 1) 
 		meta:set_int("offset", 0) 
 		meta:set_int("build_facing", 0)

@@ -4,8 +4,10 @@ minetest.register_lbm({
 	nodenames = {"group:digtron"},
 	action = function(pos, node)
 		local node_def = minetest.registered_nodes[node.name]
-		local meta = minetest.get_meta(pos)
-		meta:set_string("formspec", node_def._digtron_formspec)
+		if node_def._digtron_formspec then
+			local meta = minetest.get_meta(pos)
+			meta:set_string("formspec", node_def._digtron_formspec(pos, meta))
+		end
 	end
 })
 

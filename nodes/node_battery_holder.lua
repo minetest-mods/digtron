@@ -6,8 +6,7 @@ local S, NS = dofile(MP.."/intllib.lua")
 -- Battery storage. Controller node draws electrical power from here.
 -- Note that batttery boxes are digtron group 7.
 
-local battery_holder_formspec = 
-	"size[8,9.3]" ..
+local battery_holder_formspec_string = "size[8,9.3]" ..
 	default.gui_bg ..
 	default.gui_bg_img ..
 	default.gui_slots ..
@@ -19,6 +18,9 @@ local battery_holder_formspec =
 	"listring[current_player;main]" ..
 	default.get_hotbar_bg(0,5.15)
 
+local battery_holder_formspec = function(pos, meta)
+	return battery_holder_formspec_string
+end
 
 local holder_groups = {cracky = 3,  oddly_breakable_by_hand = 3, digtron = 7, tubedevice = 1, tubedevice_receiver = 1}
 if not minetest.get_modpath("technic") then
@@ -50,7 +52,7 @@ minetest.register_node("digtron:battery_holder", {
 
 	on_construct = function(pos)
 		local meta = minetest.get_meta(pos)
-		meta:set_string("formspec", battery_holder_formspec)
+		meta:set_string("formspec", battery_holder_formspec(pos, meta))
 		local inv = meta:get_inventory()
 		inv:set_size("batteries", 8*4)
 	end,

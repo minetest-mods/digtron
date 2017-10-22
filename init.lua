@@ -76,6 +76,8 @@ dofile( digtron_modpath .. "/upgrades.lua" ) -- various LBMs for upgrading older
 -- 5 - fuel-holding digtron, has a "fuel" invetory that the control node can draw fuel items from. Separate from general inventory, nothing gets put here automatically.
 -- 6 - holds both fuel and main inventories
 -- 7 - holds batteries (RE Battery from technic) to provide clean renewable power
+-- 8 - connects to adjacent HV technic cable
+-- 9 - connects to pipeworks, auto-ejects mined items
 
 -- This code was added for use with FaceDeer's fork of the [catacomb] mod. Paramat's version doesn't support customized protected nodes, which causes
 -- it to "eat" Digtrons sometimes.

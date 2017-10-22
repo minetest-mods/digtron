@@ -197,7 +197,7 @@ digtron.doc.power_connector_usagehelp = S("A power connector node automatically 
 ---------------------------------------------------------------------
 
 digtron.doc.inventory_ejector_longdesc = S("An outlet that can be used to eject accumulated detritus from a Digtron's inventory.")
-digtron.doc.inventory_ejector_usagehelp = S("When this block is right-clicked it will search the entire inventory of the Digtron and will eject a stack of items taken from it, provided the items are not set for use by any of the Digtron's builders. Will not eject if the destination block is occupied.")
+digtron.doc.inventory_ejector_usagehelp = S("When this block is punched it will search the entire inventory of the Digtron and will eject a stack of items taken from it, provided the items are not set for use by any of the Digtron's builders. It will not eject if the destination block is occupied.")
 
 if pipeworks_enabled then
 	digtron.doc.inventory_ejector_usagehelp = digtron.doc.inventory_ejector_usagehelp

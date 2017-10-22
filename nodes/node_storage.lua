@@ -4,7 +4,7 @@ local S, NS = dofile(MP.."/intllib.lua")
 
 local pipeworks_path = minetest.get_modpath("pipeworks")
 
-local inventory_formspec = 
+local inventory_formspec_string = 
 	"size[8,9.3]" ..
 	default.gui_bg ..
 	default.gui_bg_img ..
@@ -16,6 +16,10 @@ local inventory_formspec =
 	"listring[current_name;main]" ..
 	"listring[current_player;main]" ..
 	default.get_hotbar_bg(0,5.15)
+
+local inventory_formspec = function(pos, meta)
+	return inventory_formspec_string
+end
 
 -- Storage buffer. Builder nodes draw from this inventory and digger nodes deposit into it.
 -- Note that inventories are digtron group 2.
@@ -42,7 +46,7 @@ minetest.register_node("digtron:inventory", {
 
 	on_construct = function(pos)
 		local meta = minetest.get_meta(pos)
-		meta:set_string("formspec", inventory_formspec)
+		meta:set_string("formspec", inventory_formspec(pos, meta))
 		local inv = meta:get_inventory()
 		inv:set_size("main", 8*4)
 	end,
@@ -75,7 +79,7 @@ minetest.register_node("digtron:inventory", {
 	after_dig_node = (function() if pipeworks_path then return pipeworks.after_dig end end)()
 })
 
-local fuelstore_formspec = 
+local fuelstore_formspec_string = 
 	"size[8,9.3]" ..
 	default.gui_bg ..
 	default.gui_bg_img ..
@@ -88,6 +92,10 @@ local fuelstore_formspec =
 	"listring[current_player;main]" ..
 	default.get_hotbar_bg(0,5.15)
 
+local fuelstore_formspec = function(pos, meta)
+	return fuelstore_formspec_string
+end
+	
 -- Fuel storage. Controller node draws fuel from here.
 -- Note that fuel stores are digtron group 5.
 minetest.register_node("digtron:fuelstore", {
@@ -164,7 +172,7 @@ minetest.register_node("digtron:fuelstore", {
 	after_dig_node = (function() if pipeworks_path then return pipeworks.after_dig end end)()
 })
 
-local combined_storage_formspec =
+local combined_storage_formspec_string =
 	"size[8,9.9]" ..
 	default.gui_bg ..
 	default.gui_bg_img ..
@@ -179,6 +187,9 @@ local combined_storage_formspec =
 	"listring[current_player;main]" ..
 	default.get_hotbar_bg(0,5.75)
 
+local combined_storage_formspec = function(pos, meta)
+	return combined_storage_formspec_string
+end
 
 -- Combined storage. Group 6 has both an inventory and a fuel store
 minetest.register_node("digtron:combined_storage", {
@@ -202,7 +213,7 @@ minetest.register_node("digtron:combined_storage", {
 		},
 	on_construct = function(pos)
 		local meta = minetest.get_meta(pos)
-		meta:set_string("formspec", combined_storage_formspec)
+		meta:set_string("formspec", combined_storage_formspec(pos, meta))
 		local inv = meta:get_inventory()
 		inv:set_size("main", 8*3)
 		inv:set_size("fuel", 8*1)

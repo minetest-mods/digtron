@@ -25,8 +25,9 @@ local dual_digger_nodebox = {
 	{-0.4375, -0.5, -0.3125, 0.4375, -0.4375, 0.3125}, -- Lower_Cutter_2
 }
 
-local intermittent_formspec = 
-	default.gui_bg ..
+local modpath_doc = minetest.get_modpath("doc")
+
+local intermittent_formspec_string = default.gui_bg ..
 	default.gui_bg_img ..
 	default.gui_slots ..
 	"field[0.5,0.8;1,0.1;period;" .. S("Periodicity") .. ";${period}]" ..
@@ -36,17 +37,21 @@ local intermittent_formspec =
 	"button_exit[2.2,0.5;1,0.1;set;" .. S("Save &\nShow") .. "]" ..
 	"tooltip[set;" .. S("Saves settings") .. "]"
 
-if minetest.get_modpath("doc") then
-	intermittent_formspec = "size[4.5,1]" .. intermittent_formspec ..
+if modpath_doc then
+	intermittent_formspec_string = "size[4.5,1]" .. intermittent_formspec_string ..
 		"button_exit[3.2,0.5;1,0.1;help;" .. S("Help") .. "]" ..
 		"tooltip[help;" .. S("Show documentation about this block") .. "]"
 	else
-		intermittent_formspec = "size[3.5,1]" .. intermittent_formspec
+		intermittent_formspec_string = "size[3.5,1]" .. intermittent_formspec_string
 	end
+
+local intermittent_formspec = function(pos, meta)
+	return intermittent_formspec_string
+end
 
 local intermittent_on_construct = function(pos)
     local meta = minetest.get_meta(pos)
-    meta:set_string("formspec", intermittent_formspec)
+    meta:set_string("formspec", intermittent_formspec(pos, meta))
 	meta:set_int("period", 1) 
 	meta:set_int("offset", 0) 
 end

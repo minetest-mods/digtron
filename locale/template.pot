@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-10-14 14:59-0600\n"
+"POT-Creation-Date: 2017-10-21 22:27-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -733,10 +733,10 @@ msgstr ""
 
 #: doc.lua:200
 msgid ""
-"When this block is right-clicked it will search the entire inventory of the "
+"When this block is punched it will search the entire inventory of the "
 "Digtron and will eject a stack of items taken from it, provided the items "
-"are not set for use by any of the Digtron's builders. Will not eject if the "
-"destination block is occupied."
+"are not set for use by any of the Digtron's builders. It will not eject if "
+"the destination block is occupied."
 msgstr ""
 
 #: doc.lua:205
@@ -972,17 +972,17 @@ msgid "Digtron has @1 blocks but only enough traction to move @2 blocks.\n"
 msgstr ""
 
 #: util_execute_cycle.lua:110
-#: util_execute_cycle.lua:349
-#: util_execute_cycle.lua:426
-#: util_execute_cycle.lua:545
+#: util_execute_cycle.lua:359
+#: util_execute_cycle.lua:436
+#: util_execute_cycle.lua:555
 #: nodes\node_controllers.lua:48
-#: nodes\node_controllers.lua:201
+#: nodes\node_controllers.lua:202
 msgid "Heat remaining in controller furnace: @1"
 msgstr ""
 
 #: util_execute_cycle.lua:173
-#: util_execute_cycle.lua:399
-#: util_execute_cycle.lua:489
+#: util_execute_cycle.lua:409
+#: util_execute_cycle.lua:499
 #: nodes\node_axle.lua:57
 msgid "Digtron is obstructed."
 msgstr ""
@@ -1000,7 +1000,7 @@ msgstr ""
 msgid "Digtron has insufficient building materials. Needed: @1"
 msgstr ""
 
-#: util_execute_cycle.lua:328
+#: util_execute_cycle.lua:338
 msgid ""
 "Digtron unexpectedly failed to execute one or more build operations, likely "
 "due to an inventory error."
@@ -1010,11 +1010,11 @@ msgstr ""
 msgid "Digtron Rotation Axle"
 msgstr ""
 
-#: nodes\node_battery_holder.lua:14
+#: nodes\node_battery_holder.lua:13
 msgid "Batteries"
 msgstr ""
 
-#: nodes\node_battery_holder.lua:31
+#: nodes\node_battery_holder.lua:33
 msgid "Digtron Battery Holder"
 msgstr ""
 
@@ -1034,7 +1034,7 @@ msgid ""
 msgstr ""
 
 #: nodes\node_builders.lua:21
-#: nodes\node_diggers.lua:32
+#: nodes\node_diggers.lua:33
 msgid "Periodicity"
 msgstr ""
 
@@ -1047,7 +1047,7 @@ msgstr ""
 
 #: nodes\node_builders.lua:23
 #: nodes\node_controllers.lua:91
-#: nodes\node_diggers.lua:34
+#: nodes\node_diggers.lua:35
 msgid "Offset"
 msgstr ""
 
@@ -1060,14 +1060,14 @@ msgid ""
 msgstr ""
 
 #: nodes\node_builders.lua:25
-#: nodes\node_diggers.lua:36
+#: nodes\node_diggers.lua:37
 msgid ""
 "Save &\n"
 "Show"
 msgstr ""
 
 #: nodes\node_builders.lua:26
-#: nodes\node_diggers.lua:37
+#: nodes\node_diggers.lua:38
 msgid "Saves settings"
 msgstr ""
 
@@ -1097,18 +1097,20 @@ msgstr ""
 #: nodes\node_builders.lua:39
 #: nodes\node_controllers.lua:106
 #: nodes\node_crate.lua:80
-#: nodes\node_diggers.lua:41
+#: nodes\node_diggers.lua:42
+#: nodes\node_item_ejector.lua:17
 msgid "Help"
 msgstr ""
 
 #: nodes\node_builders.lua:40
 #: nodes\node_controllers.lua:107
 #: nodes\node_crate.lua:81
-#: nodes\node_diggers.lua:42
+#: nodes\node_diggers.lua:43
+#: nodes\node_item_ejector.lua:18
 msgid "Show documentation about this block"
 msgstr ""
 
-#: nodes\node_builders.lua:45
+#: nodes\node_builders.lua:49
 msgid "Digtron Builder Module"
 msgstr ""
 
@@ -1194,11 +1196,11 @@ msgstr ""
 msgid "Digtron Automatic Control Module"
 msgstr ""
 
-#: nodes\node_controllers.lua:285
+#: nodes\node_controllers.lua:286
 msgid "Interrupted!"
 msgstr ""
 
-#: nodes\node_controllers.lua:300
+#: nodes\node_controllers.lua:301
 msgid "Digtron Pusher Module"
 msgstr ""
 
@@ -1254,32 +1256,32 @@ msgstr ""
 msgid "Attempts to unpack the Digtron on this location"
 msgstr ""
 
-#: nodes\node_crate.lua:98
+#: nodes\node_crate.lua:103
 msgid "Digtron Crate (Loaded)"
 msgstr ""
 
-#: nodes\node_crate.lua:133
+#: nodes\node_crate.lua:138
 msgid ""
 "Unable to read layout from crate metadata, regrettably this Digtron may be "
 "corrupted or lost."
 msgstr ""
 
-#: nodes\node_crate.lua:164
+#: nodes\node_crate.lua:169
 msgid "Unable to deploy Digtron due to protected blocks in target area"
 msgstr ""
 
-#: nodes\node_crate.lua:170
+#: nodes\node_crate.lua:175
 msgid "Unable to deploy Digtron due to obstruction in target area"
 msgstr ""
 
-#: nodes\node_diggers.lua:33
+#: nodes\node_diggers.lua:34
 msgid ""
 "Digger will dig once every n steps.\n"
 "These steps are globally aligned, all diggers with\n"
 "the same period and offset will dig on the same location."
 msgstr ""
 
-#: nodes\node_diggers.lua:35
+#: nodes\node_diggers.lua:36
 msgid ""
 "Offsets the start of periodicity counting by this amount.\n"
 "For example, a digger with period 2 and offset 0 digs\n"
@@ -1287,31 +1289,49 @@ msgid ""
 "offset 1 digs every odd-numbered block."
 msgstr ""
 
-#: nodes\node_diggers.lua:75
+#: nodes\node_diggers.lua:80
 msgid "Digtron Digger Head"
 msgstr ""
 
-#: nodes\node_diggers.lua:128
+#: nodes\node_diggers.lua:133
 msgid "Digtron Intermittent Digger Head"
 msgstr ""
 
-#: nodes\node_diggers.lua:199
+#: nodes\node_diggers.lua:204
 msgid "Digtron Soft Material Digger Head"
 msgstr ""
 
-#: nodes\node_diggers.lua:254
+#: nodes\node_diggers.lua:259
 msgid "Digtron Intermittent Soft Material Digger Head"
 msgstr ""
 
-#: nodes\node_diggers.lua:328
+#: nodes\node_diggers.lua:333
 msgid "Digtron Dual Digger Head"
 msgstr ""
 
-#: nodes\node_diggers.lua:405
+#: nodes\node_diggers.lua:410
 msgid "Digtron Dual Soft Material Digger Head"
 msgstr ""
 
-#: nodes\node_item_ejector.lua:8
+#: nodes\node_item_ejector.lua:27
+msgid "Eject into world"
+msgstr ""
+
+#: nodes\node_item_ejector.lua:28
+msgid "When checked, will eject items even if there's no pipe to accept it"
+msgstr ""
+
+#: nodes\node_item_ejector.lua:30
+msgid "Automatic"
+msgstr ""
+
+#: nodes\node_item_ejector.lua:31
+msgid ""
+"When checked, will eject items automatically with every Digtron cycle.\n"
+"Item ejectors can always be operated manually by punching them."
+msgstr ""
+
+#: nodes\node_item_ejector.lua:105
 msgid "Digtron Inventory Ejector"
 msgstr ""
 
@@ -1357,29 +1377,29 @@ msgstr ""
 msgid "Digtron HV Power Connector"
 msgstr ""
 
-#: nodes\node_power_connector.lua:67
+#: nodes\node_power_connector.lua:66
 msgid "Digtron Power @1/@2"
 msgstr ""
 
 #: nodes\node_storage.lua:12
-#: nodes\node_storage.lua:172
+#: nodes\node_storage.lua:180
 msgid "Inventory items"
 msgstr ""
 
-#: nodes\node_storage.lua:23
+#: nodes\node_storage.lua:27
 msgid "Digtron Inventory Storage"
 msgstr ""
 
-#: nodes\node_storage.lua:83
-#: nodes\node_storage.lua:174
+#: nodes\node_storage.lua:87
+#: nodes\node_storage.lua:182
 msgid "Fuel items"
 msgstr ""
 
-#: nodes\node_storage.lua:94
+#: nodes\node_storage.lua:102
 msgid "Digtron Fuel Storage"
 msgstr ""
 
-#: nodes\node_storage.lua:185
+#: nodes\node_storage.lua:196
 msgid "Digtron Combined Storage"
 msgstr ""
 
