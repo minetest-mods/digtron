@@ -25,6 +25,13 @@ minetest.register_node("digtron:empty_crate", {
 			-- no stealing other peoples' digtrons
 			return
 		end
+		
+		if #layout.all == 1 then
+			local meta = minetest.get_meta(pos)
+			minetest.sound_play("buzzer", {gain=0.5, pos=pos})
+			meta:set_string("infotext", S("No Digtron components adjacent to package"))
+			return
+		end
 
 		digtron.award_crate(layout, clicker:get_player_name())
 		
