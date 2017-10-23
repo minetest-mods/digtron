@@ -121,7 +121,7 @@ minetest.register_node("digtron:fuelstore", {
 
 	on_construct = function(pos)
 		local meta = minetest.get_meta(pos)
-		meta:set_string("formspec", fuelstore_formspec)
+		meta:set_string("formspec", fuelstore_formspec(pos, meta))
 		local inv = meta:get_inventory()
 		inv:set_size("fuel", 8*4)
 	end,
