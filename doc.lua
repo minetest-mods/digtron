@@ -207,6 +207,11 @@ end
 
 ---------------------------------------------------------------------
 
+digtron.doc.duplicator_longdesc = S("A device for duplicating an adjacent Digtron using parts from its inventory.")
+digtron.doc.duplicator_usagehelp = S("Place the duplicator block adjacent to a Digtron, and then fill the duplicator's inventory with enough parts to recreate the adjacent Digtron. Then place an empty Digtron crate at the duplicator's output (the side with the black \"+\") and click the \"Duplicate\" button in the duplicator's right-click GUI. If enough parts are available the Digtron will be duplicated and packed into the crate, along with all of its programming but with empty inventories.")
+
+---------------------------------------------------------------------
+
 digtron.doc.structure_longdesc = S("Structural component for a Digtron array")
 digtron.doc.structure_usagehelp = S("These blocks allow otherwise-disconnected sections of digtron blocks to be linked together. They are not usually necessary for simple diggers but more elaborate builder arrays might have builder blocks that can't be placed directly adjacent to other digtron blocks and these blocks can serve to keep them connected to the controller."
 .."\n\n"..

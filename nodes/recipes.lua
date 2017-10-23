@@ -148,6 +148,15 @@ minetest.register_craft({
 })
 
 minetest.register_craft({
+	output = "digtron:duplicator",
+	recipe = {
+			{"default:mese_crystal","default:mese_crystal","default:mese_crystal"},
+			{"default:chest","digtron:digtron_core","default:chest"},
+			{"default:mese_crystal","default:mese_crystal","default:mese_crystal"}
+			}
+})
+
+minetest.register_craft({
 	output = "digtron:inventory_ejector",
 	recipe = {
 			{"default:steel_ingot","default:steel_ingot","default:steel_ingot"},

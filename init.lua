@@ -59,6 +59,7 @@ dofile( digtron_modpath .. "/nodes/node_controllers.lua" ) -- controllers
 dofile( digtron_modpath .. "/nodes/node_axle.lua" ) -- Rotation controller
 dofile( digtron_modpath .. "/nodes/node_crate.lua" ) -- Digtron portability support
 dofile( digtron_modpath .. "/nodes/node_item_ejector.lua" ) -- ejects non-building, non-fuel items from inventories
+dofile( digtron_modpath .. "/nodes/node_duplicator.lua" ) -- constructs copies of existing Digtrons
 
 --Technic
 dofile( digtron_modpath .. "/nodes/node_battery_holder.lua" ) -- holds rechargeable batteries from the technic mod
