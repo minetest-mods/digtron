@@ -121,6 +121,8 @@ end
 
 ---------------------------------------------------------------------
 
+local locked_suffix = "\n\n" .. S("This is the \"locked\" version of the Digtron crate. It can only be used by the player who placed it.")
+
 digtron.doc.empty_crate_longdesc = S("An empty crate that a Digtron can be stored in")
 digtron.doc.empty_crate_usagehelp = S("Digtrons can be pushed around and rotated, and that may be enough for getting them perfectly positioned for the start of a run. But once your digger is a kilometer down under a shaft filled with stairs, how to get it back to the surface to run another pass?"
 .."\n\n"..
@@ -128,6 +130,12 @@ digtron.doc.empty_crate_usagehelp = S("Digtrons can be pushed around and rotated
 
 digtron.doc.loaded_crate_longdesc = S("A crate containing a Digtron array")
 digtron.doc.loaded_crate_usagehelp = S("This crate contains a Digtron assembly that was stored in it earlier. Place it somewhere and right-click on it to access the label text that was applied to it. There's also a button that causes it to display the shape the deployed Digtron would take if you unpacked the crate, marking unbuildable blocks with a warning marker. And finally there's a button to actually deploy the Digtron, replacing this loaded crate with an empty that can be reused later.")
+
+digtron.doc.empty_locked_crate_longdesc = digtron.doc.empty_crate_longdesc
+digtron.doc.empty_locked_crate_usagehelp = digtron.doc.empty_crate_usagehelp .. locked_suffix
+
+digtron.doc.loaded_locked_crate_longdesc = digtron.doc.loaded_crate_longdesc
+digtron.doc.loaded_locked_crate_usagehelp = digtron.doc.loaded_crate_usagehelp .. locked_suffix
 
 ----------------------------------------------------------------------
 
