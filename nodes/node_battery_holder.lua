@@ -39,6 +39,12 @@ minetest.register_node("digtron:battery_holder", {
 	sounds = digtron.metal_sounds,
 	paramtype2= "facedir",
 	drawtype = "nodebox",
+	node_box = {
+        type = "fixed",
+        fixed = {
+            {-0.5, -0.5, -0.5, 0.5, 0.5, 0.5},
+        },
+    },
 	paramtype = "light",
 	is_ground_content = false,
 	tiles = {
