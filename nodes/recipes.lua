@@ -148,6 +148,18 @@ minetest.register_craft({
 })
 
 minetest.register_craft({
+	output = "digtron:empty_locked_crate",
+	type = "shapeless",
+	recipe = {"default:steel_ingot", "digtron:empty_crate"},
+})
+
+minetest.register_craft({
+	output = "digtron:empty_crate",
+	type = "shapeless",
+	recipe = {"digtron:empty_locked_crate"},
+})
+
+minetest.register_craft({
 	output = "digtron:duplicator",
 	recipe = {
 			{"default:mese_crystal","default:mese_crystal","default:mese_crystal"},
