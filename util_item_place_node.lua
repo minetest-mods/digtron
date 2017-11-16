@@ -32,7 +32,7 @@ local function has_prefix(str, prefix)
 	return str:sub(1, string.len(prefix)) == prefix
 end
 
-local function whitelisted_on_place(item_name)
+digtron.whitelisted_on_place = function (item_name)
 	for listed_item, value in pairs(digtron.builder_on_place_items) do
 		if item_name == listed_item then return value end
 	end
@@ -76,6 +76,7 @@ local function check_attached_node(p, n)
 end
 
 digtron.item_place_node = function(itemstack, placer, place_to, param2)
+	local item_name = itemstack:get_name()
 	local def = itemstack:get_definition()
 	if not def then
 		return itemstack, false
@@ -87,7 +88,7 @@ digtron.item_place_node = function(itemstack, placer, place_to, param2)
 	pointed_thing.under = {x=place_to.x, y=place_to.y - 1, z=place_to.z}
 	
 	-- Handle node-specific on_place calls as best we can.
-	if def.on_place and def.on_place ~= minetest.nodedef_default.on_place and whitelisted_on_place(itemstack:get_name()) then
+	if def.on_place and def.on_place ~= minetest.nodedef_default.on_place and digtron.whitelisted_on_place(item_name) then
 		if def.paramtype2 == "facedir" then
 			pointed_thing.under = vector.add(place_to, minetest.facedir_to_dir(param2))
 		elseif def.paramtype2 == "wallmounted" then
@@ -108,6 +109,14 @@ digtron.item_place_node = function(itemstack, placer, place_to, param2)
 		end
 		
 		return returnstack, success
+	end
+	
+	if minetest.registered_nodes[item_name] == nil then
+		-- Permitted craft items are handled by the node-specific on_place call, above.
+		-- if we are a craft item and we get here then we're not whitelisted and we should fail.
+		-- Note that builders should be filtering out craft items like this, but this will protect us
+		-- just in case.
+		return itemstack, false
 	end
 	
 	local oldnode = minetest.get_node_or_nil(place_to)

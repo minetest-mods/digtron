@@ -158,9 +158,16 @@ minetest.register_node("digtron:builder", {
 	end,
 
 	allow_metadata_inventory_put = function(pos, listname, index, stack, player)
-		if minetest.get_item_group(stack:get_name(), "digtron") ~= 0 then
+		local stack_name = stack:get_name()
+	
+		if minetest.get_item_group(stack_name, "digtron") ~= 0 then
 			return 0 -- don't allow builders to be set to build Digtron nodes, they'll just clog the output.
 		end	
+		
+		if not minetest.registered_nodes[stack_name] and not digtron.whitelisted_on_place(stack_name) then
+			return 0 -- don't allow craft items unless their on_place is whitelisted.
+		end
+		
 		local inv = minetest.get_inventory({type="node", pos=pos})
 		inv:set_stack(listname, index, stack:take_item(1))
 		return 0
