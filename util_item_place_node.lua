@@ -114,8 +114,8 @@ digtron.item_place_node = function(itemstack, placer, place_to, param2)
 	if minetest.registered_nodes[item_name] == nil then
 		-- Permitted craft items are handled by the node-specific on_place call, above.
 		-- if we are a craft item and we get here then we're not whitelisted and we should fail.
-		-- Note that builders should be filtering out craft items like this, but this will protect us
-		-- just in case.
+		-- Note that builder settings should be filtering out craft items like this before we get here,
+		-- but this will protect us just in case.
 		return itemstack, false
 	end
 	

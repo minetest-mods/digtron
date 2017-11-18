@@ -20,6 +20,9 @@ digtron_traction_factor (Digtron traction factor) float 3.0 0.0 1000.0
 #The maximum extrusion setting permitted for a Digtron builder module.
 digtron_maximum_extrusion (Digtron maximum extrusion) int 25 1 100
 
+digtron_marker_crate_good_duration (Duration that 'good' crate markers last) float 3.0 0.0 100.0
+digtron_marker_crate_bad_duration (Duration that 'bad' crate markers last) float 9.0 0.0 100.0
+
 [Fuel costs]
 
 #eg, stone.

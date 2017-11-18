@@ -57,3 +57,7 @@ setting("float", "build_cost", 1.0, "Build cost")
 -- With 100, the battery is 2.5 better than a coal lump, yet 3.7 less powerful than a coal block
 -- Being rechargeable should pay off for this "average" performance.
 setting("int", "power_ratio", 100, "The electrical charge to 1 coal heat unit conversion ratio")
+
+
+setting("float", "marker_crate_good_duration", 3.0, "Duration that 'good' crate markers last")
+setting("float", "marker_crate_bad_duration", 9.0, "Duration that 'bad' crate markers last")

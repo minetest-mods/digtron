@@ -60,7 +60,7 @@ minetest.register_entity("digtron:marker_crate_good", {
 	},
 
 	on_activate = function(self, staticdata)
-		minetest.after(5.0, 
+		minetest.after(digtron.config.marker_crate_good_duration, 
 			function(self) 
 				self.object:remove()
 			end,
@@ -86,7 +86,7 @@ minetest.register_entity("digtron:marker_crate_bad", {
 	},
 
 	on_activate = function(self, staticdata)
-		minetest.after(5.0, 
+		minetest.after(digtron.config.marker_crate_bad_duration, 
 			function(self) 
 				self.object:remove()
 			end,
