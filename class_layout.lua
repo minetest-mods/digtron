@@ -18,12 +18,18 @@ local get_node_image = function(pos, node)
 	
 	-- Record what kind of thing we've got in a builder node so its facing can be rotated properly
 	if minetest.get_item_group(node.name, "digtron") == 4 then
-		local build_item = node_image.meta.inventory.main[1]
-		if build_item ~= "" then
-			local build_item_def = minetest.registered_nodes[ItemStack(build_item):get_name()]
-			if build_item_def ~= nil then
-				node_image.build_item_paramtype2 = build_item_def.paramtype2
+		-- https://github.com/minetest-mods/digtron/issues/17 had a user encounter a crash here,
+		-- adding logging to hopefully catch it if it happens again.
+		if node_image.meta.inventory.main ~= nil then
+			local build_item = node_image.meta.inventory.main[1]
+			if build_item ~= "" then
+				local build_item_def = minetest.registered_nodes[ItemStack(build_item):get_name()]
+				if build_item_def ~= nil then
+					node_image.build_item_paramtype2 = build_item_def.paramtype2
+				end
 			end
+		else
+			minetest.log("error", string.format("Digtron node in group 4 lacks a 'main' inventory. Please update the issue at https://github.com/minetest-mods/digtron/issues/17. Node image: %s", dump(node_image)))
 		end
 	end
 	return node_image
