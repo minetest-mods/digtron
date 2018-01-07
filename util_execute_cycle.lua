@@ -283,7 +283,9 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	
 	--move the array
 	layout:move_layout_image(dir)
-	layout:write_layout_image(clicker)
+	if not layout:write_layout_image(clicker) then
+		return pos, "unrecoverable write_layout_image error", 1
+	end
 	local oldpos = {x=pos.x, y=pos.y, z=pos.z}
 	pos = vector.add(pos, dir)
 	meta = minetest.get_meta(pos)
@@ -412,7 +414,10 @@ digtron.execute_move_cycle = function(pos, clicker)
 	minetest.sound_play("truck", {gain=1.0, pos=pos})
 		
 	--move the array
-	layout:write_layout_image(clicker)
+	if not layout:write_layout_image(clicker) then
+		return pos, "unrecoverable write_layout_image error", 1
+	end
+	
 	pos = vector.add(pos, dir)
 	if move_player then
 		clicker:moveto(vector.add(clicker:getpos(), dir), true)
@@ -520,7 +525,9 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 	
 	--move the array
 	layout:move_layout_image(digtron.facedir_to_down_dir(facing))
-	layout:write_layout_image(clicker)
+	if not layout:write_layout_image(clicker) then
+		return pos, "unrecoverable write_layout_image error", 1
+	end
 	local oldpos = {x=pos.x, y=pos.y, z=pos.z}
 	pos = vector.add(pos, dir)
 	meta = minetest.get_meta(pos)

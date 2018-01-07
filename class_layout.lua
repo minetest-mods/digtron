@@ -18,18 +18,12 @@ local get_node_image = function(pos, node)
 	
 	-- Record what kind of thing we've got in a builder node so its facing can be rotated properly
 	if minetest.get_item_group(node.name, "digtron") == 4 then
-		-- https://github.com/minetest-mods/digtron/issues/17 had a user encounter a crash here,
-		-- adding logging to hopefully catch it if it happens again.
-		if node_image.meta.inventory.main ~= nil then
-			local build_item = node_image.meta.inventory.main[1]
-			if build_item ~= "" then
-				local build_item_def = minetest.registered_nodes[ItemStack(build_item):get_name()]
-				if build_item_def ~= nil then
-					node_image.build_item_paramtype2 = build_item_def.paramtype2
-				end
+		local build_item = node_image.meta.inventory.main[1]
+		if build_item ~= "" then
+			local build_item_def = minetest.registered_nodes[ItemStack(build_item):get_name()]
+			if build_item_def ~= nil then
+				node_image.build_item_paramtype2 = build_item_def.paramtype2
 			end
-		else
-			minetest.log("error", string.format("Digtron node in group 4 lacks a 'main' inventory. Please update the issue at https://github.com/minetest-mods/digtron/issues/17. Node image: %s", dump(node_image)))
 		end
 	end
 	return node_image
@@ -327,43 +321,12 @@ function DigtronLayout.can_write_layout_image(self)
 	return true
 end
 
-function DigtronLayout.write_layout_image(self, player)
+-- We need to call on_dignode and on_placenode for dug and placed nodes,
+-- but that triggers falling nodes (sand and whatnot) and destroys Digtrons
+-- if done during mid-write. So we need to defer the calls until after the
+-- Digtron has been fully written.
 
-	-- We need to call on_dignode and on_placenode for dug and placed nodes,
-	-- but that triggers falling nodes (sand and whatnot) and destroys Digtrons
-	-- if done during mid-write. So we need to defer the calls until after the
-	-- Digtron has been fully written.
-	
-	local dug_nodes = {}
-	local placed_nodes = {}
-	
-	-- fake_player will be passed to callbacks to prevent actual player from "taking the blame" for this action.
-	-- For example, the hunger mod shouldn't be making the player hungry when he moves Digtron.
-	digtron.fake_player:update(self.controller, player:get_player_name())
-	-- note that the actual player is still passed to the per-node after_place_node and after_dig_node, should they exist.
-
-	-- destroy the old digtron
-	local oldpos, _ = self.old_pos_pointset:pop()
-	while oldpos ~= nil do
-		local old_node = minetest.get_node(oldpos)
-		local old_meta = minetest.get_meta(oldpos)
-		minetest.remove_node(oldpos)
-		table.insert(dug_nodes, {oldpos, old_node, old_meta})
-		oldpos, _ = self.old_pos_pointset:pop()
-	end		
-
-	-- create the new one
-	for k, node_image in pairs(self.all) do
-		local new_pos = node_image.pos
-		local new_node = node_image.node
-		local old_node = minetest.get_node(new_pos)
-		minetest.set_node(new_pos, new_node)
-		minetest.get_meta(new_pos):from_table(node_image.meta)
-		
-		table.insert(placed_nodes, {new_pos, new_node, old_node})
-	end
-	
-	
+local node_callbacks = function(dug_nodes, placed_nodes, player)
 	for _, dug_node in pairs(dug_nodes) do
 		local old_pos = dug_node[1]
 		local old_node = dug_node[2]
@@ -403,8 +366,69 @@ function DigtronLayout.write_layout_image(self, player)
 		if new_def ~= nil and new_def.after_place_node ~= nil then
 			new_def.after_place_node(new_pos, player)
 		end
-
 	end
+end
+
+local set_node_with_retry = function(pos, node)
+	local start_time = minetest.get_us_time()
+	while not minetest.set_node(pos, node) do
+		if minetest.get_us_time() - start_time > 1000000 then -- 1 second in useconds
+			return false
+		end
+	end
+	return true
+end
+
+local set_meta_with_retry = function(meta, meta_table)
+	local start_time = minetest.get_us_time()
+	while not meta:from_table(meta_table) do
+		if minetest.get_us_time() - start_time > 1000000 then -- 1 second in useconds
+			return false
+		end
+	end
+	return true
+end
+
+function DigtronLayout.write_layout_image(self, player)
+	local dug_nodes = {}
+	local placed_nodes = {}
+	
+	-- destroy the old digtron
+	local oldpos, _ = self.old_pos_pointset:pop()
+	while oldpos ~= nil do
+		local old_node = minetest.get_node(oldpos)
+		local old_meta = minetest.get_meta(oldpos)
+
+		if not set_node_with_retry(oldpos, {name="air"}) then
+			minetest.log("error", "DigtronLayout.write_layout_image failed to destroy old Digtron node, aborting write.")
+			return false
+		end
+
+		table.insert(dug_nodes, {oldpos, old_node, old_meta})
+		oldpos, _ = self.old_pos_pointset:pop()
+	end
+
+	-- create the new one
+	for k, node_image in pairs(self.all) do
+		local new_pos = node_image.pos
+		local new_node = node_image.node
+		local old_node = minetest.get_node(new_pos)
+
+		if not (set_node_with_retry(new_pos, new_node) and set_meta_with_retry(minetest.get_meta(new_pos), node_image.meta)) then
+			minetest.log("error", "DigtronLayout.write_layout_image failed to write a Digtron node, aborting write.")
+			return false
+		end
+		
+		table.insert(placed_nodes, {new_pos, new_node, old_node})
+	end
+	
+	-- fake_player will be passed to callbacks to prevent actual player from "taking the blame" for this action.
+	-- For example, the hunger mod shouldn't be making the player hungry when he moves Digtron.
+	digtron.fake_player:update(self.controller, player:get_player_name())
+	-- note that the actual player is still passed to the per-node after_place_node and after_dig_node, should they exist.
+	node_callbacks(dug_nodes, placed_nodes, player)
+	
+	return true
 end
 
 

@@ -45,13 +45,15 @@ minetest.register_node("digtron:axle", {
 		local image = DigtronLayout.create(pos, clicker)
 		image:rotate_layout_image(node.param2)
 		if image:can_write_layout_image() then
-			image:write_layout_image(clicker)
-			
-			minetest.sound_play("whirr", {gain=1.0, pos=pos})
-			meta = minetest.get_meta(pos)
-			meta:set_string("waiting", "true")
-			meta:set_string("infotext", nil)
-			minetest.get_node_timer(pos):start(digtron.config.cycle_time*2)
+			if image:write_layout_image(clicker) then
+				minetest.sound_play("whirr", {gain=1.0, pos=pos})
+				meta = minetest.get_meta(pos)
+				meta:set_string("waiting", "true")
+				meta:set_string("infotext", nil)
+				minetest.get_node_timer(pos):start(digtron.config.cycle_time*2)
+			else
+				meta:set_string("infotext", "unrecoverable write_layout_image error")
+			end
 		else
 			minetest.sound_play("buzzer", {gain=1.0, pos=pos})
 			meta:set_string("infotext", S("Digtron is obstructed."))
