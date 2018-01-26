@@ -107,8 +107,7 @@ if minetest.get_modpath("doc") then
 	"tooltip[help;" .. S("Show documentation about this block").. "]"
 end	
 
--- Needed to make this global so that it could recurse into minetest.after
-digtron.auto_cycle = function(pos)
+local function auto_cycle(pos)
 	local node = minetest.get_node(pos)
 	local controlling_coordinate = digtron.get_controlling_coordinate(pos, node.param2)
 	local meta = minetest.get_meta(pos)
@@ -128,13 +127,13 @@ digtron.auto_cycle = function(pos)
 			status = status .. "\n" .. S("Cycles remaining: @1", cycle) .. "\n" .. S("Halted!")
 			meta:set_string("infotext", status)
 			if return_code == 1 then --return code 1 happens when there's unloaded nodes adjacent, just keep trying.
-				minetest.after(meta:get_int("period"), digtron.auto_cycle, newpos)
+				minetest.after(meta:get_int("period"), auto_cycle, newpos)
 			else
 				meta:set_string("formspec", auto_formspec)
 			end
 		else
 			meta = minetest.get_meta(newpos)
-			minetest.after(meta:get_int("period"), digtron.auto_cycle, newpos)
+			minetest.after(meta:get_int("period"), auto_cycle, newpos)
 			meta:set_string("infotext", status)
 			meta:set_string("lateral_done", "true")
 		end
@@ -147,7 +146,7 @@ digtron.auto_cycle = function(pos)
 		status = status .. "\n" .. S("Cycles remaining: @1", cycle) .. "\n" .. S("Halted!")
 		meta:set_string("infotext", status)
 		if return_code == 1 then --return code 1 happens when there's unloaded nodes adjacent, just keep trying.
-			minetest.after(meta:get_int("period"), digtron.auto_cycle, newpos)
+			minetest.after(meta:get_int("period"), auto_cycle, newpos)
 		else
 			meta:set_string("formspec", auto_formspec)
 		end
@@ -162,7 +161,7 @@ digtron.auto_cycle = function(pos)
 	meta:set_string("lateral_done", nil)
 	
 	if cycle > 0 then
-		minetest.after(meta:get_int("period"), digtron.auto_cycle, newpos)
+		minetest.after(meta:get_int("period"), auto_cycle, newpos)
 	else
 		meta:set_string("formspec", auto_formspec)
 	end
@@ -252,7 +251,7 @@ minetest.register_node("digtron:auto_controller", {
 				if fields.execute then
 					meta:set_string("waiting", nil)
 					meta:set_string("formspec", nil)
-					digtron.auto_cycle(pos)
+					auto_cycle(pos)
 				end
 			end
 		end
