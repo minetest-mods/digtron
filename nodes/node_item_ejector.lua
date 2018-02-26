@@ -67,6 +67,9 @@ local function eject_items(pos, node, player, eject_even_without_pipeworks)
 	local source_index = nil
 	local source_stack = nil
 	for _, node_image in pairs(layout.inventories) do
+		if type(node_image.meta.inventory.main) ~= "table" then
+			node_image.meta.inventory.main = {}
+		end
 		for index, item_stack in pairs(node_image.meta.inventory.main) do
 			if item_stack:get_count() > 0 and not filter_items[item_stack:get_name()] then
 				source_node = node_image

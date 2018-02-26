@@ -146,6 +146,9 @@ minetest.register_node("digtron:duplicator", {
 			-- clear inventories of image's nodes			
 			for _, node_image in pairs(layout.inventories) do
 				local main_inventory = node_image.meta.inventory.main
+				if type(main_inventory) ~= "table" then
+					main_inventory = {}
+				end
 				for index, _ in pairs(main_inventory) do
 					main_inventory[index] = ItemStack(nil)
 				end
