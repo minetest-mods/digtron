@@ -18,7 +18,10 @@ local get_node_image = function(pos, node)
 	
 	-- Record what kind of thing we've got in a builder node so its facing can be rotated properly
 	if minetest.get_item_group(node.name, "digtron") == 4 then
-		local build_item = node_image.meta.inventory.main[1]
+		local build_item = ""
+		if node_image.meta.inventory.main then
+			build_item = node_image.meta.inventory.main[1]
+		end
 		if build_item ~= "" then
 			local build_item_def = minetest.registered_nodes[ItemStack(build_item):get_name()]
 			if build_item_def ~= nil then
