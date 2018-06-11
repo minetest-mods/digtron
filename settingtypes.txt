@@ -23,6 +23,10 @@ digtron_maximum_extrusion (Digtron maximum extrusion) int 25 1 100
 digtron_marker_crate_good_duration (Duration that 'good' crate markers last) float 3.0 0.0 100.0
 digtron_marker_crate_bad_duration (Duration that 'bad' crate markers last) float 9.0 0.0 100.0
 
+#When a Digtron encounters unloaded map blocks, cause them to load
+#so that the Digtron can continue moving.
+digtron_emerge_unloaded_mapblocks (Emerge unloaded map blocks) bool true
+
 [Fuel costs]
 
 #eg, stone.

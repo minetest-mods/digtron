@@ -127,6 +127,9 @@ local function auto_cycle(pos)
 			status = status .. "\n" .. S("Cycles remaining: @1", cycle) .. "\n" .. S("Halted!")
 			meta:set_string("infotext", status)
 			if return_code == 1 then --return code 1 happens when there's unloaded nodes adjacent, just keep trying.
+				if digtron.config.emerge_unloaded_mapblocks then
+					minetest.emerge_area(vector.add(pos, -128), vector.add(pos, 128))
+				end
 				minetest.after(meta:get_int("period"), auto_cycle, newpos)
 			else
 				meta:set_string("formspec", auto_formspec)
@@ -139,13 +142,16 @@ local function auto_cycle(pos)
 		end
 		return
 	end
-	
+
 	local newpos, status, return_code = digtron.execute_dig_cycle(pos, player)
-	
+
 	if vector.equals(pos, newpos) then
 		status = status .. "\n" .. S("Cycles remaining: @1", cycle) .. "\n" .. S("Halted!")
 		meta:set_string("infotext", status)
-		if return_code == 1 then --return code 1 happens when there's unloaded nodes adjacent, just keep trying.
+		if return_code == 1 then --return code 1 happens when there's unloaded nodes adjacent, call emerge and keep trying.
+			if digtron.config.emerge_unloaded_mapblocks then
+				minetest.emerge_area(vector.add(pos, -128), vector.add(pos, 128))
+			end
 			minetest.after(meta:get_int("period"), auto_cycle, newpos)
 		else
 			meta:set_string("formspec", auto_formspec)
@@ -286,10 +292,6 @@ minetest.register_node("digtron:auto_controller", {
 		meta:set_string("waiting", "true")
 		meta:set_string("formspec", auto_formspec)
 	end,
-	
-	on_timer = function(pos, elapsed)
-		minetest.get_meta(pos):set_string("waiting", nil)
-	end,
 })
 
 ---------------------------------------------------------------------------------------------------------------
@@ -341,5 +343,4 @@ minetest.register_node("digtron:pusher", {
 	on_timer = function(pos, elapsed)
 		minetest.get_meta(pos):set_string("waiting", nil)
 	end,
-
 })

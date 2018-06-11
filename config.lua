@@ -61,3 +61,5 @@ setting("int", "power_ratio", 100, "The electrical charge to 1 coal heat unit co
 
 setting("float", "marker_crate_good_duration", 3.0, "Duration that 'good' crate markers last")
 setting("float", "marker_crate_bad_duration", 9.0, "Duration that 'bad' crate markers last")
+
+setting("bool", "emerge_unloaded_mapblocks", true, "When Digtron encounters unloaded map blocks, emerge them.")
