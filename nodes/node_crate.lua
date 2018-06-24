@@ -258,7 +258,12 @@ end
 local loaded_on_dig = function(pos, player, loaded_node_name)
 	local meta = minetest.get_meta(pos)
 	local to_serialize = {title=meta:get_string("title"), layout=meta:get_string("crated_layout")}
-		
+	
+	if not meta:get_string("crated_layout") or meta:get_string("crated_layout") == "" then
+		minetest.sound_play("buzzer", {gain=0.5, pos=pos})
+		minetest.chat_send_player(player:get_player_name(), "Crating error: could not read contents!")
+	end
+	
 	local stack = ItemStack({name=loaded_node_name, count=1, wear=0, metadata=minetest.serialize(to_serialize)})
 	local inv = player:get_inventory()
 	local stack = inv:add_item("main", stack)
@@ -277,6 +282,7 @@ local loaded_after_place = function(pos, itemstack)
 		meta:set_string("crated_layout", deserialized.layout)
 		meta:set_string("title", deserialized.title)
 		meta:set_string("infotext", deserialized.title)
+
 		--meta:set_string("formspec", loaded_formspec(pos, meta)) -- not needed, on_construct handles this
 	end
 end
