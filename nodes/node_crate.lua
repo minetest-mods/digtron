@@ -52,7 +52,7 @@ local store_digtron = function(pos, clicker, loaded_node_name, protected)
 	
 	if not layout_string or layout_string == "" then
 		minetest.sound_play("buzzer", {gain=0.5, pos=pos})
-		minetest.chat_send_player(clicker:get_player_name(), "Crating error: digrton is broken!")
+		minetest.chat_send_player(clicker:get_player_name(), "Crating error: digtron is broken!")
 		return nil
 	end
 	
