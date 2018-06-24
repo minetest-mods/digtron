@@ -50,6 +50,12 @@ local store_digtron = function(pos, clicker, loaded_node_name, protected)
 	
 	local layout_string = layout:serialize()
 	
+	if not layout_string or layout_string == "" then
+		minetest.sound_play("buzzer", {gain=0.5, pos=pos})
+		minetest.chat_send_player(clicker:get_player_name(), "Crating error: digrton is broken!")
+		return nil
+	end
+	
 	-- destroy everything. Note that this includes the empty crate, which will be bundled up with the layout.
 	for _, node_image in pairs(layout.all) do
 		local old_pos = node_image.pos
