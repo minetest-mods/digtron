@@ -20,6 +20,7 @@ local player_permitted = function(pos, player)
 	if not owner or owner == "" or owner == player:get_player_name() then
 		return true
 	end
+
 end
 
 local store_digtron = function(pos, clicker, loaded_node_name, protected)
@@ -294,7 +295,7 @@ minetest.register_node("digtron:loaded_crate", {
 	on_receive_fields = function(pos, formname, fields, sender)
 		return loaded_on_recieve(pos, fields, sender)
 	end,
-		
+
 	on_dig = function(pos, node, player)
 		return loaded_on_dig(pos, player, "digtron:loaded_crate")
 	end,
@@ -317,6 +318,16 @@ minetest.register_node("digtron:loaded_locked_crate", {
 	on_construct = function(pos)
 		local meta = minetest.get_meta(pos)
 		meta:set_string("owner", "")
+	end,
+
+	can_dig = function(pos, player)
+		if player and player:is_player() and minetest.is_protected(pos, player:get_player_name()) then
+			-- protected area
+			return false
+		end
+
+		-- locked crate
+		return player_permitted(pos, player)
 	end,
 	
 	on_dig = function(pos, node, player)
