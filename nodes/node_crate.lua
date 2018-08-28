@@ -77,6 +77,7 @@ local store_digtron = function(pos, clicker, loaded_node_name, protected)
 	
 	local meta = minetest.get_meta(pos)
 	meta:set_string("crated_layout", layout_string)
+	meta:set_string("owner", clicker:get_player_name() or "")
 	meta:set_string("title", S("Crated Digtron"))
 	meta:set_string("infotext", S("Crated Digtron") .. "\n" .. protection_suffix)
 end
@@ -98,6 +99,10 @@ minetest.register_node("digtron:empty_crate", {
     },
 	paramtype = "light",
 	
+	can_dig = function(pos,player)
+		return player and not minetest.is_protected(pos, player:get_player_name())
+	end,
+
 	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
 		store_digtron(pos, clicker, "digtron:loaded_crate")
 	end
@@ -130,7 +135,7 @@ minetest.register_node("digtron:empty_locked_crate", {
 		meta:set_string("infotext", S("Digtron Crate") .. "\n" .. S("Owned by @1", placer:get_player_name() or ""))
 	end,
 	can_dig = function(pos,player)
-		return player_permitted(pos,player)
+		return player and not minetest.is_protected(pos, player:get_player_name()) and player_permitted(pos,player)
 	end,
 	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
 		if player_permitted(pos,clicker) then
@@ -294,9 +299,9 @@ minetest.register_node("digtron:loaded_crate", {
 	on_receive_fields = function(pos, formname, fields, sender)
 		return loaded_on_recieve(pos, fields, sender)
 	end,
-		
+
 	on_dig = function(pos, node, player)
-		return loaded_on_dig(pos, player, "digtron:loaded_crate")
+		return player and not minetest.is_protected(pos, player:get_player_name()) and loaded_on_dig(pos, player, "digtron:loaded_crate")
 	end,
 	
 	after_place_node = function(pos, placer, itemstack, pointed_thing)
@@ -320,7 +325,7 @@ minetest.register_node("digtron:loaded_locked_crate", {
 	end,
 	
 	on_dig = function(pos, node, player)
-		if player_permitted(pos,player) then
+		if player and not minetest.is_protected(pos, player:get_player_name()) and player_permitted(pos,player) then
 			return loaded_on_dig(pos, player, "digtron:loaded_locked_crate")
 		else
 			return false
