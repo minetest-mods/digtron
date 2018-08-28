@@ -458,7 +458,7 @@ function DigtronLayout.deserialize(layout_string)
 	if not layout_string or layout_string == "" then
 		return nil
 	end
-	deserialized_layout = minetest.deserialize(layout_string)
+	local deserialized_layout = minetest.deserialize(layout_string)
 
 	self.all = deserialized_layout.all
 	self.controller = deserialized_layout.controller
