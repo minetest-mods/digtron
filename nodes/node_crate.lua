@@ -182,6 +182,7 @@ local loaded_on_recieve = function(pos, fields, sender, protected)
 		meta:set_string("title", minetest.formspec_escape(fields.title))
 	end
 	local title = meta:get_string("title")
+	local infotext
 	
 	if protected then
 		infotext = title .. "\n" .. S("Owned by @1", sender:get_player_name())
