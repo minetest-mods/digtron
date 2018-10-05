@@ -301,7 +301,9 @@ minetest.register_node("digtron:loaded_crate", {
 	end,
 
 	on_dig = function(pos, node, player)
-		return player and not minetest.is_protected(pos, player:get_player_name()) and loaded_on_dig(pos, player, "digtron:loaded_crate")
+		if player and not minetest.is_protected(pos, player:get_player_name()) then
+			loaded_on_dig(pos, player, "digtron:loaded_crate")
+		end
 	end,
 	
 	after_place_node = function(pos, placer, itemstack, pointed_thing)
