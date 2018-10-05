@@ -99,7 +99,7 @@ minetest.register_node("digtron:empty_crate", {
     },
 	paramtype = "light",
 	
-	can_dig = function(pos,player)
+	can_dig = function(pos, player)
 		return player and not minetest.is_protected(pos, player:get_player_name())
 	end,
 
