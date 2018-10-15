@@ -77,7 +77,12 @@ local store_digtron = function(pos, clicker, loaded_node_name, protected)
 	
 	local meta = minetest.get_meta(pos)
 	meta:set_string("crated_layout", layout_string)
-	meta:set_string("owner", clicker:get_player_name() or "")
+
+	if protected then
+		-- only set owner if protected
+		meta:set_string("owner", clicker:get_player_name() or "")
+	end
+
 	meta:set_string("title", S("Crated Digtron"))
 	meta:set_string("infotext", S("Crated Digtron") .. "\n" .. protection_suffix)
 end
