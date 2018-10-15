@@ -104,7 +104,7 @@ minetest.register_node("digtron:empty_crate", {
     },
 	paramtype = "light",
 	
-	can_dig = function(pos,player)
+	can_dig = function(pos, player)
 		return player and not minetest.is_protected(pos, player:get_player_name())
 	end,
 
@@ -140,7 +140,7 @@ minetest.register_node("digtron:empty_locked_crate", {
 		meta:set_string("infotext", S("Digtron Crate") .. "\n" .. S("Owned by @1", placer:get_player_name() or ""))
 	end,
 	can_dig = function(pos,player)
-		return player and not minetest.is_protected(pos, player:get_player_name()) and player_permitted(pos,player)
+		return player and not minetest.is_protected(pos, player:get_player_name()) and player_permitted(pos, player)
 	end,
 	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
 		if player_permitted(pos,clicker) then
@@ -306,7 +306,9 @@ minetest.register_node("digtron:loaded_crate", {
 	end,
 
 	on_dig = function(pos, node, player)
-		return player and not minetest.is_protected(pos, player:get_player_name()) and loaded_on_dig(pos, player, "digtron:loaded_crate")
+		if player and not minetest.is_protected(pos, player:get_player_name()) then
+			loaded_on_dig(pos, player, "digtron:loaded_crate")
+		end
 	end,
 	
 	after_place_node = function(pos, placer, itemstack, pointed_thing)
