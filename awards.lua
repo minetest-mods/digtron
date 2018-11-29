@@ -1,8 +1,8 @@
 if not minetest.get_modpath("awards") then
-	digtron.award_item_dug = function (items, player, count) end
-	digtron.award_layout = function (layout, player) end
-	digtron.award_item_built = function(item_name, player) end
-	digtron.award_crate = function (layout, player) end
+	digtron.award_item_dug = function (items, name, count) end
+	digtron.award_layout = function (layout, name) end
+	digtron.award_item_built = function(item_name, name) end
+	digtron.award_crate = function (layout, name) end
 	return
 end
 ---------------------------------------------------------------------------
@@ -11,19 +11,18 @@ end
 local MP = minetest.get_modpath(minetest.get_current_modname())
 local S, NS = dofile(MP.."/intllib.lua")
 
-digtron.award_item_dug = function (items_dropped, player)
-	if table.getn(items_dropped) == 0 then
+digtron.award_item_dug = function (items_dropped, name)
+	if table.getn(items_dropped) == 0 or not name or name == "" then
 		return
 	end
 
-	local data = awards.player(player)
+	local data = awards.player(name)
 
 	data.digtron_dug_groups = {}
 	data.digtron_dug_groups.tree = 0
 	data.digtron_dug_groups.dirt = 0
 	data.digtron_dug_groups.grass = 0
 	data.digtron_dug = {}
-	data.digtron_placed = {}
 
 	for _, item in pairs(items_dropped) do
 		awards.increment_item_counter(data, "digtron_dug", item)
@@ -39,111 +38,113 @@ digtron.award_item_dug = function (items_dropped, player)
 	end
 	
 	if awards.get_item_count(data, "digtron_dug", "default:mese_crystal") > 100 then
-		awards.unlock(player, "digtron_100mese_dug")
+		awards.unlock(name, "digtron_100mese_dug")
 	end
 	if awards.get_item_count(data, "digtron_dug", "default:diamond") > 100 then
-		awards.unlock(player, "digtron_100diamond_dug")
+		awards.unlock(name, "digtron_100diamond_dug")
 	end
 	if awards.get_item_count(data, "digtron_dug", "default:coal_lump") > 1000 then
-		awards.unlock(player, "digtron_1000coal_dug")
+		awards.unlock(name, "digtron_1000coal_dug")
 		if awards.get_item_count(data, "digtron_dug", "default:coal_lump") > 10000 then
-			awards.unlock(player, "digtron_10000coal_dug")
+			awards.unlock(name, "digtron_10000coal_dug")
 		end
 	end
 	if awards.get_item_count(data, "digtron_dug", "default:iron_lump") > 1000 then
-		awards.unlock(player, "digtron_1000iron_dug")
+		awards.unlock(name, "digtron_1000iron_dug")
 	end
 	if awards.get_item_count(data, "digtron_dug", "default:copper_lump") > 1000 then
-		awards.unlock(player, "digtron_1000copper_dug")
+		awards.unlock(name, "digtron_1000copper_dug")
 	end
 	if awards.get_item_count(data, "digtron_dug", "default:gold_lump") > 100 then
-		awards.unlock(player, "digtron_100gold_dug")
+		awards.unlock(name, "digtron_100gold_dug")
 	end
 	
 	local total_count = awards.get_total_keyed_count(data, "digtron_dug")
 	if total_count > 1000 then
-		awards.unlock(player, "digtron_1000_dug")
+		awards.unlock(name, "digtron_1000_dug")
 		if total_count > 10000 then
-			awards.unlock(player, "digtron_10000_dug")
+			awards.unlock(name, "digtron_10000_dug")
 			if total_count > 100000 then
-				awards.unlock(player, "digtron_100000_dug")
+				awards.unlock(name, "digtron_100000_dug")
 				if total_count > 1000000 then
-					awards.unlock(player, "digtron_1000000_dug")
+					awards.unlock(name, "digtron_1000000_dug")
 				end
 			end
 		end
 	end
 
 	if data["digtron_dug_groups"]["tree"] > 1000 then
-		awards.unlock(player, "digtron_1000wood_dug")
+		awards.unlock(name, "digtron_1000wood_dug")
 		if data["digtron_dug_groups"]["tree"] > 10000 then
-			awards.unlock(player, "digtron_10000wood_dug")
+			awards.unlock(name, "digtron_10000wood_dug")
 		end
 	end
 	if data["digtron_dug_groups"]["dirt"] > 1000 then
-		awards.unlock(player, "digtron_1000dirt_dug")
+		awards.unlock(name, "digtron_1000dirt_dug")
 	end
 	if data["digtron_dug_groups"]["grass"] > 1000 then
-		awards.unlock(player, "digtron_1000grass_dug")
+		awards.unlock(name, "digtron_1000grass_dug")
 	end
 end
 
-digtron.award_item_built = function(item_name, player)
-	local data = awards.player(player)
+digtron.award_item_built = function(item_name, name)
+	local data = awards.player(name)
+	data.digtron_built = {}
+
 	awards.increment_item_counter(data, "digtron_built", item_name)
 	
 	local total_count = awards.get_total_keyed_count(data, "digtron_built")
 	if total_count > 1000 then
-		awards.unlock(player, "digtron_1000_built")
+		awards.unlock(name, "digtron_1000_built")
 		if total_count > 10000 then
-			awards.unlock(player, "digtron_10000_built")
+			awards.unlock(name, "digtron_10000_built")
 		end
 	end
 end
 
-digtron.award_layout = function (layout, player)
-	if layout == nil or player == nil or player == "" then
+digtron.award_layout = function(layout, name)
+	if layout == nil or not name or name == "" then
 		return
 	end
 
 	if layout.water_touching then
-		awards.unlock(player, "digtron_water")
+		awards.unlock(name, "digtron_water")
 	end
 	if layout.lava_touching then
-		awards.unlock(player, "digtron_lava")
+		awards.unlock(name, "digtron_lava")
 	end
 	if table.getn(layout.all) > 9 then
-		awards.unlock(player, "digtron_size10")
+		awards.unlock(name, "digtron_size10")
 		if table.getn(layout.all) > 99 then
-			awards.unlock(player, "digtron_size100")
+			awards.unlock(name, "digtron_size100")
 		end
 	end
 	if table.getn(layout.diggers) > 24 then
-		awards.unlock(player, "digtron_digger25")
+		awards.unlock(name, "digtron_digger25")
 	end
 	if table.getn(layout.builders) > 24 then
-		awards.unlock(player, "digtron_builder25")
+		awards.unlock(name, "digtron_builder25")
 	end
 	
 	if layout.controller.y > 100 then
-		awards.unlock(player, "digtron_height100")
+		awards.unlock(name, "digtron_height100")
 		if layout.controller.y > 1000 then
-			awards.unlock(player, "digtron_height1000")
+			awards.unlock(name, "digtron_height1000")
 		end
 	elseif layout.controller.y < -100 then
-		awards.unlock(player, "digtron_depth100")
+		awards.unlock(name, "digtron_depth100")
 		if layout.controller.y < -1000 then
-			awards.unlock(player, "digtron_depth1000")
+			awards.unlock(name, "digtron_depth1000")
 			if layout.controller.y < -2000 then
-				awards.unlock(player, "digtron_depth2000")
+				awards.unlock(name, "digtron_depth2000")
 				if layout.controller.y < -4000 then
-					awards.unlock(player, "digtron_depth4000")
+					awards.unlock(name, "digtron_depth4000")
 					if layout.controller.y < -8000 then
-						awards.unlock(player, "digtron_depth8000")
+						awards.unlock(name, "digtron_depth8000")
 						if layout.controller.y < -16000 then
-							awards.unlock(player, "digtron_depth16000")
+							awards.unlock(name, "digtron_depth16000")
 							if layout.controller.y < -30000 then
-								awards.unlock(player, "digtron_depth30000")
+								awards.unlock(name, "digtron_depth30000")
 							end
 						end
 					end
@@ -153,16 +154,16 @@ digtron.award_layout = function (layout, player)
 	end
 end
 
-digtron.award_crate = function (layout, player)
-	if layout == nil or player == nil or player == "" then
+digtron.award_crate = function(layout, name)
+	if layout == nil or not name or name == "" then
 		return
 	end
 
 	-- Note that we're testing >10 rather than >9 because this layout includes the crate node
 	if table.getn(layout.all) > 10 then
-		awards.unlock(player, "digtron_crate10")
+		awards.unlock(name, "digtron_crate10")
 		if table.getn(layout.all) > 100 then
-			awards.unlock(player, "digtron_crate100")
+			awards.unlock(name, "digtron_crate100")
 		end
 	end
 end
