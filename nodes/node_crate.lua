@@ -59,7 +59,7 @@ local store_digtron = function(pos, clicker, loaded_node_name, protected)
 		if modpath_awards then
 			-- We're about to tell the awards mod that we're digging a node, but we
 			-- don't want it to count toward any actual awards. Pre-decrement.
-			local data = awards.players[clicker:get_player_name()]
+			local data = awards.player(clicker:get_player_name())
 			awards.increment_item_counter(data, "count", old_node.name, -1)
 		end
 		
