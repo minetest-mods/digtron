@@ -60,7 +60,7 @@ local store_digtron = function(pos, clicker, loaded_node_name, protected)
 			-- We're about to tell the awards mod that we're digging a node, but we
 			-- don't want it to count toward any actual awards. Pre-decrement.
 			local data = awards.player(clicker:get_player_name())
-			awards.increment_item_counter(data, "count", old_node.name, -1)
+			awards.increment_item_counter(data, "dig", old_node.name, -1)
 		end
 		
 		for _, callback in ipairs(minetest.registered_on_dignodes) do
