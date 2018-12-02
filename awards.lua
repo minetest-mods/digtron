@@ -11,6 +11,13 @@ end
 local MP = minetest.get_modpath(minetest.get_current_modname())
 local S, NS = dofile(MP.."/intllib.lua")
 
+dugtron.award_init = function (table, default)
+	if not table then
+		table = default
+		return table
+	end
+end
+
 digtron.award_item_dug = function (items_dropped, name)
 	if table.getn(items_dropped) == 0 or not name or name == "" then
 		return
@@ -18,11 +25,11 @@ digtron.award_item_dug = function (items_dropped, name)
 
 	local data = awards.player(name)
 
-	data.digtron_dug_groups = {}
-	data.digtron_dug_groups.tree = 0
-	data.digtron_dug_groups.dirt = 0
-	data.digtron_dug_groups.grass = 0
-	data.digtron_dug = {}
+	digtron.award_init(data.digtron_dug_groups, {})
+	digtron.award_init(data.digtron_dug_groups.tree, 0)
+	digtron.award_init(data.digtron_dug_groups.dirt, 0)
+	digtron.award_init(data.digtron_dug_groups.grass, 0)
+	digtron.award_init(data.digtron_dug, {})
 
 	for _, item in pairs(items_dropped) do
 		awards.increment_item_counter(data, "digtron_dug", item)
@@ -88,8 +95,11 @@ digtron.award_item_dug = function (items_dropped, name)
 end
 
 digtron.award_item_built = function(item_name, name)
+	if not name or name == "" then
+		return
+	end
 	local data = awards.player(name)
-	data.digtron_built = {}
+	digtron.award_init(data.digtron_built, {})
 
 	awards.increment_item_counter(data, "digtron_built", item_name)
 	
