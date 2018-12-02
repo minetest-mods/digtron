@@ -11,7 +11,7 @@ end
 local MP = minetest.get_modpath(minetest.get_current_modname())
 local S, NS = dofile(MP.."/intllib.lua")
 
-dugtron.award_init = function (table, default)
+digtron.award_init = function (table, default)
 	if not table then
 		table = default
 		return table
