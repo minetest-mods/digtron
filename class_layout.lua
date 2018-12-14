@@ -335,8 +335,6 @@ local node_callbacks = function(dug_nodes, placed_nodes, player)
 		local old_node = dug_node[2]
 		local old_meta = dug_node[3]
 
-		minetest.log("action", string.format("%s removes Digtron component %s at (%d, %d, %d)", player:get_player_name(), old_node.name, old_pos.x, old_pos.y, old_pos.z))
-		
 		for _, callback in ipairs(minetest.registered_on_dignodes) do
 			-- Copy pos and node because callback can modify them
 			local pos_copy = {x=old_pos.x, y=old_pos.y, z=old_pos.z}
@@ -354,8 +352,6 @@ local node_callbacks = function(dug_nodes, placed_nodes, player)
 		local new_pos = placed_node[1]
 		local new_node = placed_node[2]
 		local old_node = placed_node[3]
-	
-		minetest.log("action", string.format("%s adds Digtron component %s at (%d, %d, %d)", player:get_player_name(), new_node.name, new_pos.x, new_pos.y, new_pos.z))
 
 		for _, callback in ipairs(minetest.registered_on_placenodes) do
 			-- Copy pos and node because callback can modify them
