@@ -50,10 +50,6 @@ digtron.award_item_built = function(item_name, player)
 	awards.notify_digtron_build(player, item_name)
 end
 
-awards.register_trigger("digtron_layout", {
-	type = "custom",
-})
-
 awards.register_award("digtron_depth1000",{
 	title = S("Digging Deeper"),
 	description = S("Operate a Digtron 1,000m underground"),
