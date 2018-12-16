@@ -297,7 +297,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	for _, itemname in pairs(items_dropped) do
 		digtron.place_in_inventory(itemname, layout.inventories, oldpos)
 	end
-	digtron.award_item_dug(items_dropped, clicker:get_player_name()) -- Achievements mod hook
+	digtron.award_item_dug(items_dropped, clicker) -- Achievements mod hook
 	
 	local building_fuel_cost = 0
 	local strange_failure = false
