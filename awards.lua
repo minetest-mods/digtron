@@ -55,11 +55,6 @@ awards.register_award("digtron_depth1000",{
 	description = S("Operate a Digtron 1,000m underground"),
 	background = "awards_bg_mining.png",
 	icon = "default_cobble.png^[colorize:#0002^digtron_digger_yb_frame.png^awards_level2.png",
-	trigger = {
-		type = "digtron_layout",
-		target = -1000,
-		key = "y",
-	}
 })
 
 digtron.award_layout = function(layout, player)
