@@ -164,7 +164,7 @@ function DigtronLayout.create(pos, player)
 		testpos, _ = to_test:pop()
 	end
 	
-	digtron.award_layout(self, player:get_player_name()) -- hook for achievements mod
+	digtron.award_layout(self, player) -- hook for achievements mod
 	
 	return self
 end
