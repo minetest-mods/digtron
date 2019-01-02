@@ -47,33 +47,49 @@ if modpath_doc then
 
 local intermittent_formspec = function(pos, meta)
 	return intermittent_formspec_string
-end
+		:gsub("${period}", meta:get_int("period"), 1)
+		:gsub("${offset}", meta:get_int("offset"), 1)
+	end
 
 local intermittent_on_construct = function(pos)
     local meta = minetest.get_meta(pos)
-    meta:set_string("formspec", intermittent_formspec(pos, meta))
 	meta:set_int("period", 1) 
 	meta:set_int("offset", 0) 
 end
 
-local intermittent_on_receive_fields = function(pos, formname, fields, sender)
-    local meta = minetest.get_meta(pos)
-	local period = tonumber(fields.period)
-	local offset = tonumber(fields.offset)
-	if  period and period > 0 then
-		meta:set_int("period", math.floor(period))
+local intermittent_on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
+	if itemstack:get_definition().type == "node" and minetest.get_item_group(itemstack:get_name(), "digtron") > 0 then
+		return minetest.item_place_node(itemstack, clicker, pointed_thing)
 	end
-	if offset then
-		meta:set_int("offset", math.floor(offset))
+	local meta = minetest.get_meta(pos)	
+	minetest.show_formspec(clicker:get_player_name(),
+		"digtron:intermittent_digger"..minetest.pos_to_string(pos),
+		intermittent_formspec(pos, meta))
+end
+
+minetest.register_on_player_receive_fields(function(player, formname, fields)
+	if formname:sub(1, 27) == "digtron:intermittent_digger" then
+		local pos = minetest.string_to_pos(formname:sub(28, -1))
+	    local meta = minetest.get_meta(pos)
+		local period = tonumber(fields.period)
+		local offset = tonumber(fields.offset)
+		if  period and period > 0 then
+			meta:set_int("period", math.floor(period))
+		end
+		if offset then
+			meta:set_int("offset", math.floor(offset))
+		end
+		if fields.help and minetest.get_modpath("doc") then --check for mod in case someone disabled it after this digger was built
+			local node_name = minetest.get_node(pos).name
+			minetest.after(0.5, doc.show_entry, player:get_player_name(), "nodes", node_name, true)
+		end
+		if fields.set then
+			digtron.show_offset_markers(pos, offset, period)
+		end
+		return true
 	end
-	if fields.help and minetest.get_modpath("doc") then --check for mod in case someone disabled it after this digger was built
-		local node_name = minetest.get_node(pos).name
-		minetest.after(0.5, doc.show_entry, sender:get_player_name(), "nodes", node_name, true)
-	end
-	if fields.set then
-		digtron.show_offset_markers(pos, offset, period)
-	end
-end,
+end)
+
 
 -- Digs out nodes that are "in front" of the digger head.
 minetest.register_node("digtron:digger", {
@@ -166,7 +182,7 @@ minetest.register_node("digtron:intermittent_digger", {
 	
 	on_construct = intermittent_on_construct,
 	
-	on_receive_fields = intermittent_on_receive_fields,
+	on_rightclick = intermittent_on_rightclick,
 
 	-- returns fuel_cost, item_produced
 	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate, lateral_dig, player)
@@ -292,8 +308,8 @@ minetest.register_node("digtron:intermittent_soft_digger", {
 	
 	on_construct = intermittent_on_construct,
 	
-	on_receive_fields = intermittent_on_receive_fields,
-	
+	on_rightclick = intermittent_on_rightclick,
+		
 	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate, lateral_dig, player)
 		if lateral_dig == true then
 			return 0, {}
