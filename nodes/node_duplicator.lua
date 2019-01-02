@@ -143,26 +143,32 @@ minetest.register_node("digtron:duplicator", {
 				inv:remove_item("main", ItemStack({name=name, count=count}))
 			end
 
-			-- clear inventories of image's nodes			
-			for _, node_image in pairs(layout.inventories) do
-				local main_inventory = node_image.meta.inventory.main
-				if type(main_inventory) ~= "table" then
-					main_inventory = {}
-				end
-				for index, _ in pairs(main_inventory) do
-					main_inventory[index] = ItemStack(nil)
-				end
-			end
-			for _, node_image in pairs(layout.fuelstores) do
-				local fuel_inventory = node_image.meta.inventory.fuel
-				for index, _ in pairs(fuel_inventory) do
-					fuel_inventory[index] = ItemStack(nil)
+			-- clear inventories of image's nodes		
+			if layout.inventories ~= nil then
+				for _, node_image in pairs(layout.inventories) do
+					local main_inventory = node_image.meta.inventory.main
+					if type(main_inventory) ~= "table" then
+						main_inventory = {}
+					end
+					for index, _ in pairs(main_inventory) do
+						main_inventory[index] = ItemStack(nil)
+					end
 				end
 			end
-			for _, node_image in pairs(layout.battery_holders) do
-				local battery_inventory = node_image.meta.inventory.batteries
-				for index, _ in pairs(battery_inventory) do
-					battery_inventory[index] = ItemStack(nil)
+			if layout.fuelstores ~= nil then
+				for _, node_image in pairs(layout.fuelstores) do
+					local fuel_inventory = node_image.meta.inventory.fuel
+					for index, _ in pairs(fuel_inventory) do
+						fuel_inventory[index] = ItemStack(nil)
+					end
+				end
+			end
+			if layout.battery_holders ~= nil then
+				for _, node_image in pairs(layout.battery_holders) do
+					local battery_inventory = node_image.meta.inventory.batteries
+					for index, _ in pairs(battery_inventory) do
+						battery_inventory[index] = ItemStack(nil)
+					end
 				end
 			end
 

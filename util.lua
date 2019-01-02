@@ -108,11 +108,13 @@ end
 digtron.place_in_inventory = function(itemname, inventory_positions, fallback_pos)
 	--tries placing the item in each inventory node in turn. If there's no room, drop it at fallback_pos
 	local itemstack = ItemStack(itemname)
-	for k, location in pairs(inventory_positions) do
-		local inv = minetest.get_inventory({type="node", pos=location.pos})
-		itemstack = inv:add_item("main", itemstack)
-		if itemstack:is_empty() then
-			return nil
+	if inventory_positions ~= nil then
+		for k, location in pairs(inventory_positions) do
+			local inv = minetest.get_inventory({type="node", pos=location.pos})
+			itemstack = inv:add_item("main", itemstack)
+			if itemstack:is_empty() then
+				return nil
+			end
 		end
 	end
 	minetest.add_item(fallback_pos, itemstack)
@@ -134,6 +136,7 @@ digtron.place_in_specific_inventory = function(itemname, pos, inventory_position
 end
 
 digtron.take_from_inventory = function(itemname, inventory_positions)
+	if inventory_positions == nil then return nil end
 	--tries to take an item from each inventory node in turn. Returns location of inventory item was taken from on success, nil on failure
 	local itemstack = ItemStack(itemname)
 	for k, location in pairs(inventory_positions) do
@@ -165,6 +168,10 @@ end
 -- We can get away with this sort of thing for fuel but not for builder inventory because there's just one
 -- controller node burning stuff, not multiple build heads drawing from inventories in turn. Much simpler.
 digtron.burn = function(fuelstore_positions, target, test)
+	if fuelstore_positions == nil then
+		return 0
+	end
+
 	local current_burned = 0
 	for k, location in pairs(fuelstore_positions) do
 		if current_burned > target then
@@ -203,16 +210,16 @@ end
 -- factor, since if taken at face value (10000 EU), the batteries would be the ultimate power source barely
 -- ever needing replacement.
 digtron.tap_batteries = function(battery_positions, target, test)
+	if (battery_positions == nil) then
+		return 0
+	end
+
 	local current_burned = 0
 	-- 1 coal block is 370 PU
 	-- 1 coal lump is 40 PU
 	-- An RE battery holds 10000 EU of charge
 	-- local power_ratio = 100 -- How much charge equals 1 unit of PU from coal
 	-- setting Moved to digtron.config.power_ratio
-	
-	if (battery_positions == nil) then
-		return 0
-	end
 	
 	for k, location in pairs(battery_positions) do
 		if current_burned > target then
@@ -271,10 +278,6 @@ digtron.tap_batteries = function(battery_positions, target, test)
 	end
 	return current_burned
 end
-
-
-
-
 
 digtron.remove_builder_item = function(pos)
 	local objects = minetest.env:get_objects_inside_radius(pos, 0.5)

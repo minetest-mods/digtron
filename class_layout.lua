@@ -39,13 +39,6 @@ function DigtronLayout.create(pos, player)
 	--initialize. We're assuming that the start position is a controller digtron, should be a safe assumption since only the controller node should call this
 	self.traction = 0
 	self.all = {}
-	self.inventories = {}
-	self.fuelstores = {}
-	self.battery_holders = {} -- technic batteries
-	self.power_connectors = {} -- technic power cable
-	self.diggers = {}
-	self.builders = {}
-	self.auto_ejectors = {}
 	self.extents = {}
 	self.water_touching = false
 	self.lava_touching = false
@@ -118,21 +111,30 @@ function DigtronLayout.create(pos, player)
 
 			-- add a reference to this node's position to special node lists
 			if group_number == 2 then
+				self.inventories = self.inventories or {}
 				table.insert(self.inventories, node_image)
 			elseif group_number == 3 then
+				self.diggers = self.diggers or {}
 				table.insert(self.diggers, node_image)
 			elseif group_number == 4 then
+				self.builders = self.builders or {}
 				table.insert(self.builders, node_image)
 			elseif group_number == 5 then
+				self.fuelstores = self.fuelstores or {}
 				table.insert(self.fuelstores, node_image)
 			elseif group_number == 6 then
+				self.inventories = self.inventories or {}
+				self.fuelstores = self.fuelstores or {}
 				table.insert(self.inventories, node_image)
 				table.insert(self.fuelstores, node_image)
-			elseif group_number == 7 then
+			elseif group_number == 7 then -- technic batteries
+				self.battery_holders = self.battery_holders or {}
 				table.insert(self.battery_holders, node_image)
 			elseif group_number == 8 then
-				table.insert(self.power_connectors, node_image)
+				self.power_connectors = self.power_connectors or {}
+				table.insert(self.power_connectors, node_image) -- technic power connectors
 			elseif group_number == 9 and node_image.meta.fields["autoeject"] == "true" then
+				self.auto_ejectors = self.auto_ejectors or {}
 				table.insert(self.auto_ejectors, node_image)
 			end
 			

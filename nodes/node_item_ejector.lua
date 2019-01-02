@@ -58,15 +58,17 @@ local function eject_items(pos, node, player, eject_even_without_pipeworks)
 
 	-- Build a list of all the items that builder nodes want to use.
 	local filter_items = {}
-	for _, node_image in pairs(layout.builders) do
-		filter_items[node_image.meta.inventory.main[1]:get_name()] = true
+	if layout.builders ~= nil then
+		for _, node_image in pairs(layout.builders) do
+			filter_items[node_image.meta.inventory.main[1]:get_name()] = true
+		end
 	end
 	
 	-- Look through the inventories and find an item that's not on that list.
 	local source_node = nil
 	local source_index = nil
 	local source_stack = nil
-	for _, node_image in pairs(layout.inventories) do
+	for _, node_image in pairs(layout.inventories or {}) do
 		if type(node_image.meta.inventory.main) ~= "table" then
 			node_image.meta.inventory.main = {}
 		end
