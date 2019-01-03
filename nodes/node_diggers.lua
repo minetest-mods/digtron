@@ -132,7 +132,7 @@ minetest.register_node("digtron:digger", {
 		local digpos = digtron.find_new_pos(pos, facing)
 
 		if protected_nodes:get(digpos.x, digpos.y, digpos.z) then
-			return 0, {}
+			return 0
 		end
 		
 		return digtron.mark_diggable(digpos, nodes_dug, player)
@@ -184,22 +184,22 @@ minetest.register_node("digtron:intermittent_digger", {
 	
 	on_rightclick = intermittent_on_rightclick,
 
-	-- returns fuel_cost, item_produced
+	-- returns fuel_cost, item_produced (a table or nil)
 	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate, lateral_dig, player)
 		if lateral_dig == true then
-			return 0, {}
+			return 0
 		end
 
 		local facing = minetest.get_node(pos).param2
 		local digpos = digtron.find_new_pos(pos, facing)
 
 		if protected_nodes:get(digpos.x, digpos.y, digpos.z) then
-			return 0, {}
+			return 0
 		end
 		
 		local meta = minetest.get_meta(pos)
 		if (digpos[controlling_coordinate] + meta:get_int("offset")) % meta:get_int("period") ~= 0 then
-			return 0, {}
+			return 0
 		end
 		
 		return digtron.mark_diggable(digpos, nodes_dug, player)
@@ -255,14 +255,14 @@ minetest.register_node("digtron:soft_digger", {
 		local digpos = digtron.find_new_pos(pos, facing)
 		
 		if protected_nodes:get(digpos.x, digpos.y, digpos.z) then
-			return 0, {}
+			return 0
 		end
 			
 		if digtron.is_soft_material(digpos) then
 			return digtron.mark_diggable(digpos, nodes_dug, player)
 		end
 		
-		return 0, {}
+		return 0
 	end,
 
 	damage_creatures = function(player, pos, controlling_coordinate)
@@ -312,26 +312,26 @@ minetest.register_node("digtron:intermittent_soft_digger", {
 		
 	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate, lateral_dig, player)
 		if lateral_dig == true then
-			return 0, {}
+			return 0
 		end
 
 		local facing = minetest.get_node(pos).param2
 		local digpos = digtron.find_new_pos(pos, facing)
 		
 		if protected_nodes:get(digpos.x, digpos.y, digpos.z) then
-			return 0, {}
+			return 0
 		end
 		
 		local meta = minetest.get_meta(pos)
 		if (digpos[controlling_coordinate] + meta:get_int("offset")) % meta:get_int("period") ~= 0 then
-			return 0, {}
+			return 0
 		end
 		
 		if digtron.is_soft_material(digpos) then
 			return digtron.mark_diggable(digpos, nodes_dug, player)
 		end
 		
-		return 0, {}
+		return 0
 	end,
 
 	damage_creatures = function(player, pos, controlling_coordinate)
@@ -398,15 +398,19 @@ minetest.register_node("digtron:dual_digger", {
 		
 		if protected_nodes:get(digpos.x, digpos.y, digpos.z) ~= true then
 			local forward_cost, forward_items = digtron.mark_diggable(digpos, nodes_dug, player)
-			for _, item in pairs(forward_items) do
-				table.insert(items, item)
+			if forward_items ~= nil then
+				for _, item in pairs(forward_items) do
+					table.insert(items, item)
+				end
 			end
 			cost = cost + forward_cost
 		end
 		if protected_nodes:get(digdown.x, digdown.y, digdown.z) ~= true then
 			local down_cost, down_items = digtron.mark_diggable(digdown, nodes_dug, player)
-			for _, item in pairs(down_items) do
-				table.insert(items, item)
+			if down_items ~= nil then
+				for _, item in pairs(down_items) do
+					table.insert(items, item)
+				end
 			end
 			cost = cost + down_cost
 		end
@@ -475,15 +479,19 @@ minetest.register_node("digtron:dual_soft_digger", {
 		
 		if protected_nodes:get(digpos.x, digpos.y, digpos.z) ~= true and digtron.is_soft_material(digpos) then
 			local forward_cost, forward_items = digtron.mark_diggable(digpos, nodes_dug, player)
-			for _, item in pairs(forward_items) do
-				table.insert(items, item)
+			if forward_items ~= nil then
+				for _, item in pairs(forward_items) do
+					table.insert(items, item)
+				end
 			end
 			cost = cost + forward_cost
 		end
 		if protected_nodes:get(digdown.x, digdown.y, digdown.z) ~= true and digtron.is_soft_material(digdown) then
 			local down_cost, down_items = digtron.mark_diggable(digdown, nodes_dug, player)
-			for _, item in pairs(down_items) do
-				table.insert(items, item)
+			if down_items ~= nil then
+				for _, item in pairs(down_items) do
+					table.insert(items, item)
+				end
 			end
 			cost = cost + down_cost
 		end

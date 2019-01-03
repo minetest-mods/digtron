@@ -15,6 +15,8 @@ local controller_nodebox ={
 	{-0.5, -0.5, -0.5, -0.125, -0.125, -0.3125}, -- back_connector_4
 }
 
+local node_inventory_table = {type="node"} -- a reusable parameter for get_inventory calls, set the pos parameter before using.
+
 -- Master controller. Most complicated part of the whole system. Determines which direction a digtron moves and triggers all of its component parts.
 minetest.register_node("digtron:controller", {
 	description = S("Digtron Control Module"),
@@ -220,13 +222,15 @@ minetest.register_node("digtron:auto_controller", {
 		if minetest.get_item_group(stack:get_name(), "digtron") ~= 0 then
 			return 0 -- pointless setting a Digtron node as a stop block
 		end	
-		local inv = minetest.get_inventory({type="node", pos=pos})
+		node_inventory_table.pos = pos
+		local inv = minetest.get_inventory(node_inventory_table)
 		inv:set_stack(listname, index, stack:take_item(1))
 		return 0
 	end,
 	
 	allow_metadata_inventory_take = function(pos, listname, index, stack, player)
-		local inv = minetest.get_inventory({type="node", pos=pos})
+		node_inventory_table.pos = pos
+		local inv = minetest.get_inventory(node_inventory_table)
 		inv:set_stack(listname, index, ItemStack(""))
 		return 0
 	end,

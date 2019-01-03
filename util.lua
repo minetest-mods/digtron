@@ -3,6 +3,8 @@
 dofile( minetest.get_modpath( "digtron" ) .. "/util_item_place_node.lua" ) -- separated out to avoid potential for license complexity
 dofile( minetest.get_modpath( "digtron" ) .. "/util_execute_cycle.lua" ) -- separated out simply for tidiness, there's some big code in there
 
+local node_inventory_table = {type="node"} -- a reusable parameter for get_inventory calls, set the pos parameter before using.
+
 -- Apparently node_sound_metal_defaults is a newer thing, I ran into games using an older version of the default mod without it.
 if default.node_sound_metal_defaults ~= nil then
 	digtron.metal_sounds = default.node_sound_metal_defaults()
@@ -44,7 +46,7 @@ digtron.mark_diggable = function(pos, nodes_dug, player)
 	
 	-- prevent digtrons from being marked for digging.
 	if minetest.get_item_group(target.name, "digtron") ~= 0 or minetest.get_item_group(target.name, "digtron_protected") ~= 0 then
-		return 0, {}
+		return 0
 	end
 
 	local targetdef = minetest.registered_nodes[target.name]
@@ -75,7 +77,7 @@ digtron.mark_diggable = function(pos, nodes_dug, player)
 			return material_cost, minetest.get_node_drops(target.name, "")
 		end
 	end
-	return 0, {}
+	return 0
 end
 	
 digtron.can_build_to = function(pos, protected_nodes, dug_nodes)
@@ -112,7 +114,8 @@ digtron.place_in_inventory = function(itemname, inventory_positions, fallback_po
 	local itemstack = ItemStack(itemname)
 	if inventory_positions ~= nil then
 		for k, location in pairs(inventory_positions) do
-			local inv = minetest.get_inventory({type="node", pos=location.pos})
+			node_inventory_table.pos = location.pos
+			local inv = minetest.get_inventory(node_inventory_table)
 			itemstack = inv:add_item("main", itemstack)
 			if itemstack:is_empty() then
 				return nil
@@ -128,7 +131,8 @@ digtron.place_in_specific_inventory = function(itemname, pos, inventory_position
 	--is trying to keep various inventories organized manually stuff will go back where it came from,
 	--probably.
 	local itemstack = ItemStack(itemname)
-	local inv = minetest.get_inventory({type="node", pos=pos})
+	node_inventory_table.pos = pos
+	local inv = minetest.get_inventory(node_inventory_table)
 	local returned_stack = inv:add_item("main", itemstack)
 	if not returned_stack:is_empty() then
 		-- we weren't able to put the item back into that particular inventory for some reason.
@@ -142,7 +146,8 @@ digtron.take_from_inventory = function(itemname, inventory_positions)
 	--tries to take an item from each inventory node in turn. Returns location of inventory item was taken from on success, nil on failure
 	local itemstack = ItemStack(itemname)
 	for k, location in pairs(inventory_positions) do
-		local inv = minetest.get_inventory({type="node", pos=location.pos})
+		node_inventory_table.pos = location.pos
+		local inv = minetest.get_inventory(node_inventory_table)
 		local output = inv:remove_item("main", itemstack)
 		if not output:is_empty() then
 			return location.pos
@@ -164,6 +169,7 @@ digtron.get_controlling_coordinate = function(pos, facedir)
 	end
 end
 
+local fuel_craft = {method="fuel", width=1, items={}} -- reusable crafting recipe table for get_craft_result calls below
 -- Searches fuel store inventories for burnable items and burns them until target is reached or surpassed 
 -- (or there's nothing left to burn). Returns the total fuel value burned
 -- if the "test" parameter is set to true, doesn't actually take anything out of inventories.
@@ -179,13 +185,15 @@ digtron.burn = function(fuelstore_positions, target, test)
 		if current_burned > target then
 			break
 		end
-		local inv = minetest.get_inventory({type="node", pos=location.pos})
+		node_inventory_table.pos = location.pos
+		local inv = minetest.get_inventory(node_inventory_table)
 		local invlist = inv:get_list("fuel")
 		for i, itemstack in pairs(invlist) do
-			local fuel_per_item = minetest.get_craft_result({method="fuel", width=1, items={itemstack:peek_item(1)}}).time
+			fuel_craft.items[1] = itemstack:peek_item(1)
+			local fuel_per_item = minetest.get_craft_result(fuel_craft).time
 			if fuel_per_item ~= 0 then
 				local actual_burned = math.min(
-						math.ceil((target - current_burned)/fuel_per_item ), -- burn this many, if we can.
+						math.ceil((target - current_burned)/fuel_per_item), -- burn this many, if we can.
 						itemstack:get_count() -- how many we have at most.
 					)
 				if test ~= true then
@@ -227,7 +235,8 @@ digtron.tap_batteries = function(battery_positions, target, test)
 		if current_burned > target then
 			break
 		end
-		local inv = minetest.get_inventory({type="node", pos=location.pos})
+		node_inventory_table.pos = location.pos
+		local inv = minetest.get_inventory(node_inventory_table)
 		local invlist = inv:get_list("batteries")
 		
 		if (invlist == nil) then
@@ -294,7 +303,8 @@ end
 
 digtron.update_builder_item = function(pos)
 	digtron.remove_builder_item(pos)
-	local inv = minetest.get_inventory({type="node", pos=pos})
+	node_inventory_table.pos = pos
+	local inv = minetest.get_inventory(node_inventory_table)
 	local item_stack = inv:get_stack("main", 1)
 	if not item_stack:is_empty() then
 		digtron.create_builder_item = item_stack:get_name()

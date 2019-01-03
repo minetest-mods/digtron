@@ -80,8 +80,10 @@ local function move_player_test(layout, player)
 	return false
 end
 
+local node_inventory_table = {type="node"} -- a reusable parameter for get_inventory calls, set the pos parameter before using.
 local function test_stop_block(pos, items)
-	local inv = minetest.get_inventory({type="node", pos=pos})
+	node_inventory_table.pos = pos
+	local inv = minetest.get_inventory(node_inventory_table)
 	local item_stack = inv:get_stack("stop", 1)
 	if not item_stack:is_empty() then
 		for _, item in pairs(items) do
@@ -135,7 +137,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 			local targetdef = minetest.registered_nodes[target.name]
 			if targetdef.execute_dig ~= nil then
 				local fuel_cost, dropped = targetdef.execute_dig(location.pos, layout.protected, layout.nodes_dug, controlling_coordinate, false, clicker)
-				if table.getn(dropped) > 0 then
+				if dropped ~= nil then
 					for _, itemname in pairs(dropped) do
 						table.insert(items_dropped, itemname)
 					end
@@ -476,7 +478,7 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 			local targetdef = minetest.registered_nodes[target.name]
 			if targetdef.execute_dig ~= nil then
 				local fuel_cost, dropped = targetdef.execute_dig(location.pos, layout.protected, layout.nodes_dug, controlling_coordinate, true, clicker)
-				if table.getn(dropped) > 0 then
+				if dropped ~= nil then
 					for _, itemname in pairs(dropped) do
 						table.insert(items_dropped, itemname)
 					end
@@ -586,9 +588,6 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 			minetest.log("action", string.format("%s uses Digtron to dig %s at (%d, %d, %d)", clicker:get_player_name(), minetest.get_node(node_to_dig).name, node_to_dig.x, node_to_dig.y, node_to_dig.z))
 			minetest.remove_node(node_to_dig)
 		end
-		-- all of the digtron's nodes wind up in nodes_dug, so this is an ideal place to stick
-		-- a check to make sand fall after the digtron has passed.
-		--minetest.check_for_falling({x=node_to_dig.x, y=node_to_dig.y+1, z=node_to_dig.z})
 		node_to_dig, whether_to_dig = layout.nodes_dug:pop()
 	end
 	return pos, status_text, 0
