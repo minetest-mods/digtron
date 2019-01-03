@@ -205,7 +205,7 @@ minetest.register_node("digtron:builder", {
 		
 		-- If we're adding a wallmounted item and the build facing is greater than 5, reset it to 0
 		local meta = minetest.get_meta(pos)
-		if stack_def.paramtype2 == "wallmounted" and tonumber(meta:get_int("build_facing")) > 5 then
+		if stack_def ~= nil and stack_def.paramtype2 == "wallmounted" and tonumber(meta:get_int("build_facing")) > 5 then
 			meta:set_int("build_facing", 0)
 		end
 		
