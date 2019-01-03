@@ -204,32 +204,60 @@ local wallmounted_rotate = {
 	}
 }
 
-	--90 degrees CW about x-axis: (x, y, z) -> (x, -z, y)
-	--90 degrees CCW about x-axis: (x, y, z) -> (x, z, -y)
-	--90 degrees CW about y-axis: (x, y, z) -> (-z, y, x)
-	--90 degrees CCW about y-axis: (x, y, z) -> (z, y, -x)
-	--90 degrees CW about z-axis: (x, y, z) -> (y, -x, z)
-	--90 degrees CCW about z-axis: (x, y, z) -> (-y, x, z)
+--90 degrees CW about x-axis: (x, y, z) -> (x, -z, y)
+--90 degrees CCW about x-axis: (x, y, z) -> (x, z, -y)
+--90 degrees CW about y-axis: (x, y, z) -> (-z, y, x)
+--90 degrees CCW about y-axis: (x, y, z) -> (z, y, -x)
+--90 degrees CW about z-axis: (x, y, z) -> (y, -x, z)
+--90 degrees CCW about z-axis: (x, y, z) -> (-y, x, z)
+-- operates directly on the pos vector
 local rotate_pos = function(axis, direction, pos)
 	if axis == "x" then
 		if direction < 0 then
-			return {x= pos.x, y= -pos.z, z= pos.y}
+			local temp_z = pos.z
+			pos.z = pos.y
+			pos.y = -temp_z
 		else
-			return {x= pos.x, y= pos.z, z= -pos.y}
+			local temp_z = pos.z
+			pos.z = -pos.y
+			pos.y = temp_z
 		end
 	elseif axis == "y" then
 		if direction < 0 then
-			return {x= -pos.z, y= pos.y, z= pos.x}
+			local temp_x = pos.x
+			pos.x = -pos.z
+			pos.z = temp_x
 		else
-			return {x= pos.z, y= pos.y, z= -pos.x}
+			local temp_x = pos.x
+			pos.x = pos.z
+			pos.z = -temp_x
 		end
 	else	
 		if direction < 0 then
-			return {x= -pos.y, y= pos.x, z= pos.z}
+			local temp_x = pos.x
+			pos.x = -pos.y
+			pos.y = temp_x
 		else
-			return {x= pos.y, y= -pos.x, z= pos.z}
+			local temp_x = pos.x
+			pos.x = pos.y
+			pos.y = -temp_x
 		end
 	end
+	return pos
+end
+
+-- operates directly on the pos vector
+local subtract_in_place = function(pos, subtract)
+	pos.x = pos.x - subtract.x
+	pos.y = pos.y - subtract.y
+	pos.z = pos.z - subtract.z
+	return pos
+end
+local add_in_place = function(pos, add)
+	pos.x = pos.x + add.x
+	pos.y = pos.y + add.y
+	pos.z = pos.z + add.z
+	return pos
 end
 
 local rotate_node_image = function(node_image, origin, axis, direction, old_pos_pointset)
@@ -252,10 +280,10 @@ local rotate_node_image = function(node_image, origin, axis, direction, old_pos_
 	old_pos_pointset:set(node_image.pos.x, node_image.pos.y, node_image.pos.z, true)
 	
 	-- position in space relative to origin
-	local pos = vector.subtract(node_image.pos, origin)
+	local pos = subtract_in_place(node_image.pos, origin)
 	pos = rotate_pos(axis, direction, pos)
 	-- Move back to original reference frame
-	node_image.pos = vector.add(pos, origin)
+	node_image.pos = add_in_place(pos, origin)
 	
 	return node_image	
 end
@@ -302,7 +330,7 @@ function DigtronLayout.move_layout_image(self, dir)
 	
 	for k, node_image in pairs(self.all) do
 		self.old_pos_pointset:set(node_image.pos.x, node_image.pos.y, node_image.pos.z, true)
-		node_image.pos = vector.add(node_image.pos, dir)
+		node_image.pos = add_in_place(node_image.pos, dir)
 		self.nodes_dug:set(node_image.pos.x, node_image.pos.y, node_image.pos.z, false) -- we've moved a digtron node into this space, mark it so that we don't dig it.
 	end
 end

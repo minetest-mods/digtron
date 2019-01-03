@@ -130,7 +130,7 @@ local function auto_cycle(pos)
 			meta:set_string("infotext", status)
 			if return_code == 1 then --return code 1 happens when there's unloaded nodes adjacent, just keep trying.
 				if digtron.config.emerge_unloaded_mapblocks then
-					minetest.emerge_area(vector.add(pos, -128), vector.add(pos, 128))
+					minetest.emerge_area(vector.add(pos, -80), vector.add(pos, 80))
 				end
 				minetest.after(meta:get_int("period"), auto_cycle, newpos)
 			else
@@ -152,7 +152,7 @@ local function auto_cycle(pos)
 		meta:set_string("infotext", status)
 		if return_code == 1 then --return code 1 happens when there's unloaded nodes adjacent, call emerge and keep trying.
 			if digtron.config.emerge_unloaded_mapblocks then
-				minetest.emerge_area(vector.add(pos, -128), vector.add(pos, 128))
+				minetest.emerge_area(vector.add(pos, -80), vector.add(pos, 80))
 			end
 			minetest.after(meta:get_int("period"), auto_cycle, newpos)
 		else
