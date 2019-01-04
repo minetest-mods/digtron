@@ -44,7 +44,6 @@ end
 	
 local builder_formspec = function(pos, meta)
 	local nodemeta = "nodemeta:"..pos.x .. "," .. pos.y .. "," ..pos.z
-	minetest.debug(nodemeta)
 	return builder_formspec_string
 		:gsub("${extrusion}", meta:get_int("extrusion"), 1)
 		:gsub("${period}", meta:get_int("period"), 1)

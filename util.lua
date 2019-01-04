@@ -325,8 +325,6 @@ digtron.damage_creatures = function(player, source_pos, target_pos, amount, item
 			y = target_pos.y-source_pos.y + 0.2,
 			z = target_pos.z-source_pos.z,
 		}
-		minetest.debug("debug:")
-		minetest.debug(dump(velocity))
 		for _, obj in ipairs(objects) do
 			if obj:is_player() then
 				-- See issue #2960 for status of a "set player velocity" method
@@ -336,7 +334,6 @@ digtron.damage_creatures = function(player, source_pos, target_pos, amount, item
 					y = target_pos.y + velocity.y,
 					z = target_pos.z + velocity.z,
 				}
-				minetest.debug(dump(newpos))
 				obj:set_pos(newpos)
 				obj:punch(player, 1.0, damage_def, nil)
 			else
