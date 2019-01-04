@@ -4,6 +4,9 @@ local S, NS = dofile(MP.."/intllib.lua")
 
 -- Note: diggers go in group 3 and have an execute_dig method.
 
+local damage_hp = digtron.config.damage_hp
+local damage_hp_half = damage_hp/2
+
 local digger_nodebox = {
 	{-0.5, -0.5, 0, 0.5, 0.5, 0.4375}, -- Block
 	{-0.4375, -0.3125, 0.4375, 0.4375, 0.3125, 0.5}, -- Cutter1
@@ -138,9 +141,9 @@ minetest.register_node("digtron:digger", {
 		return digtron.mark_diggable(digpos, nodes_dug, player)
 	end,
 	
-	damage_creatures = function(player, pos, controlling_coordinate)
+	damage_creatures = function(player, pos, controlling_coordinate, items_dropped)
 		local facing = minetest.get_node(pos).param2
-		digtron.damage_creatures(player, digtron.find_new_pos(pos, facing), 8)
+		digtron.damage_creatures(player, pos, digtron.find_new_pos(pos, facing), damage_hp, items_dropped)
 	end,
 })
 
@@ -205,12 +208,12 @@ minetest.register_node("digtron:intermittent_digger", {
 		return digtron.mark_diggable(digpos, nodes_dug, player)
 	end,
 	
-	damage_creatures = function(player, pos, controlling_coordinate)
+	damage_creatures = function(player, pos, controlling_coordinate, items_dropped)
 		local facing = minetest.get_node(pos).param2
 		local targetpos = digtron.find_new_pos(pos, facing)
 		local meta = minetest.get_meta(pos)
 		if (targetpos[controlling_coordinate] + meta:get_int("offset")) % meta:get_int("period") == 0 then
-			digtron.damage_creatures(player, targetpos, 8)
+			digtron.damage_creatures(player, pos, targetpos, damage_hp, items_dropped)
 		end
 	end
 })
@@ -265,9 +268,9 @@ minetest.register_node("digtron:soft_digger", {
 		return 0
 	end,
 
-	damage_creatures = function(player, pos, controlling_coordinate)
+	damage_creatures = function(player, pos, controlling_coordinate, items_dropped)
 		local facing = minetest.get_node(pos).param2
-		digtron.damage_creatures(player, digtron.find_new_pos(pos, facing), 4)
+		digtron.damage_creatures(player, pos, digtron.find_new_pos(pos, facing), damage_hp_half, items_dropped)
 	end,
 })
 
@@ -334,12 +337,12 @@ minetest.register_node("digtron:intermittent_soft_digger", {
 		return 0
 	end,
 
-	damage_creatures = function(player, pos, controlling_coordinate)
+	damage_creatures = function(player, pos, controlling_coordinate, items_dropped)
 		local meta = minetest.get_meta(pos)
 		local facing = minetest.get_node(pos).param2
 		local targetpos = digtron.find_new_pos(pos, facing)		
 		if (targetpos[controlling_coordinate] + meta:get_int("offset")) % meta:get_int("period") == 0 then
-			digtron.damage_creatures(player, targetpos, 4)
+			digtron.damage_creatures(player, pos, targetpos, damage_hp_half, items_dropped)
 		end
 	end,
 })
@@ -418,10 +421,10 @@ minetest.register_node("digtron:dual_digger", {
 		return cost, items
 	end,
 	
-	damage_creatures = function(player, pos, controlling_coordinate)
+	damage_creatures = function(player, pos, controlling_coordinate, items_dropped)
 		local facing = minetest.get_node(pos).param2
-		digtron.damage_creatures(player, digtron.find_new_pos(pos, facing), 8)
-		digtron.damage_creatures(player, digtron.find_new_pos_downward(pos, facing), 8)
+		digtron.damage_creatures(player, pos, digtron.find_new_pos(pos, facing), damage_hp, items_dropped)
+		digtron.damage_creatures(player, pos, digtron.find_new_pos_downward(pos, facing), damage_hp, items_dropped)
 	end,
 })
 
@@ -499,9 +502,9 @@ minetest.register_node("digtron:dual_soft_digger", {
 		return cost, items
 	end,
 	
-	damage_creatures = function(player, pos, controlling_coordinate)
+	damage_creatures = function(player, pos, controlling_coordinate, items_dropped)
 		local facing = minetest.get_node(pos).param2
-		digtron.damage_creatures(player, digtron.find_new_pos(pos, facing), 4)
-		digtron.damage_creatures(player, digtron.find_new_pos_downward(pos, facing), 4)
+		digtron.damage_creatures(player, pos, digtron.find_new_pos(pos, facing), damage_hp_half, items_dropped)
+		digtron.damage_creatures(player, pos, digtron.find_new_pos_downward(pos, facing), damage_hp_half, items_dropped)
 	end,
 })

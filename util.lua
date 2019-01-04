@@ -312,17 +312,66 @@ digtron.update_builder_item = function(pos)
 	end
 end
 
-digtron.damage_creatures = function(player, pos, amount)
-	local objects = minetest.env:get_objects_inside_radius(pos, 1.0)
+local damage_def = {
+	full_punch_interval = 1.0,
+	damage_groups = {},
+}
+digtron.damage_creatures = function(player, source_pos, target_pos, amount, items_dropped)
+	local objects = minetest.env:get_objects_inside_radius(target_pos, 1.0)
 	if objects ~= nil then
+		damage_def.damage_groups.fleshy = amount
+		local velocity = {
+			x = target_pos.x-source_pos.x,
+			y = target_pos.y-source_pos.y + 0.2,
+			z = target_pos.z-source_pos.z,
+		}
+		minetest.debug("debug:")
+		minetest.debug(dump(velocity))
 		for _, obj in ipairs(objects) do
-			if obj then
-				obj:punch(player, 1.0, {
-					full_punch_interval = 1.0,
-					damage_groups = {fleshy = amount},
-					}, nil )
+			if obj:is_player() then
+				-- See issue #2960 for status of a "set player velocity" method
+				-- instead, knock the player back
+				newpos = {
+					x = target_pos.x + velocity.x,
+					y = target_pos.y + velocity.y,
+					z = target_pos.z + velocity.z,
+				}
+				minetest.debug(dump(newpos))
+				obj:set_pos(newpos)
+				obj:punch(player, 1.0, damage_def, nil)
+			else
+				local lua_entity = obj:get_luaentity()
+				if lua_entity ~= nil then
+					if lua_entity.name == "__builtin:item" then
+						table.insert(items_dropped, lua_entity.itemstring)
+						lua_entity.itemstring = ""
+						obj:remove()
+					else
+						if obj.add_velocity ~= nil then
+							obj:add_velocity(velocity)
+						else
+							local vel = obj:get_velocity()
+							obj:set_velocity(vector.add(vel, velocity))
+						end
+						obj:punch(player, 1.0, damage_def, nil)
+					end
+				end
 			end
 		end
+	end
+	-- If we killed any mobs they might have dropped some stuff, vacuum that up now too.
+	objects = minetest.env:get_objects_inside_radius(target_pos, 1.0)
+	if objects ~= nil then
+		for _, obj in ipairs(objects) do
+			if not obj:is_player() then
+				local lua_entity = obj:get_luaentity()
+				if lua_entity ~= nil and lua_entity.name == "__builtin:item" then
+					table.insert(items_dropped, lua_entity.itemstring)
+					lua_entity.itemstring = ""
+					obj:remove()
+				end
+			end
+		end		
 	end
 end
 

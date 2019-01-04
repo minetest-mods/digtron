@@ -279,12 +279,12 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	local move_player = move_player_test(layout, clicker)
 	
 	-- damage the weak flesh
-	if digtron.config.damage_creatures and layout.diggers ~= nil then
+	if digtron.config.damage_hp > 0 and layout.diggers ~= nil then
 		for k, location in pairs(layout.diggers) do
 			local target = minetest.get_node(location.pos)
 			local targetdef = minetest.registered_nodes[target.name]
 			if targetdef.damage_creatures ~= nil then
-				targetdef.damage_creatures(clicker, location.pos, controlling_coordinate)
+				targetdef.damage_creatures(clicker, location.pos, controlling_coordinate, items_dropped)
 			end
 		end
 	end
@@ -527,7 +527,7 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 	local move_player = move_player_test(layout, clicker)
 	
 	-- damage the weak flesh
-	if digtron.config.damage_creatures and layout.diggers ~= nil then
+	if digtron.config.damage_hp > 0 and layout.diggers ~= nil then
 		for k, location in pairs(layout.diggers) do
 			local target = minetest.get_node(location.pos)
 			local targetdef = minetest.registered_nodes[target.name]
