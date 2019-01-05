@@ -49,11 +49,11 @@ end
 
 function Pointset:pop()
 	-- returns a point that's in the 3D array, and then removes it.
-	hash, value = next(self.points)
+	local hash, value = next(self.points)
 	if hash == nil then return nil end
 	local pos = minetest.get_position_from_hash(hash)
 	self.points[hash] = nil	
-	return pos, val
+	return pos, value
 end
 
 function Pointset:get_pos_list(value)
