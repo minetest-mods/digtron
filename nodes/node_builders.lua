@@ -4,6 +4,8 @@ local S, NS = dofile(MP.."/intllib.lua")
 
 -- Note: builders go in group 4 and have both test_build and execute_build methods.
 
+local node_inventory_table = {type="node"} -- a reusable parameter for get_inventory calls, set the pos parameter before using.
+
 local displace_due_to_help_button = 1.0
 if minetest.get_modpath("doc") then
 	displace_due_to_help_button = 0.0
@@ -42,7 +44,6 @@ end
 	
 local builder_formspec = function(pos, meta)
 	local nodemeta = "nodemeta:"..pos.x .. "," .. pos.y .. "," ..pos.z
-	minetest.debug(nodemeta)
 	return builder_formspec_string
 		:gsub("${extrusion}", meta:get_int("extrusion"), 1)
 		:gsub("${period}", meta:get_int("period"), 1)
@@ -200,7 +201,8 @@ minetest.register_node("digtron:builder", {
 			return 0 -- don't allow craft items unless their on_place is whitelisted.
 		end
 		
-		local inv = minetest.get_inventory({type="node", pos=pos})
+		node_inventory_table.pos = pos
+		local inv = minetest.get_inventory(node_inventory_table)
 		inv:set_stack(listname, index, stack:take_item(1))
 		
 		-- If we're adding a wallmounted item and the build facing is greater than 5, reset it to 0
@@ -213,7 +215,8 @@ minetest.register_node("digtron:builder", {
 	end,
 	
 	allow_metadata_inventory_take = function(pos, listname, index, stack, player)
-		local inv = minetest.get_inventory({type="node", pos=pos})
+		node_inventory_table.pos = pos
+		local inv = minetest.get_inventory(node_inventory_table)
 		inv:set_stack(listname, index, ItemStack(""))
 		return 0
 	end,
@@ -246,7 +249,8 @@ minetest.register_node("digtron:builder", {
 		
 		local return_items = {}
 		
-		local inv = minetest.get_inventory({type="node", pos=pos})
+		node_inventory_table.pos = pos
+		local inv = minetest.get_inventory(node_inventory_table)
 		local item_stack = inv:get_stack("main", 1)
 
 		if item_stack:is_empty() then
@@ -296,7 +300,8 @@ minetest.register_node("digtron:builder", {
 		end
 		local built_count = 0
 		
-		local inv = minetest.get_inventory({type="node", pos=pos})
+		node_inventory_table.pos = pos
+		local inv = minetest.get_inventory(node_inventory_table)
 		local item_stack = inv:get_stack("main", 1)
 		if item_stack:is_empty() then
 			return built_count

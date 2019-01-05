@@ -6,8 +6,9 @@ digtron_uses_resources (Digtron uses resources) bool true
 #When true, lava counts as protected blocks.
 digtron_lava_impassible (Lava is impassible to Digtrons) bool true
 
-#When true, diggers deal damage to creatures when they trigger.
-digtron_damage_creatures (Digtrons cause damage) bool true
+#Sets how much HP damage a digger does. Soft material diggers do half this.
+#Set to 0 to disable damage entirely.
+digtron_damage_hp (Diggers damage this many hp) int 8
 
 #How many seconds a digtron waits between cycles.
 #Auto-controllers can make this wait longer, but cannot make it shorter.

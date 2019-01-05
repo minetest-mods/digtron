@@ -76,10 +76,10 @@ digtron.award_layout = function(layout, player)
 			awards.unlock(name, "digtron_size100")
 		end
 	end
-	if table.getn(layout.diggers) > 24 then
+	if layout.diggers ~= nil and table.getn(layout.diggers) > 24 then
 		awards.unlock(name, "digtron_digger25")
 	end
-	if table.getn(layout.builders) > 24 then
+	if layout.builders ~= nil and table.getn(layout.builders) > 24 then
 		awards.unlock(name, "digtron_builder25")
 	end
 	

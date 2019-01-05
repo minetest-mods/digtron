@@ -39,13 +39,6 @@ function DigtronLayout.create(pos, player)
 	--initialize. We're assuming that the start position is a controller digtron, should be a safe assumption since only the controller node should call this
 	self.traction = 0
 	self.all = {}
-	self.inventories = {}
-	self.fuelstores = {}
-	self.battery_holders = {} -- technic batteries
-	self.power_connectors = {} -- technic power cable
-	self.diggers = {}
-	self.builders = {}
-	self.auto_ejectors = {}
 	self.extents = {}
 	self.water_touching = false
 	self.lava_touching = false
@@ -118,21 +111,30 @@ function DigtronLayout.create(pos, player)
 
 			-- add a reference to this node's position to special node lists
 			if group_number == 2 then
+				self.inventories = self.inventories or {}
 				table.insert(self.inventories, node_image)
 			elseif group_number == 3 then
+				self.diggers = self.diggers or {}
 				table.insert(self.diggers, node_image)
 			elseif group_number == 4 then
+				self.builders = self.builders or {}
 				table.insert(self.builders, node_image)
 			elseif group_number == 5 then
+				self.fuelstores = self.fuelstores or {}
 				table.insert(self.fuelstores, node_image)
 			elseif group_number == 6 then
+				self.inventories = self.inventories or {}
+				self.fuelstores = self.fuelstores or {}
 				table.insert(self.inventories, node_image)
 				table.insert(self.fuelstores, node_image)
-			elseif group_number == 7 then
+			elseif group_number == 7 then -- technic batteries
+				self.battery_holders = self.battery_holders or {}
 				table.insert(self.battery_holders, node_image)
 			elseif group_number == 8 then
-				table.insert(self.power_connectors, node_image)
+				self.power_connectors = self.power_connectors or {}
+				table.insert(self.power_connectors, node_image) -- technic power connectors
 			elseif group_number == 9 and node_image.meta.fields["autoeject"] == "true" then
+				self.auto_ejectors = self.auto_ejectors or {}
 				table.insert(self.auto_ejectors, node_image)
 			end
 			
@@ -202,32 +204,60 @@ local wallmounted_rotate = {
 	}
 }
 
-	--90 degrees CW about x-axis: (x, y, z) -> (x, -z, y)
-	--90 degrees CCW about x-axis: (x, y, z) -> (x, z, -y)
-	--90 degrees CW about y-axis: (x, y, z) -> (-z, y, x)
-	--90 degrees CCW about y-axis: (x, y, z) -> (z, y, -x)
-	--90 degrees CW about z-axis: (x, y, z) -> (y, -x, z)
-	--90 degrees CCW about z-axis: (x, y, z) -> (-y, x, z)
+--90 degrees CW about x-axis: (x, y, z) -> (x, -z, y)
+--90 degrees CCW about x-axis: (x, y, z) -> (x, z, -y)
+--90 degrees CW about y-axis: (x, y, z) -> (-z, y, x)
+--90 degrees CCW about y-axis: (x, y, z) -> (z, y, -x)
+--90 degrees CW about z-axis: (x, y, z) -> (y, -x, z)
+--90 degrees CCW about z-axis: (x, y, z) -> (-y, x, z)
+-- operates directly on the pos vector
 local rotate_pos = function(axis, direction, pos)
 	if axis == "x" then
 		if direction < 0 then
-			return {x= pos.x, y= -pos.z, z= pos.y}
+			local temp_z = pos.z
+			pos.z = pos.y
+			pos.y = -temp_z
 		else
-			return {x= pos.x, y= pos.z, z= -pos.y}
+			local temp_z = pos.z
+			pos.z = -pos.y
+			pos.y = temp_z
 		end
 	elseif axis == "y" then
 		if direction < 0 then
-			return {x= -pos.z, y= pos.y, z= pos.x}
+			local temp_x = pos.x
+			pos.x = -pos.z
+			pos.z = temp_x
 		else
-			return {x= pos.z, y= pos.y, z= -pos.x}
+			local temp_x = pos.x
+			pos.x = pos.z
+			pos.z = -temp_x
 		end
 	else	
 		if direction < 0 then
-			return {x= -pos.y, y= pos.x, z= pos.z}
+			local temp_x = pos.x
+			pos.x = -pos.y
+			pos.y = temp_x
 		else
-			return {x= pos.y, y= -pos.x, z= pos.z}
+			local temp_x = pos.x
+			pos.x = pos.y
+			pos.y = -temp_x
 		end
 	end
+	return pos
+end
+
+-- operates directly on the pos vector
+local subtract_in_place = function(pos, subtract)
+	pos.x = pos.x - subtract.x
+	pos.y = pos.y - subtract.y
+	pos.z = pos.z - subtract.z
+	return pos
+end
+local add_in_place = function(pos, add)
+	pos.x = pos.x + add.x
+	pos.y = pos.y + add.y
+	pos.z = pos.z + add.z
+	return pos
 end
 
 local rotate_node_image = function(node_image, origin, axis, direction, old_pos_pointset)
@@ -250,14 +280,23 @@ local rotate_node_image = function(node_image, origin, axis, direction, old_pos_
 	old_pos_pointset:set(node_image.pos.x, node_image.pos.y, node_image.pos.z, true)
 	
 	-- position in space relative to origin
-	local pos = vector.subtract(node_image.pos, origin)
+	local pos = subtract_in_place(node_image.pos, origin)
 	pos = rotate_pos(axis, direction, pos)
 	-- Move back to original reference frame
-	node_image.pos = vector.add(pos, origin)
+	node_image.pos = add_in_place(pos, origin)
 	
 	return node_image	
 end
 
+
+local top = {
+	[0]={axis="y", dir=-1},
+	{axis="z", dir=1},
+	{axis="z", dir=-1},
+	{axis="x", dir=1},
+	{axis="x", dir=-1},
+	{axis="y", dir=1},
+}
 -- Rotates 90 degrees widdershins around the axis defined by facedir (which in this case is pointing out the front of the node, so it needs to be converted into an upward-pointing axis internally)
 function DigtronLayout.rotate_layout_image(self, facedir)
 	-- To convert this into the direction the "top" of the axle node is pointing in:
@@ -268,14 +307,6 @@ function DigtronLayout.rotate_layout_image(self, facedir)
 	-- 16, 17, 18, 19 == (-1,0,0)
 	-- 20, 21, 22, 23== (0,-1,0)
 	
-	local top = {
-		[0]={axis="y", dir=-1},
-		{axis="z", dir=1},
-		{axis="z", dir=-1},
-		{axis="x", dir=1},
-		{axis="x", dir=-1},
-		{axis="y", dir=1},
-	}
 	local params = top[math.floor(facedir/4)]
 	
 	for k, node_image in pairs(self.all) do
@@ -299,7 +330,7 @@ function DigtronLayout.move_layout_image(self, dir)
 	
 	for k, node_image in pairs(self.all) do
 		self.old_pos_pointset:set(node_image.pos.x, node_image.pos.y, node_image.pos.z, true)
-		node_image.pos = vector.add(node_image.pos, dir)
+		node_image.pos = add_in_place(node_image.pos, dir)
 		self.nodes_dug:set(node_image.pos.x, node_image.pos.y, node_image.pos.z, false) -- we've moved a digtron node into this space, mark it so that we don't dig it.
 	end
 end
@@ -329,41 +360,56 @@ end
 -- if done during mid-write. So we need to defer the calls until after the
 -- Digtron has been fully written.
 
-local node_callbacks = function(dug_nodes, placed_nodes, player)
-	for _, dug_node in pairs(dug_nodes) do
-		local old_pos = dug_node[1]
-		local old_node = dug_node[2]
-		local old_meta = dug_node[3]
+-- using local counters and shared tables like this allows us to avoid some needless allocating and garbage-collecting of tables
+local dug_nodes_count = 0
+local dug_node_pos = {}
+local dug_node = {}
+local dug_node_meta = {}
 
-		for _, callback in ipairs(minetest.registered_on_dignodes) do
-			-- Copy pos and node because callback can modify them
-			local pos_copy = {x=old_pos.x, y=old_pos.y, z=old_pos.z}
-			local oldnode_copy = {name=old_node.name, param1=old_node.param1, param2=old_node.param2}
-			callback(pos_copy, oldnode_copy, digtron.fake_player)
-		end
+local placed_nodes_count = 0
+local placed_node_pos = {}
+local placed_new_node = {}
+local placed_old_node = {}
 
-		local old_def = minetest.registered_nodes[old_node.name]
-		if old_def ~= nil and old_def.after_dig_node ~= nil then
-			old_def.after_dig_node(old_pos, old_node, old_meta, player)
+local node_callbacks = function(player)
+	if dug_nodes_count > 0 then
+		for i = 1, dug_nodes_count do
+			local old_pos = dug_node_pos[i]
+			local old_node = dug_node[i]
+			local old_meta = dug_node_meta[i]
+	
+			for _, callback in ipairs(minetest.registered_on_dignodes) do
+				-- Copy pos and node because callback can modify them
+				local pos_copy = {x=old_pos.x, y=old_pos.y, z=old_pos.z}
+				local oldnode_copy = {name=old_node.name, param1=old_node.param1, param2=old_node.param2}
+				callback(pos_copy, oldnode_copy, digtron.fake_player)
+			end
+	
+			local old_def = minetest.registered_nodes[old_node.name]
+			if old_def ~= nil and old_def.after_dig_node ~= nil then
+				old_def.after_dig_node(old_pos, old_node, old_meta, player)
+			end
 		end
 	end
+
+	if placed_nodes_count > 0 then
+		for i = 1, placed_nodes_count do
+			local new_pos = placed_node_pos[i]
+			local new_node = placed_new_node[i]
+			local old_node = placed_old_node[i]
 	
-	for _, placed_node in pairs(placed_nodes) do
-		local new_pos = placed_node[1]
-		local new_node = placed_node[2]
-		local old_node = placed_node[3]
-
-		for _, callback in ipairs(minetest.registered_on_placenodes) do
-			-- Copy pos and node because callback can modify them
-			local pos_copy = {x=new_pos.x, y=new_pos.y, z=new_pos.z}
-			local oldnode_copy = {name=old_node.name, param1=old_node.param1, param2=old_node.param2}
-			local newnode_copy = {name=new_node.name, param1=new_node.param1, param2=new_node.param2}
-			callback(pos_copy, newnode_copy, digtron.fake_player, oldnode_copy)
-		end
-
-		local new_def = minetest.registered_nodes[new_node.name]
-		if new_def ~= nil and new_def.after_place_node ~= nil then
-			new_def.after_place_node(new_pos, player)
+			for _, callback in ipairs(minetest.registered_on_placenodes) do
+				-- Copy pos and node because callback can modify them
+				local pos_copy = {x=new_pos.x, y=new_pos.y, z=new_pos.z}
+				local oldnode_copy = {name=old_node.name, param1=old_node.param1, param2=old_node.param2}
+				local newnode_copy = {name=new_node.name, param1=new_node.param1, param2=new_node.param2}
+				callback(pos_copy, newnode_copy, digtron.fake_player, oldnode_copy)
+			end
+	
+			local new_def = minetest.registered_nodes[new_node.name]
+			if new_def ~= nil and new_def.after_place_node ~= nil then
+				new_def.after_place_node(new_pos, player)
+			end
 		end
 	end
 end
@@ -388,22 +434,23 @@ local set_meta_with_retry = function(meta, meta_table)
 	return true
 end
 
+local air_node = {name="air"}
 function DigtronLayout.write_layout_image(self, player)
-	local dug_nodes = {}
-	local placed_nodes = {}
-	
 	-- destroy the old digtron
 	local oldpos, _ = self.old_pos_pointset:pop()
 	while oldpos ~= nil do
 		local old_node = minetest.get_node(oldpos)
 		local old_meta = minetest.get_meta(oldpos)
 
-		if not set_node_with_retry(oldpos, {name="air"}) then
+		if not set_node_with_retry(oldpos, air_node) then
 			minetest.log("error", "DigtronLayout.write_layout_image failed to destroy old Digtron node, aborting write.")
 			return false
 		end
 
-		table.insert(dug_nodes, {oldpos, old_node, old_meta})
+		dug_nodes_count = dug_nodes_count + 1
+		dug_node_pos[dug_nodes_count] = oldpos
+		dug_node[dug_nodes_count] = old_node
+		dug_node_meta[dug_nodes_count] = old_meta
 		oldpos, _ = self.old_pos_pointset:pop()
 	end
 
@@ -418,15 +465,19 @@ function DigtronLayout.write_layout_image(self, player)
 			return false
 		end
 		
-		table.insert(placed_nodes, {new_pos, new_node, old_node})
+		placed_nodes_count = placed_nodes_count + 1
+		placed_node_pos[placed_nodes_count] = new_pos
+		placed_new_node[placed_nodes_count] = new_node
+		placed_old_node[placed_nodes_count] = old_node
 	end
 	
 	-- fake_player will be passed to callbacks to prevent actual player from "taking the blame" for this action.
 	-- For example, the hunger mod shouldn't be making the player hungry when he moves Digtron.
 	digtron.fake_player:update(self.controller, player:get_player_name())
 	-- note that the actual player is still passed to the per-node after_place_node and after_dig_node, should they exist.
-	node_callbacks(dug_nodes, placed_nodes, player)
-	
+	node_callbacks(player)
+	dug_nodes_count = 0
+	placed_nodes_count = 0
 	return true
 end
 

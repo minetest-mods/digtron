@@ -3,6 +3,8 @@
 dofile( minetest.get_modpath( "digtron" ) .. "/util_item_place_node.lua" ) -- separated out to avoid potential for license complexity
 dofile( minetest.get_modpath( "digtron" ) .. "/util_execute_cycle.lua" ) -- separated out simply for tidiness, there's some big code in there
 
+local node_inventory_table = {type="node"} -- a reusable parameter for get_inventory calls, set the pos parameter before using.
+
 -- Apparently node_sound_metal_defaults is a newer thing, I ran into games using an older version of the default mod without it.
 if default.node_sound_metal_defaults ~= nil then
 	digtron.metal_sounds = default.node_sound_metal_defaults()
@@ -17,14 +19,16 @@ digtron.find_new_pos = function(pos, facing)
 	return vector.add(pos, dir)
 end
 
+local facedir_to_down_dir_table = {
+	[0]={x=0, y=-1, z=0},
+	{x=0, y=0, z=-1},
+	{x=0, y=0, z=1},
+	{x=-1, y=0, z=0},
+	{x=1, y=0, z=0},
+	{x=0, y=1, z=0}
+}
 digtron.facedir_to_down_dir = function(facing)
-	return (
-		{[0]={x=0, y=-1, z=0},
-		{x=0, y=0, z=-1},
-		{x=0, y=0, z=1},
-		{x=-1, y=0, z=0},
-		{x=1, y=0, z=0},
-		{x=0, y=1, z=0}})[math.floor(facing/4)]
+	return facedir_to_down_dir_table[math.floor(facing/4)]
 end
 
 digtron.find_new_pos_downward = function(pos, facing)
@@ -42,7 +46,7 @@ digtron.mark_diggable = function(pos, nodes_dug, player)
 	
 	-- prevent digtrons from being marked for digging.
 	if minetest.get_item_group(target.name, "digtron") ~= 0 or minetest.get_item_group(target.name, "digtron_protected") ~= 0 then
-		return 0, {}
+		return 0
 	end
 
 	local targetdef = minetest.registered_nodes[target.name]
@@ -73,7 +77,7 @@ digtron.mark_diggable = function(pos, nodes_dug, player)
 			return material_cost, minetest.get_node_drops(target.name, "")
 		end
 	end
-	return 0, {}
+	return 0
 end
 	
 digtron.can_build_to = function(pos, protected_nodes, dug_nodes)
@@ -108,11 +112,14 @@ end
 digtron.place_in_inventory = function(itemname, inventory_positions, fallback_pos)
 	--tries placing the item in each inventory node in turn. If there's no room, drop it at fallback_pos
 	local itemstack = ItemStack(itemname)
-	for k, location in pairs(inventory_positions) do
-		local inv = minetest.get_inventory({type="node", pos=location.pos})
-		itemstack = inv:add_item("main", itemstack)
-		if itemstack:is_empty() then
-			return nil
+	if inventory_positions ~= nil then
+		for k, location in pairs(inventory_positions) do
+			node_inventory_table.pos = location.pos
+			local inv = minetest.get_inventory(node_inventory_table)
+			itemstack = inv:add_item("main", itemstack)
+			if itemstack:is_empty() then
+				return nil
+			end
 		end
 	end
 	minetest.add_item(fallback_pos, itemstack)
@@ -124,7 +131,8 @@ digtron.place_in_specific_inventory = function(itemname, pos, inventory_position
 	--is trying to keep various inventories organized manually stuff will go back where it came from,
 	--probably.
 	local itemstack = ItemStack(itemname)
-	local inv = minetest.get_inventory({type="node", pos=pos})
+	node_inventory_table.pos = pos
+	local inv = minetest.get_inventory(node_inventory_table)
 	local returned_stack = inv:add_item("main", itemstack)
 	if not returned_stack:is_empty() then
 		-- we weren't able to put the item back into that particular inventory for some reason.
@@ -134,10 +142,12 @@ digtron.place_in_specific_inventory = function(itemname, pos, inventory_position
 end
 
 digtron.take_from_inventory = function(itemname, inventory_positions)
+	if inventory_positions == nil then return nil end
 	--tries to take an item from each inventory node in turn. Returns location of inventory item was taken from on success, nil on failure
 	local itemstack = ItemStack(itemname)
 	for k, location in pairs(inventory_positions) do
-		local inv = minetest.get_inventory({type="node", pos=location.pos})
+		node_inventory_table.pos = location.pos
+		local inv = minetest.get_inventory(node_inventory_table)
 		local output = inv:remove_item("main", itemstack)
 		if not output:is_empty() then
 			return location.pos
@@ -159,24 +169,31 @@ digtron.get_controlling_coordinate = function(pos, facedir)
 	end
 end
 
+local fuel_craft = {method="fuel", width=1, items={}} -- reusable crafting recipe table for get_craft_result calls below
 -- Searches fuel store inventories for burnable items and burns them until target is reached or surpassed 
 -- (or there's nothing left to burn). Returns the total fuel value burned
 -- if the "test" parameter is set to true, doesn't actually take anything out of inventories.
 -- We can get away with this sort of thing for fuel but not for builder inventory because there's just one
 -- controller node burning stuff, not multiple build heads drawing from inventories in turn. Much simpler.
 digtron.burn = function(fuelstore_positions, target, test)
+	if fuelstore_positions == nil then
+		return 0
+	end
+
 	local current_burned = 0
 	for k, location in pairs(fuelstore_positions) do
 		if current_burned > target then
 			break
 		end
-		local inv = minetest.get_inventory({type="node", pos=location.pos})
+		node_inventory_table.pos = location.pos
+		local inv = minetest.get_inventory(node_inventory_table)
 		local invlist = inv:get_list("fuel")
 		for i, itemstack in pairs(invlist) do
-			local fuel_per_item = minetest.get_craft_result({method="fuel", width=1, items={itemstack:peek_item(1)}}).time
+			fuel_craft.items[1] = itemstack:peek_item(1)
+			local fuel_per_item = minetest.get_craft_result(fuel_craft).time
 			if fuel_per_item ~= 0 then
 				local actual_burned = math.min(
-						math.ceil((target - current_burned)/fuel_per_item ), -- burn this many, if we can.
+						math.ceil((target - current_burned)/fuel_per_item), -- burn this many, if we can.
 						itemstack:get_count() -- how many we have at most.
 					)
 				if test ~= true then
@@ -203,6 +220,10 @@ end
 -- factor, since if taken at face value (10000 EU), the batteries would be the ultimate power source barely
 -- ever needing replacement.
 digtron.tap_batteries = function(battery_positions, target, test)
+	if (battery_positions == nil) then
+		return 0
+	end
+
 	local current_burned = 0
 	-- 1 coal block is 370 PU
 	-- 1 coal lump is 40 PU
@@ -210,15 +231,12 @@ digtron.tap_batteries = function(battery_positions, target, test)
 	-- local power_ratio = 100 -- How much charge equals 1 unit of PU from coal
 	-- setting Moved to digtron.config.power_ratio
 	
-	if (battery_positions == nil) then
-		return 0
-	end
-	
 	for k, location in pairs(battery_positions) do
 		if current_burned > target then
 			break
 		end
-		local inv = minetest.get_inventory({type="node", pos=location.pos})
+		node_inventory_table.pos = location.pos
+		local inv = minetest.get_inventory(node_inventory_table)
 		local invlist = inv:get_list("batteries")
 		
 		if (invlist == nil) then
@@ -272,10 +290,6 @@ digtron.tap_batteries = function(battery_positions, target, test)
 	return current_burned
 end
 
-
-
-
-
 digtron.remove_builder_item = function(pos)
 	local objects = minetest.env:get_objects_inside_radius(pos, 0.5)
 	if objects ~= nil then
@@ -289,7 +303,8 @@ end
 
 digtron.update_builder_item = function(pos)
 	digtron.remove_builder_item(pos)
-	local inv = minetest.get_inventory({type="node", pos=pos})
+	node_inventory_table.pos = pos
+	local inv = minetest.get_inventory(node_inventory_table)
 	local item_stack = inv:get_stack("main", 1)
 	if not item_stack:is_empty() then
 		digtron.create_builder_item = item_stack:get_name()
@@ -297,17 +312,63 @@ digtron.update_builder_item = function(pos)
 	end
 end
 
-digtron.damage_creatures = function(player, pos, amount)
-	local objects = minetest.env:get_objects_inside_radius(pos, 1.0)
+local damage_def = {
+	full_punch_interval = 1.0,
+	damage_groups = {},
+}
+digtron.damage_creatures = function(player, source_pos, target_pos, amount, items_dropped)
+	local objects = minetest.env:get_objects_inside_radius(target_pos, 1.0)
 	if objects ~= nil then
+		damage_def.damage_groups.fleshy = amount
+		local velocity = {
+			x = target_pos.x-source_pos.x,
+			y = target_pos.y-source_pos.y + 0.2,
+			z = target_pos.z-source_pos.z,
+		}
 		for _, obj in ipairs(objects) do
-			if obj then
-				obj:punch(player, 1.0, {
-					full_punch_interval = 1.0,
-					damage_groups = {fleshy = amount},
-					}, nil )
+			if obj:is_player() then
+				-- See issue #2960 for status of a "set player velocity" method
+				-- instead, knock the player back
+				newpos = {
+					x = target_pos.x + velocity.x,
+					y = target_pos.y + velocity.y,
+					z = target_pos.z + velocity.z,
+				}
+				obj:set_pos(newpos)
+				obj:punch(player, 1.0, damage_def, nil)
+			else
+				local lua_entity = obj:get_luaentity()
+				if lua_entity ~= nil then
+					if lua_entity.name == "__builtin:item" then
+						table.insert(items_dropped, lua_entity.itemstring)
+						lua_entity.itemstring = ""
+						obj:remove()
+					else
+						if obj.add_velocity ~= nil then
+							obj:add_velocity(velocity)
+						else
+							local vel = obj:get_velocity()
+							obj:set_velocity(vector.add(vel, velocity))
+						end
+						obj:punch(player, 1.0, damage_def, nil)
+					end
+				end
 			end
 		end
+	end
+	-- If we killed any mobs they might have dropped some stuff, vacuum that up now too.
+	objects = minetest.env:get_objects_inside_radius(target_pos, 1.0)
+	if objects ~= nil then
+		for _, obj in ipairs(objects) do
+			if not obj:is_player() then
+				local lua_entity = obj:get_luaentity()
+				if lua_entity ~= nil and lua_entity.name == "__builtin:item" then
+					table.insert(items_dropped, lua_entity.itemstring)
+					lua_entity.itemstring = ""
+					obj:remove()
+				end
+			end
+		end		
 	end
 end
 
