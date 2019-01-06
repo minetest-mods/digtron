@@ -45,12 +45,14 @@ digtron.mark_diggable = function(pos, nodes_dug, player)
 	local target = minetest.get_node(pos)
 	
 	-- prevent digtrons from being marked for digging.
-	if minetest.get_item_group(target.name, "digtron") ~= 0 or minetest.get_item_group(target.name, "digtron_protected") ~= 0 then
+	if minetest.get_item_group(target.name, "digtron") ~= 0 or
+		minetest.get_item_group(target.name, "digtron_protected") ~= 0 or
+		minetest.get_item_group(target.name, "immortal") ~= 0 then
 		return 0
 	end
 
 	local targetdef = minetest.registered_nodes[target.name]
-	if targetdef == nil or targetdef.can_dig == nil or targetdef.can_dig(pos, player) then 
+	if targetdef == nil or targetdef.can_dig == nil or targetdef.can_dig(pos, player) then
 		nodes_dug:set(pos.x, pos.y, pos.z, true)
 		if target.name ~= "air" then
 			local in_known_group = false
