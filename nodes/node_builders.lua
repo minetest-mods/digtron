@@ -330,7 +330,7 @@ minetest.register_node("digtron:builder", {
 				-- item not in inventory! Need to sound the angry buzzer to let the player know, so return a negative number.
 				return (built_count + 1) * -1
 			end
-			local returned_stack, success = digtron.item_place_node(item_stack, player, buildpos, build_facing)
+			local returned_stack, success = digtron.item_place_node(ItemStack(item_stack), player, buildpos, build_facing)
 			if success == true then
 				minetest.log("action", string.format("%s uses Digtron to build %s at (%d, %d, %d), displacing %s", player:get_player_name(), item_stack:get_name(), buildpos.x, buildpos.y, buildpos.z, oldnode.name))
 				--flag this node as *not* to be dug.
