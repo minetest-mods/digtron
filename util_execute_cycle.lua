@@ -337,7 +337,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 			local target = minetest.get_node(location.pos)
 			local targetdef = minetest.registered_nodes[target.name]
 			if targetdef.execute_eject ~= nil then
-				targetdef.execute_eject(location.pos, target, clicker)
+				targetdef.execute_eject(location.pos, target, clicker, layout)
 			else
 				minetest.log(string.format("%s has an ejector group but is missing execute_eject method! This is an error in mod programming, file a bug.", targetdef.name))
 			end

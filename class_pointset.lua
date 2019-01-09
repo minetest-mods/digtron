@@ -17,6 +17,13 @@ function Pointset.create()
 	return set
 end
 
+function Pointset:clear()
+	local points = self.points
+	for k, v in pairs(points) do
+		points[k] = nil
+	end
+end
+
 function Pointset:set(x, y, z, value)
 	-- sets a value in the 3D array "points".
 	self.points[hash_node_position_values(x,y,z)] = value

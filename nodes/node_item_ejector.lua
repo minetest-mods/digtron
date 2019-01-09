@@ -31,7 +31,7 @@ local ejector_formspec = function(pos, meta)
 		"tooltip[autoeject;" .. S("When checked, will eject items automatically with every Digtron cycle.\nItem ejectors can always be operated manually by punching them.") .. "]"
 end
 
-local function eject_items(pos, node, player, eject_even_without_pipeworks)
+local function eject_items(pos, node, player, eject_even_without_pipeworks, layout)
 	local dir = minetest.facedir_to_dir(node.param2)
 	local destination_pos = vector.add(pos, dir)
 	local destination_node_name = minetest.get_node(destination_pos).name
@@ -54,7 +54,9 @@ local function eject_items(pos, node, player, eject_even_without_pipeworks)
 		return false
 	end	
 
-	local layout = DigtronLayout.create(pos, player)
+	if layout == nil then
+		layout = DigtronLayout.create(pos, player)
+	end
 
 	-- Build a list of all the items that builder nodes want to use.
 	local filter_items = {}
@@ -141,9 +143,9 @@ minetest.register_node("digtron:inventory_ejector", {
 		eject_items(pos, node, player, true)
 	end,
 	
-	execute_eject = function(pos, node, player)
+	execute_eject = function(pos, node, player, layout)
 		local meta = minetest.get_meta(pos)
-		eject_items(pos, node, player, meta:get_string("nonpipe") == "true")
+		eject_items(pos, node, player, meta:get_string("nonpipe") == "true", layout)
 	end,
 	
 	on_receive_fields = function(pos, formname, fields, sender)

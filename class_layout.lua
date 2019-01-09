@@ -32,6 +32,10 @@ local get_node_image = function(pos, node)
 	return node_image
 end
 
+-- temporary pointsets used while searching
+local to_test = Pointset.create()
+local tested = Pointset.create()
+
 function DigtronLayout.create(pos, player)
 	local self = {}
 	setmetatable(self, DigtronLayout)
@@ -56,10 +60,6 @@ function DigtronLayout.create(pos, player)
 	self.extents.min_y = pos.y
 	self.extents.max_z = pos.z
 	self.extents.min_z = pos.z
-	
-	-- temporary pointsets used while searching
-	local to_test = Pointset.create()
-	local tested = Pointset.create()
 
 	tested:set(pos.x, pos.y, pos.z, true)
 	to_test:set(pos.x + 1, pos.y, pos.z, true)
@@ -167,6 +167,9 @@ function DigtronLayout.create(pos, player)
 	end
 	
 	digtron.award_layout(self, player) -- hook for achievements mod
+	
+	to_test:clear()
+	tested:clear()
 	
 	return self
 end

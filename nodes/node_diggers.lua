@@ -61,8 +61,13 @@ local intermittent_on_construct = function(pos)
 end
 
 local intermittent_on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
-	if itemstack:get_definition().type == "node" and minetest.get_item_group(itemstack:get_name(), "digtron") > 0 then
-		return minetest.item_place_node(itemstack, clicker, pointed_thing)
+	local item_def = itemstack:get_definition()
+	if item_def.type == "node" and minetest.get_item_group(itemstack:get_name(), "digtron") > 0 then
+		local returnstack, success = minetest.item_place_node(itemstack, clicker, pointed_thing)
+		if success and item_def.sounds and item_def.sounds.place and item_def.sounds.place.name then
+			minetest.sound_play(item_def.sounds.place, {pos = pos})
+		end
+		return returnstack, success
 	end
 	local meta = minetest.get_meta(pos)	
 	minetest.show_formspec(clicker:get_player_name(),
