@@ -178,8 +178,10 @@ minetest.register_node("digtron:duplicator", {
 			minetest.set_node(target_pos, {name="digtron:loaded_crate", param1=node.param1, param2=node.param2})
 			local target_meta = minetest.get_meta(target_pos)
 			target_meta:set_string("crated_layout", layout_string)
-			target_meta:set_string("title", S("Crated Digtron"))
-			target_meta:set_string("infotext", S("Crated Digtron"))			
+			
+			local titlestring = S("Crated @1-block Digtron", tostring(#layout.all-1))
+			target_meta:set_string("title", titlestring)
+			target_meta:set_string("infotext", titlestring)
 			minetest.sound_play("machine1", {gain=1.0, pos=pos})
 		end
 	end,

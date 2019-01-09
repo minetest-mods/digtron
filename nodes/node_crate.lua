@@ -83,8 +83,9 @@ local store_digtron = function(pos, clicker, loaded_node_name, protected)
 		meta:set_string("owner", clicker:get_player_name() or "")
 	end
 
-	meta:set_string("title", S("Crated Digtron"))
-	meta:set_string("infotext", S("Crated Digtron") .. "\n" .. protection_suffix)
+	local titlestring = S("Crated @1-block Digtron", tostring(#layout.all-1))
+	meta:set_string("title", titlestring )
+	meta:set_string("infotext", titlestring .. "\n" .. protection_suffix)
 end
 
 minetest.register_node("digtron:empty_crate", {

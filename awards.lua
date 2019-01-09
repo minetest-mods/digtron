@@ -50,13 +50,6 @@ digtron.award_item_built = function(item_name, player)
 	awards.notify_digtron_build(player, item_name)
 end
 
-awards.register_award("digtron_depth1000",{
-	title = S("Digging Deeper"),
-	description = S("Operate a Digtron 1,000m underground"),
-	background = "awards_bg_mining.png",
-	icon = "default_cobble.png^[colorize:#0002^digtron_digger_yb_frame.png^awards_level2.png",
-})
-
 digtron.award_layout = function(layout, player)
 	if layout == nil or not player then
 		return
@@ -268,6 +261,7 @@ awards.register_award("digtron_1000dirt_dug",{
 
 awards.register_award("digtron_1000_dug",{
 	title = S("Digtron Miner"),
+	description = S("Excavate 1000 blocks using a Digtron"),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_tool_bronzepick.png^digtron_digger_yb_frame.png",
 	trigger = {
@@ -278,6 +272,7 @@ awards.register_award("digtron_1000_dug",{
 
 awards.register_award("digtron_10000_dug",{
 	title = S("Digtron Expert Miner"),
+	description = S("Excavate 10,000 blocks using a Digtron"),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_tool_steelpick.png^digtron_digger_yb_frame.png",
 	trigger = {
@@ -288,6 +283,7 @@ awards.register_award("digtron_10000_dug",{
 
 awards.register_award("digtron_100000_dug",{
 	title = S("Digtron Master Miner"),
+	description = S("Excavate 100,000 blocks using a Digtron"),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_tool_diamondpick.png^digtron_digger_yb_frame.png",
 	trigger = {
@@ -405,6 +401,7 @@ awards.register_award("digtron_100gold_dug",{
 
 awards.register_award("digtron_1000_built",{
 	title = S("Constructive Digging"),
+	description = S("Build 1,000 blocks with a Digtron"),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^digtron_builder.png",
 	trigger = {
@@ -415,6 +412,7 @@ awards.register_award("digtron_1000_built",{
 
 awards.register_award("digtron_10000_built",{
 	title = S("Highly Constructive Digging"),
+	description = S("Build 10,000 blocks with a Digtron"),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^digtron_axel_side.png^[transformR90^digtron_builder.png",
 	trigger = {
