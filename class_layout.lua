@@ -94,9 +94,8 @@ function DigtronLayout.create(pos, player)
 		local node = minetest.get_node(testpos)
 
 		if node.name == "ignore" then
-			--buildtron array is next to unloaded nodes, too dangerous to do anything. Abort.
-			self.all = nil
-			return self
+			--digtron array is next to unloaded nodes, too dangerous to do anything. Abort.
+			self.ignore_touching = true
 		end
 		
 		if minetest.get_item_group(node.name, "water") ~= 0 then

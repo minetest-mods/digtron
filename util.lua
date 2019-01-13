@@ -336,7 +336,7 @@ digtron.damage_creatures = function(player, source_pos, target_pos, amount, item
 			if obj:is_player() then
 				-- See issue #2960 for status of a "set player velocity" method
 				-- instead, knock the player back
-				newpos = {
+				local newpos = {
 					x = target_pos.x + velocity.x,
 					y = target_pos.y + velocity.y,
 					z = target_pos.z + velocity.z,

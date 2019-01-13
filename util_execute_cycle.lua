@@ -45,8 +45,8 @@ end
 
 --Performs various tests on a layout to play warning noises and see if Digtron can move at all.
 local function neighbour_test(layout, status_text, dir)
-	if layout.all == nil then
-		-- get_all_digtron_neighbours returns nil if the digtron array touches unloaded nodes, too dangerous to do anything in that situation. Abort.
+	if layout.ignore_touching == true then
+		-- if the digtron array touches unloaded nodes, too dangerous to do anything in that situation. Abort.
 		minetest.sound_play("buzzer", {gain=0.25, pos=layout.controller})
 		return S("Digtron is adjacent to unloaded nodes.") .. "\n" .. status_text, 1
 	end
