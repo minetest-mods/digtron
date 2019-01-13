@@ -16,8 +16,20 @@ local get_node_image = function(pos, node)
 		node_image.meta.fields.formspec = node_def._digtron_formspec(pos, meta) -- causes formspec to be automatically upgraded whenever Digtron moves
 	end
 	
+	local group = minetest.get_item_group(node.name, "digtron")
+	-- group 1 has no special metadata
+	if group > 1 and group < 10 then
+		assert(node_image ~= nil and node_image.meta ~= nil, "[Digtron] Digtron failed to get a metadata table for a Digtron node in group "
+			.. tostring(group) .. ". This error should not be possible. Please see https://github.com/minetest/minetest/issues/8067")
+		-- These groups have inventories
+		if group == 2 or (group > 3 and group < 8) then
+			assert(node_image.meta.inventory ~= nil, "[Digtron] Digtron failed to get a metadata inventory table for a Digtron node in group "
+			.. tostring(group) .. ". This error should not be possible. Please see https://github.com/minetest/minetest/issues/8067")
+		end
+	end
+	
 	-- Record what kind of thing we've got in a builder node so its facing can be rotated properly
-	if minetest.get_item_group(node.name, "digtron") == 4 then
+	if group == 4 then
 		local build_item = ""
 		if node_image.meta.inventory.main then
 			build_item = node_image.meta.inventory.main[1]
@@ -37,13 +49,13 @@ local to_test = Pointset.create()
 local tested = Pointset.create()
 
 function DigtronLayout.create(pos, player)
+	collectgarbage()
 	local self = {}
 	setmetatable(self, DigtronLayout)
 
 	--initialize. We're assuming that the start position is a controller digtron, should be a safe assumption since only the controller node should call this
 	self.traction = 0
 	self.all = {}
-	self.extents = {}
 	self.water_touching = false
 	self.lava_touching = false
 	self.protected = Pointset.create() -- if any nodes we look at are protected, make note of that. That way we don't need to keep re-testing protection state later.
@@ -54,12 +66,12 @@ function DigtronLayout.create(pos, player)
 
 	table.insert(self.all, get_node_image(pos, minetest.get_node(pos))) -- We never visit the source node, so insert it into the all table a priori. Revisit this design decision if a controller node is created that contains fuel or inventory or whatever.
 
-	self.extents.max_x = pos.x
-	self.extents.min_x = pos.x
-	self.extents.max_y = pos.y
-	self.extents.min_y = pos.y
-	self.extents.max_z = pos.z
-	self.extents.min_z = pos.z
+	self.extents_max_x = pos.x
+	self.extents_min_x = pos.x
+	self.extents_max_y = pos.y
+	self.extents_min_y = pos.y
+	self.extents_max_z = pos.z
+	self.extents_min_z = pos.z
 
 	tested:set(pos.x, pos.y, pos.z, true)
 	to_test:set(pos.x + 1, pos.y, pos.z, true)
@@ -143,12 +155,12 @@ function DigtronLayout.create(pos, player)
 			end
 			
 			-- update extents
-			self.extents.max_x = math.max(self.extents.max_x, testpos.x)
-			self.extents.min_x = math.min(self.extents.min_x, testpos.x)
-			self.extents.max_y = math.max(self.extents.max_y, testpos.y)
-			self.extents.min_y = math.min(self.extents.min_y, testpos.y)
-			self.extents.max_z = math.max(self.extents.max_z, testpos.z)
-			self.extents.min_z = math.min(self.extents.min_z, testpos.z)
+			self.extents_max_x = math.max(self.extents_max_x, testpos.x)
+			self.extents_min_x = math.min(self.extents_min_x, testpos.x)
+			self.extents_max_y = math.max(self.extents_max_y, testpos.y)
+			self.extents_min_y = math.min(self.extents_min_y, testpos.y)
+			self.extents_max_z = math.max(self.extents_max_z, testpos.z)
+			self.extents_min_z = math.min(self.extents_min_z, testpos.z)
 			
 			--queue up potential new test points adjacent to this digtron node
 			to_test:set_if_not_in(tested, testpos.x + 1, testpos.y, testpos.z, true)
@@ -302,6 +314,12 @@ local top = {
 }
 -- Rotates 90 degrees widdershins around the axis defined by facedir (which in this case is pointing out the front of the node, so it needs to be converted into an upward-pointing axis internally)
 function DigtronLayout.rotate_layout_image(self, facedir)
+
+	if self == nil or self.all == nil or self.controller == nil or self.old_pos_pointset == nil then
+		-- this should not be possible, but if it is then abort.
+		return false
+	end
+
 	-- To convert this into the direction the "top" of the axle node is pointing in:
 	-- 0, 1, 2, 3 == (0,1,0)
 	-- 4, 5, 6, 7 == (0,0,1)
@@ -322,14 +340,12 @@ end
 -- Translation
 
 function DigtronLayout.move_layout_image(self, dir)
-	local extents = self.extents
-	
-	extents.max_x = extents.max_x + dir.x
-	extents.min_x = extents.min_x + dir.x
-	extents.max_y = extents.max_y + dir.y
-	extents.min_y = extents.min_y + dir.y
-	extents.max_z = extents.max_z + dir.z
-	extents.min_z = extents.min_z + dir.z
+	self.extents_max_x = self.extents_max_x + dir.x
+	self.extents_min_x = self.extents_min_x + dir.x
+	self.extents_max_y = self.extents_max_y + dir.y
+	self.extents_min_y = self.extents_min_y + dir.y
+	self.extents_max_z = self.extents_max_z + dir.z
+	self.extents_min_z = self.extents_min_z + dir.z
 	
 	for k, node_image in pairs(self.all) do
 		self.old_pos_pointset:set(node_image.pos.x, node_image.pos.y, node_image.pos.z, true)

@@ -72,9 +72,9 @@ end
 -- Checks if a player is within a layout's extents.
 local function move_player_test(layout, player)
 	local player_pos = player:getpos()
-	if player_pos.x >= layout.extents.min_x - 1 and player_pos.x <= layout.extents.max_x + 1 and
-	   player_pos.y >= layout.extents.min_y - 1 and player_pos.y <= layout.extents.max_y + 1 and
-	   player_pos.z >= layout.extents.min_z - 1 and player_pos.z <= layout.extents.max_z + 1 then
+	if player_pos.x >= layout.extents_min_x - 1 and player_pos.x <= layout.extents_max_x + 1 and
+	   player_pos.y >= layout.extents_min_y - 1 and player_pos.y <= layout.extents_max_y + 1 and
+	   player_pos.z >= layout.extents_min_z - 1 and player_pos.z <= layout.extents_max_z + 1 then
 		return true
 	end
 	return false

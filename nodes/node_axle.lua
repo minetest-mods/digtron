@@ -43,7 +43,10 @@ minetest.register_node("digtron:axle", {
 			return
 		end
 		local image = DigtronLayout.create(pos, clicker)
-		image:rotate_layout_image(node.param2)
+		if image:rotate_layout_image(node.param2) == false then
+			-- This should be impossible, but if self-validation fails abort.
+			return
+		end
 		if image:can_write_layout_image() then
 			if image:write_layout_image(clicker) then
 				minetest.sound_play("whirr", {gain=1.0, pos=pos})
