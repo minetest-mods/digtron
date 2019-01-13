@@ -190,6 +190,11 @@ digtron.burn = function(fuelstore_positions, target, test)
 		node_inventory_table.pos = location.pos
 		local inv = minetest.get_inventory(node_inventory_table)
 		local invlist = inv:get_list("fuel")
+
+		if invlist == nil then -- This check shouldn't be needed, it's yet another guard against https://github.com/minetest/minetest/issues/8067
+			break
+		end
+		
 		for i, itemstack in pairs(invlist) do
 			fuel_craft.items[1] = itemstack:peek_item(1)
 			local fuel_per_item = minetest.get_craft_result(fuel_craft).time
@@ -241,7 +246,7 @@ digtron.tap_batteries = function(battery_positions, target, test)
 		local inv = minetest.get_inventory(node_inventory_table)
 		local invlist = inv:get_list("batteries")
 		
-		if (invlist == nil) then
+		if (invlist == nil) then -- This check shouldn't be needed, it's yet another guard against https://github.com/minetest/minetest/issues/8067
 			break
 		end
 		
