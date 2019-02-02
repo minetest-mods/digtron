@@ -69,7 +69,7 @@ minetest.register_node("digtron:battery_holder", {
 			local node_name = stack:get_name()
                                                  
 			-- Only allow RE batteries from technic mod
-			if node_name == "technic:battery" then                            
+			if technic.power_tools[node_name] ~= nil then                            
 				local meta = stack:get_metadata()
 				local md = minetest.deserialize(meta)
 				-- And specifically if they hold any charge
