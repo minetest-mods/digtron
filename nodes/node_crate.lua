@@ -65,8 +65,8 @@ local store_digtron = function(pos, clicker, loaded_node_name, protected)
 		if modpath_awards then
 			-- We're about to tell the awards mod that we're digging a node, but we
 			-- don't want it to count toward any actual awards. Pre-decrement.
-			local data = awards.players[clicker:get_player_name()]
-			awards.increment_item_counter(data, "count", old_node.name, -1)
+			local data = awards.player(clicker:get_player_name())
+			awards.increment_item_counter(data, "dig", old_node.name, -1)
 		end
 		
 		for _, callback in ipairs(minetest.registered_on_dignodes) do
@@ -83,8 +83,15 @@ local store_digtron = function(pos, clicker, loaded_node_name, protected)
 	
 	local meta = minetest.get_meta(pos)
 	meta:set_string("crated_layout", layout_string)
-	meta:set_string("title", S("Crated Digtron"))
-	meta:set_string("infotext", S("Crated Digtron") .. "\n" .. protection_suffix)
+
+	if protected then
+		-- only set owner if protected
+		meta:set_string("owner", clicker:get_player_name() or "")
+	end
+
+	local titlestring = S("Crated @1-block Digtron", tostring(#layout.all-1))
+	meta:set_string("title", titlestring )
+	meta:set_string("infotext", titlestring .. "\n" .. protection_suffix)
 end
 
 minetest.register_node("digtron:empty_crate", {
@@ -104,6 +111,10 @@ minetest.register_node("digtron:empty_crate", {
     },
 	paramtype = "light",
 	
+	can_dig = function(pos, player)
+		return player and not minetest.is_protected(pos, player:get_player_name())
+	end,
+
 	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
 		store_digtron(pos, clicker, "digtron:loaded_crate")
 	end
@@ -136,7 +147,7 @@ minetest.register_node("digtron:empty_locked_crate", {
 		meta:set_string("infotext", S("Digtron Crate") .. "\n" .. S("Owned by @1", placer:get_player_name() or ""))
 	end,
 	can_dig = function(pos,player)
-		return player_permitted(pos,player)
+		return player and not minetest.is_protected(pos, player:get_player_name()) and player_permitted(pos, player)
 	end,
 	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
 		if player_permitted(pos,clicker) then
@@ -188,6 +199,7 @@ local loaded_on_recieve = function(pos, fields, sender, protected)
 		meta:set_string("title", minetest.formspec_escape(fields.title))
 	end
 	local title = meta:get_string("title")
+	local infotext
 	
 	if protected then
 		infotext = title .. "\n" .. S("Owned by @1", sender:get_player_name())
@@ -306,9 +318,11 @@ minetest.register_node("digtron:loaded_crate", {
 	on_receive_fields = function(pos, formname, fields, sender)
 		return loaded_on_recieve(pos, fields, sender)
 	end,
-		
+
 	on_dig = function(pos, node, player)
-		return loaded_on_dig(pos, player, "digtron:loaded_crate")
+		if player and not minetest.is_protected(pos, player:get_player_name()) then
+			loaded_on_dig(pos, player, "digtron:loaded_crate")
+		end
 	end,
 	
 	after_place_node = function(pos, placer, itemstack, pointed_thing)
@@ -332,7 +346,7 @@ minetest.register_node("digtron:loaded_locked_crate", {
 	end,
 	
 	on_dig = function(pos, node, player)
-		if player_permitted(pos,player) then
+		if player and not minetest.is_protected(pos, player:get_player_name()) and player_permitted(pos,player) then
 			return loaded_on_dig(pos, player, "digtron:loaded_locked_crate")
 		else
 			return false

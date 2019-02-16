@@ -78,7 +78,7 @@ end
 digtron.item_place_node = function(itemstack, placer, place_to, param2)
 	local item_name = itemstack:get_name()
 	local def = itemstack:get_definition()
-	if not def then
+	if (not def) or (param2 < 0) or (def.paramtype2 == "wallmounted" and param2 > 5) or (param2 > 23) then -- validate parameters
 		return itemstack, false
 	end
 

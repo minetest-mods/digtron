@@ -4,6 +4,8 @@ local S, NS = dofile(MP.."/intllib.lua")
 
 -- Note: builders go in group 4 and have both test_build and execute_build methods.
 
+local node_inventory_table = {type="node"} -- a reusable parameter for get_inventory calls, set the pos parameter before using.
+
 local displace_due_to_help_button = 1.0
 if minetest.get_modpath("doc") then
 	displace_due_to_help_button = 0.0
@@ -41,15 +43,100 @@ if minetest.get_modpath("doc") then
 end
 	
 local builder_formspec = function(pos, meta)
+	local nodemeta = "nodemeta:"..pos.x .. "," .. pos.y .. "," ..pos.z
 	return builder_formspec_string
+		:gsub("${extrusion}", meta:get_int("extrusion"), 1)
+		:gsub("${period}", meta:get_int("period"), 1)
+		:gsub("${offset}", meta:get_int("offset"), 1)
+		:gsub("${build_facing}", meta:get_int("build_facing"), 1)
+		:gsub("current_name", "nodemeta:"..pos.x .. "," .. pos.y .. "," ..pos.z, 2)
 end
+
+local builder_on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
+	local item_def = itemstack:get_definition()
+	if item_def.type == "node" and minetest.get_item_group(itemstack:get_name(), "digtron") > 0 then
+		local returnstack, success = minetest.item_place_node(itemstack, clicker, pointed_thing)
+		if success and item_def.sounds and item_def.sounds.place and item_def.sounds.place.name then
+			minetest.sound_play(item_def.sounds.place, {pos = pos})
+		end
+		return returnstack, success
+	end
+	local meta = minetest.get_meta(pos)	
+	minetest.show_formspec(clicker:get_player_name(),
+		"digtron:builder"..minetest.pos_to_string(pos),
+		builder_formspec(pos, meta))
+end
+
+minetest.register_on_player_receive_fields(function(sender, formname, fields)
+
+	if formname:sub(1, 15) ~= "digtron:builder" then
+		return
+	end
+	local pos = minetest.string_to_pos(formname:sub(16, -1))
+
+    local meta = minetest.get_meta(pos)
+	local period = tonumber(fields.period)
+	local offset = tonumber(fields.offset)
+	local build_facing = tonumber(fields.build_facing)
+	local extrusion = tonumber(fields.extrusion)
 	
+	if period and period > 0 then
+		meta:set_int("period", math.floor(tonumber(fields.period)))
+	else
+		period = meta:get_int("period")
+	end
+	if offset then
+		meta:set_int("offset", math.floor(tonumber(fields.offset)))
+	else
+		offset = meta:get_int("offset")
+	end
+	if build_facing and build_facing >= 0 and build_facing < 24 then
+		local inv = meta:get_inventory()
+		local target_item = inv:get_stack("main",1)
+		if target_item:get_definition().paramtype2 == "wallmounted" then
+			if build_facing < 6 then
+				meta:set_int("build_facing", math.floor(build_facing))
+				-- wallmounted facings only run from 0-5
+			end
+		else
+			meta:set_int("build_facing", math.floor(build_facing))
+		end
+	end
+	if extrusion and extrusion > 0 and extrusion <= digtron.config.maximum_extrusion then
+		meta:set_int("extrusion", math.floor(tonumber(fields.extrusion)))
+	else
+		extrusion = meta:get_int("extrusion")
+	end
+	
+	if fields.set then
+		digtron.show_offset_markers(pos, offset, period)
+
+	elseif fields.read then
+		local facing = minetest.get_node(pos).param2
+		local buildpos = digtron.find_new_pos(pos, facing)
+		local target_node = minetest.get_node(buildpos)
+		if target_node.name ~= "air" and minetest.get_item_group(target_node.name, "digtron") == 0 then
+			local meta = minetest.get_meta(pos)
+			local inv = meta:get_inventory()
+			local target_name = digtron.builder_read_item_substitutions[target_node.name] or target_node.name
+			inv:set_stack("main", 1, target_name)
+			meta:set_int("build_facing", target_node.param2)
+		end
+	end
+	
+	if fields.help and minetest.get_modpath("doc") then --check for mod in case someone disabled it after this digger was built
+		minetest.after(0.5, doc.show_entry, sender:get_player_name(), "nodes", "digtron:builder", true)
+	end
+
+	digtron.update_builder_item(pos)
+end)
+
+
 -- Builds objects in the targeted node. This is a complicated beastie.
 minetest.register_node("digtron:builder", {
 	description = S("Digtron Builder Module"),
 	_doc_items_longdesc = digtron.doc.builder_longdesc,
     _doc_items_usagehelp = digtron.doc.builder_usagehelp,
-	_digtron_formspec = builder_formspec,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 4},
 	drop = "digtron:builder",
 	sounds = digtron.metal_sounds,
@@ -88,7 +175,6 @@ minetest.register_node("digtron:builder", {
 	
 	on_construct = function(pos)
         local meta = minetest.get_meta(pos)
-        meta:set_string("formspec", builder_formspec(pos, meta))
 		meta:set_int("period", 1) 
 		meta:set_int("offset", 0) 
 		meta:set_int("build_facing", 0)
@@ -98,56 +184,7 @@ minetest.register_node("digtron:builder", {
 		inv:set_size("main", 1)
     end,
 	
-	on_receive_fields = function(pos, formname, fields, sender)
-        local meta = minetest.get_meta(pos)
-		local period = tonumber(fields.period)
-		local offset = tonumber(fields.offset)
-		local build_facing = tonumber(fields.build_facing)
-		local extrusion = tonumber(fields.extrusion)
-		
-		if period and period > 0 then
-			meta:set_int("period", math.floor(tonumber(fields.period)))
-		else
-			period = meta:get_int("period")
-		end
-		if offset then
-			meta:set_int("offset", math.floor(tonumber(fields.offset)))
-		else
-			offset = meta:get_int("offset")
-		end
-		if build_facing and build_facing >= 0 and build_facing < 24 then
-			-- TODO: wallmounted facings only run from 0-5, a player could theoretically put a wallmounted item into the builder and then manually set the build facing to an invalid number
-			-- Should prevent that somehow. But not tonight.
-			meta:set_int("build_facing", math.floor(build_facing))
-		end
-		if extrusion and extrusion > 0 and extrusion <= digtron.config.maximum_extrusion then
-			meta:set_int("extrusion", math.floor(tonumber(fields.extrusion)))
-		else
-			extrusion = meta:get_int("extrusion")
-		end
-		
-		if fields.set then
-			digtron.show_offset_markers(pos, offset, period)
-
-		elseif fields.read then
-			local facing = minetest.get_node(pos).param2
-			local buildpos = digtron.find_new_pos(pos, facing)
-			local target_node = minetest.get_node(buildpos)
-			if target_node.name ~= "air" and minetest.get_item_group(target_node.name, "digtron") == 0 then
-				local meta = minetest.get_meta(pos)
-				local inv = meta:get_inventory()
-				local target_name = digtron.builder_read_item_substitutions[target_node.name] or target_node.name
-				inv:set_stack("main", 1, target_name)
-				meta:set_int("build_facing", target_node.param2)
-			end
-		end
-		
-		if fields.help and minetest.get_modpath("doc") then --check for mod in case someone disabled it after this digger was built
-			minetest.after(0.5, doc.show_entry, sender:get_player_name(), "nodes", "digtron:builder", true)
-		end
-
-		digtron.update_builder_item(pos)
-	end,
+	on_rightclick = builder_on_rightclick,
 	
 	on_destruct = function(pos)
 		digtron.remove_builder_item(pos)
@@ -164,17 +201,27 @@ minetest.register_node("digtron:builder", {
 			return 0 -- don't allow builders to be set to build Digtron nodes, they'll just clog the output.
 		end	
 		
-		if not minetest.registered_nodes[stack_name] and not digtron.whitelisted_on_place(stack_name) then
+		local stack_def = minetest.registered_nodes[stack_name]
+		if not stack_def and not digtron.whitelisted_on_place(stack_name) then
 			return 0 -- don't allow craft items unless their on_place is whitelisted.
 		end
 		
-		local inv = minetest.get_inventory({type="node", pos=pos})
+		node_inventory_table.pos = pos
+		local inv = minetest.get_inventory(node_inventory_table)
 		inv:set_stack(listname, index, stack:take_item(1))
+		
+		-- If we're adding a wallmounted item and the build facing is greater than 5, reset it to 0
+		local meta = minetest.get_meta(pos)
+		if stack_def ~= nil and stack_def.paramtype2 == "wallmounted" and tonumber(meta:get_int("build_facing")) > 5 then
+			meta:set_int("build_facing", 0)
+		end
+		
 		return 0
 	end,
 	
 	allow_metadata_inventory_take = function(pos, listname, index, stack, player)
-		local inv = minetest.get_inventory({type="node", pos=pos})
+		node_inventory_table.pos = pos
+		local inv = minetest.get_inventory(node_inventory_table)
 		inv:set_stack(listname, index, ItemStack(""))
 		return 0
 	end,
@@ -207,7 +254,8 @@ minetest.register_node("digtron:builder", {
 		
 		local return_items = {}
 		
-		local inv = minetest.get_inventory({type="node", pos=pos})
+		node_inventory_table.pos = pos
+		local inv = minetest.get_inventory(node_inventory_table)
 		local item_stack = inv:get_stack("main", 1)
 
 		if item_stack:is_empty() then
@@ -257,7 +305,8 @@ minetest.register_node("digtron:builder", {
 		end
 		local built_count = 0
 		
-		local inv = minetest.get_inventory({type="node", pos=pos})
+		node_inventory_table.pos = pos
+		local inv = minetest.get_inventory(node_inventory_table)
 		local item_stack = inv:get_stack("main", 1)
 		if item_stack:is_empty() then
 			return built_count
@@ -286,12 +335,12 @@ minetest.register_node("digtron:builder", {
 				-- item not in inventory! Need to sound the angry buzzer to let the player know, so return a negative number.
 				return (built_count + 1) * -1
 			end
-			local returned_stack, success = digtron.item_place_node(item_stack, player, buildpos, build_facing)
+			local returned_stack, success = digtron.item_place_node(ItemStack(item_stack), player, buildpos, build_facing)
 			if success == true then
 				minetest.log("action", string.format("%s uses Digtron to build %s at (%d, %d, %d), displacing %s", player:get_player_name(), item_stack:get_name(), buildpos.x, buildpos.y, buildpos.z, oldnode.name))
 				--flag this node as *not* to be dug.
 				nodes_dug:set(buildpos.x, buildpos.y, buildpos.z, false)
-				digtron.award_item_built(item_stack:get_name(), player:get_player_name())
+				digtron.award_item_built(item_stack:get_name(), player)
 				built_count = built_count + 1
 			else
 				--failed to build, target node probably obstructed. Put the item back in inventory.

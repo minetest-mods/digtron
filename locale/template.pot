@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-10-24 21:34-0600\n"
+"POT-Creation-Date: 2019-01-09 00:37-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,277 +17,277 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: awards.lua:169
+#: awards.lua:122
 msgid "Deep Blue Digtron"
 msgstr ""
 
-#: awards.lua:170
+#: awards.lua:123
 msgid "Encounter water while operating a Digtron."
 msgstr ""
 
-#: awards.lua:176
+#: awards.lua:129
 msgid "Digtrons of Fire"
 msgstr ""
 
-#: awards.lua:177
+#: awards.lua:130
 msgid "Encounter lava while operating a Digtron."
 msgstr ""
 
-#: awards.lua:183
+#: awards.lua:136
 msgid "Bigtron"
 msgstr ""
 
-#: awards.lua:184
+#: awards.lua:137
 msgid "Operate a Digtron with 10 or more component blocks."
 msgstr ""
 
-#: awards.lua:190
+#: awards.lua:143
 msgid "Really Bigtron"
 msgstr ""
 
-#: awards.lua:191
+#: awards.lua:144
 msgid "Operate a Digtron with 100 or more component blocks."
 msgstr ""
 
-#: awards.lua:197
+#: awards.lua:150
 msgid "Buildtron"
 msgstr ""
 
-#: awards.lua:198
+#: awards.lua:151
 msgid "Operate a Digtron with 25 or more builder modules."
 msgstr ""
 
-#: awards.lua:204
+#: awards.lua:157
 msgid "Digging Leviathan"
 msgstr ""
 
-#: awards.lua:205
+#: awards.lua:158
 msgid "Operate a Digtron with 25 or more digger heads."
 msgstr ""
 
-#: awards.lua:211
+#: awards.lua:164
 msgid "Digtron In The Sky"
 msgstr ""
 
-#: awards.lua:212
+#: awards.lua:165
 msgid "Operate a Digtron above 1000m elevation"
 msgstr ""
 
-#: awards.lua:218
+#: awards.lua:171
 msgid "Digtron High"
 msgstr ""
 
-#: awards.lua:219
+#: awards.lua:172
 msgid "Operate a Digtron above 100m elevation"
 msgstr ""
 
-#: awards.lua:225
+#: awards.lua:178
 msgid "Scratching the Surface"
 msgstr ""
 
-#: awards.lua:226
+#: awards.lua:179
 msgid "Operate a Digtron 100m underground"
 msgstr ""
 
-#: awards.lua:232
+#: awards.lua:185
 msgid "Digging Deeper"
 msgstr ""
 
-#: awards.lua:233
+#: awards.lua:186
 msgid "Operate a Digtron 1,000m underground"
 msgstr ""
 
-#: awards.lua:239
+#: awards.lua:192
 msgid "More Than a Mile"
 msgstr ""
 
-#: awards.lua:240
+#: awards.lua:193
 msgid "Operate a Digtron 2,000m underground"
 msgstr ""
 
-#: awards.lua:246
+#: awards.lua:199
 msgid "Digging Below Plausibility"
 msgstr ""
 
-#: awards.lua:247
+#: awards.lua:200
 msgid ""
 "The deepest mine in the world is only 3.9 km deep, you operated a Digtron "
 "below 4km"
 msgstr ""
 
-#: awards.lua:253
+#: awards.lua:206
 msgid "Double Depth"
 msgstr ""
 
-#: awards.lua:254
+#: awards.lua:207
 msgid "Operate a Digtron 8,000m underground"
 msgstr ""
 
-#: awards.lua:260
+#: awards.lua:213
 msgid "Halfway to the Core"
 msgstr ""
 
-#: awards.lua:261
+#: awards.lua:214
 msgid "Operate a Digtron 16,000m underground"
 msgstr ""
 
-#: awards.lua:267
+#: awards.lua:220
 msgid "Nowhere To Go But Up"
 msgstr ""
 
-#: awards.lua:268
+#: awards.lua:221
 msgid "Operate a Digtron 30,000m underground"
 msgstr ""
 
-#: awards.lua:274
+#: awards.lua:227
 msgid "Mese Master"
 msgstr ""
 
-#: awards.lua:275
+#: awards.lua:228
 msgid "Mine 100 Mese crystals with a Digtron"
 msgstr ""
 
-#: awards.lua:281
+#: awards.lua:239
 msgid "Diamond Vs. Diamond"
 msgstr ""
 
-#: awards.lua:282
+#: awards.lua:240
 msgid "Mine 100 diamonds with a Digtron"
 msgstr ""
 
-#: awards.lua:288
+#: awards.lua:251
 msgid "Strip Mining"
 msgstr ""
 
-#: awards.lua:289
+#: awards.lua:252
 msgid "Excavate 1000 units of dirt with a Digtron"
 msgstr ""
 
-#: awards.lua:295
+#: awards.lua:263
 msgid "Digtron Miner"
 msgstr ""
 
-#: awards.lua:296
+#: awards.lua:264
 msgid "Excavate 1000 blocks using a Digtron"
 msgstr ""
 
-#: awards.lua:302
+#: awards.lua:274
 msgid "Digtron Expert Miner"
 msgstr ""
 
-#: awards.lua:303
+#: awards.lua:275
 msgid "Excavate 10,000 blocks using a Digtron"
 msgstr ""
 
-#: awards.lua:309
+#: awards.lua:285
 msgid "Digtron Master Miner"
 msgstr ""
 
-#: awards.lua:310
+#: awards.lua:286
 msgid "Excavate 100,000 blocks using a Digtron"
 msgstr ""
 
-#: awards.lua:316
+#: awards.lua:296
 msgid "DIGTRON MEGAMINER"
 msgstr ""
 
-#: awards.lua:317
+#: awards.lua:297
 msgid "Excavate over a million blocks using a Digtron!"
 msgstr ""
 
-#: awards.lua:323
+#: awards.lua:307
 msgid "Clear Cutting"
 msgstr ""
 
-#: awards.lua:324
+#: awards.lua:308
 msgid "Chop down 1000 units of tree with a Digtron"
 msgstr ""
 
-#: awards.lua:330
+#: awards.lua:319
 msgid "Digtron Deforestation"
 msgstr ""
 
-#: awards.lua:331
+#: awards.lua:320
 msgid "Chop down 10,000 units of tree with a Digtron"
 msgstr ""
 
-#: awards.lua:337
+#: awards.lua:331
 msgid "Lawnmower"
 msgstr ""
 
-#: awards.lua:338
+#: awards.lua:332
 msgid "Harvest 1000 units of grass with a Digtron"
 msgstr ""
 
-#: awards.lua:344
+#: awards.lua:343
 msgid "Iron Digtron"
 msgstr ""
 
-#: awards.lua:345
+#: awards.lua:344
 msgid "Excavate 1000 units of iron ore with a Digtron"
 msgstr ""
 
-#: awards.lua:351
+#: awards.lua:355
 msgid "Copper Digtron"
 msgstr ""
 
-#: awards.lua:352
+#: awards.lua:356
 msgid "Excavate 1000 units of copper ore with a Digtron"
 msgstr ""
 
-#: awards.lua:358
+#: awards.lua:367
 msgid "Coal Digtron"
 msgstr ""
 
-#: awards.lua:359
+#: awards.lua:368
 msgid "Excavate 1,000 units if coal with a Digtron"
 msgstr ""
 
-#: awards.lua:365
+#: awards.lua:379
 msgid "Bagger 288"
 msgstr ""
 
-#: awards.lua:366
+#: awards.lua:380
 msgid "Excavate 10,000 units of coal with a Digtron"
 msgstr ""
 
-#: awards.lua:372
+#: awards.lua:391
 msgid "Digtron 49er"
 msgstr ""
 
-#: awards.lua:373
+#: awards.lua:392
 msgid "Excavate 100 units of gold with a Digtron"
 msgstr ""
 
-#: awards.lua:379
+#: awards.lua:403
 msgid "Constructive Digging"
 msgstr ""
 
-#: awards.lua:380
+#: awards.lua:404
 msgid "Build 1,000 blocks with a Digtron"
 msgstr ""
 
-#: awards.lua:386
+#: awards.lua:414
 msgid "Highly Constructive Digging"
 msgstr ""
 
-#: awards.lua:387
+#: awards.lua:415
 msgid "Build 10,000 blocks with a Digtron"
 msgstr ""
 
-#: awards.lua:393
+#: awards.lua:425
 msgid "Digtron Packrat"
 msgstr ""
 
-#: awards.lua:394
+#: awards.lua:426
 msgid "Stored 10 or more Digtron blocks in one crate."
 msgstr ""
 
-#: awards.lua:400
+#: awards.lua:432
 msgid "Digtron Hoarder"
 msgstr ""
 
-#: awards.lua:401
+#: awards.lua:433
 msgid "Stored 100 or more Digtron blocks in one crate."
 msgstr ""
 
@@ -993,36 +993,36 @@ msgstr ""
 msgid "Digtron has @1 blocks but only enough traction to move @2 blocks.\n"
 msgstr ""
 
-#: util_execute_cycle.lua:110
-#: util_execute_cycle.lua:359
-#: util_execute_cycle.lua:436
-#: util_execute_cycle.lua:555
-#: nodes\node_controllers.lua:48
-#: nodes\node_controllers.lua:202
+#: util_execute_cycle.lua:112
+#: util_execute_cycle.lua:373
+#: util_execute_cycle.lua:453
+#: util_execute_cycle.lua:576
+#: nodes\node_controllers.lua:50
+#: nodes\node_controllers.lua:209
 msgid "Heat remaining in controller furnace: @1"
 msgstr ""
 
-#: util_execute_cycle.lua:173
-#: util_execute_cycle.lua:409
-#: util_execute_cycle.lua:499
-#: nodes\node_axle.lua:57
+#: util_execute_cycle.lua:177
+#: util_execute_cycle.lua:423
+#: util_execute_cycle.lua:518
+#: nodes\node_axle.lua:59
 msgid "Digtron is obstructed."
 msgstr ""
 
-#: util_execute_cycle.lua:245
+#: util_execute_cycle.lua:253
 msgid "Digtron needs more fuel."
 msgstr ""
 
-#: util_execute_cycle.lua:255
+#: util_execute_cycle.lua:263
 msgid ""
 "Digtron connected to at least one builder with no output material assigned."
 msgstr ""
 
-#: util_execute_cycle.lua:259
+#: util_execute_cycle.lua:267
 msgid "Digtron has insufficient building materials. Needed: @1"
 msgstr ""
 
-#: util_execute_cycle.lua:338
+#: util_execute_cycle.lua:352
 msgid ""
 "Digtron unexpectedly failed to execute one or more build operations, likely "
 "due to an inventory error."
@@ -1040,40 +1040,40 @@ msgstr ""
 msgid "Digtron Battery Holder"
 msgstr ""
 
-#: nodes\node_builders.lua:18
+#: nodes\node_builders.lua:20
 msgid "Block to build"
 msgstr ""
 
-#: nodes\node_builders.lua:19
+#: nodes\node_builders.lua:21
 msgid "Extrusion"
 msgstr ""
 
-#: nodes\node_builders.lua:20
+#: nodes\node_builders.lua:22
 msgid ""
 "Builder will extrude this many blocks in the direction it is facing.\n"
 "Can be set from 1 to @1.\n"
 "Note that Digtron won't build into unloaded map regions."
 msgstr ""
 
-#: nodes\node_builders.lua:21
-#: nodes\node_diggers.lua:33
+#: nodes\node_builders.lua:23
+#: nodes\node_diggers.lua:36
 msgid "Periodicity"
 msgstr ""
 
-#: nodes\node_builders.lua:22
+#: nodes\node_builders.lua:24
 msgid ""
 "Builder will build once every n steps.\n"
 "These steps are globally aligned, so all builders with the\n"
 "same period and offset will build on the same location."
 msgstr ""
 
-#: nodes\node_builders.lua:23
-#: nodes\node_controllers.lua:91
-#: nodes\node_diggers.lua:35
+#: nodes\node_builders.lua:25
+#: nodes\node_controllers.lua:93
+#: nodes\node_diggers.lua:38
 msgid "Offset"
 msgstr ""
 
-#: nodes\node_builders.lua:24
+#: nodes\node_builders.lua:26
 msgid ""
 "Offsets the start of periodicity counting by this amount.\n"
 "For example, a builder with period 2 and offset 0 builds\n"
@@ -1081,72 +1081,72 @@ msgid ""
 "offset 1 builds every odd-numbered block."
 msgstr ""
 
-#: nodes\node_builders.lua:25
-#: nodes\node_diggers.lua:37
+#: nodes\node_builders.lua:27
+#: nodes\node_diggers.lua:40
 msgid ""
 "Save &\n"
 "Show"
 msgstr ""
 
-#: nodes\node_builders.lua:26
-#: nodes\node_diggers.lua:38
+#: nodes\node_builders.lua:28
+#: nodes\node_diggers.lua:41
 msgid "Saves settings"
 msgstr ""
 
-#: nodes\node_builders.lua:27
+#: nodes\node_builders.lua:29
 msgid "Facing"
 msgstr ""
 
-#: nodes\node_builders.lua:28
+#: nodes\node_builders.lua:30
 msgid ""
 "Value from 0-23. Not all block types make use of this.\n"
 "Use the 'Read & Save' button to copy the facing of the block\n"
 "currently in the builder output location."
 msgstr ""
 
-#: nodes\node_builders.lua:29
+#: nodes\node_builders.lua:31
 msgid ""
 "Read &\n"
 "Save"
 msgstr ""
 
-#: nodes\node_builders.lua:30
+#: nodes\node_builders.lua:32
 msgid ""
 "Reads the facing of the block currently in the build location,\n"
 "then saves all settings."
 msgstr ""
 
-#: nodes\node_builders.lua:39
-#: nodes\node_controllers.lua:106
-#: nodes\node_crate.lua:157
-#: nodes\node_diggers.lua:42
+#: nodes\node_builders.lua:41
+#: nodes\node_controllers.lua:108
+#: nodes\node_crate.lua:168
+#: nodes\node_diggers.lua:45
 #: nodes\node_duplicator.lua:22
 #: nodes\node_item_ejector.lua:17
 msgid "Help"
 msgstr ""
 
-#: nodes\node_builders.lua:40
-#: nodes\node_controllers.lua:107
-#: nodes\node_crate.lua:158
-#: nodes\node_diggers.lua:43
+#: nodes\node_builders.lua:42
+#: nodes\node_controllers.lua:109
+#: nodes\node_crate.lua:169
+#: nodes\node_diggers.lua:46
 #: nodes\node_duplicator.lua:23
 #: nodes\node_item_ejector.lua:18
 msgid "Show documentation about this block"
 msgstr ""
 
-#: nodes\node_builders.lua:49
+#: nodes\node_builders.lua:137
 msgid "Digtron Builder Module"
 msgstr ""
 
-#: nodes\node_controllers.lua:20
+#: nodes\node_controllers.lua:22
 msgid "Digtron Control Module"
 msgstr ""
 
-#: nodes\node_controllers.lua:83
+#: nodes\node_controllers.lua:85
 msgid "Cycles"
 msgstr ""
 
-#: nodes\node_controllers.lua:84
+#: nodes\node_controllers.lua:86
 msgid ""
 "When triggered, this controller will try to run for the given number of "
 "cycles.\n"
@@ -1155,29 +1155,29 @@ msgid ""
 "you can fix the problem and restart."
 msgstr ""
 
-#: nodes\node_controllers.lua:85
+#: nodes\node_controllers.lua:87
 msgid "Set"
 msgstr ""
 
-#: nodes\node_controllers.lua:86
+#: nodes\node_controllers.lua:88
 msgid "Saves the cycle setting without starting the controller running"
 msgstr ""
 
-#: nodes\node_controllers.lua:87
+#: nodes\node_controllers.lua:89
 msgid ""
 "Set &\n"
 "Execute"
 msgstr ""
 
-#: nodes\node_controllers.lua:88
+#: nodes\node_controllers.lua:90
 msgid "Begins executing the given number of cycles"
 msgstr ""
 
-#: nodes\node_controllers.lua:89
+#: nodes\node_controllers.lua:91
 msgid "Slope"
 msgstr ""
 
-#: nodes\node_controllers.lua:90
+#: nodes\node_controllers.lua:92
 msgid ""
 "For diagonal digging. After moving forward this number of nodes the auto "
 "controller\n"
@@ -1186,58 +1186,58 @@ msgid ""
 "Set to 0 for no lateral digging."
 msgstr ""
 
-#: nodes\node_controllers.lua:92
+#: nodes\node_controllers.lua:94
 msgid ""
 "Sets the offset of the lateral motion defined in the Slope field.\n"
 "Note: this offset is relative to the controller's location.\n"
 "The controller will move laterally when it reaches the indicated point."
 msgstr ""
 
-#: nodes\node_controllers.lua:93
+#: nodes\node_controllers.lua:95
 msgid "Delay"
 msgstr ""
 
-#: nodes\node_controllers.lua:94
+#: nodes\node_controllers.lua:96
 msgid "Number of seconds to wait between each cycle"
 msgstr ""
 
-#: nodes\node_controllers.lua:96
+#: nodes\node_controllers.lua:98
 msgid "Stop block"
 msgstr ""
 
-#: nodes\node_controllers.lua:128
-#: nodes\node_controllers.lua:147
-#: nodes\node_controllers.lua:160
+#: nodes\node_controllers.lua:129
+#: nodes\node_controllers.lua:151
+#: nodes\node_controllers.lua:167
 msgid "Cycles remaining: @1"
 msgstr ""
 
-#: nodes\node_controllers.lua:128
-#: nodes\node_controllers.lua:147
+#: nodes\node_controllers.lua:129
+#: nodes\node_controllers.lua:151
 msgid "Halted!"
 msgstr ""
 
-#: nodes\node_controllers.lua:172
+#: nodes\node_controllers.lua:179
 msgid "Digtron Automatic Control Module"
 msgstr ""
 
-#: nodes\node_controllers.lua:286
+#: nodes\node_controllers.lua:295
 msgid "Interrupted!"
 msgstr ""
 
-#: nodes\node_controllers.lua:301
+#: nodes\node_controllers.lua:306
 msgid "Digtron Pusher Module"
 msgstr ""
 
 #: nodes\node_crate.lua:30
-#: nodes\node_crate.lua:130
+#: nodes\node_crate.lua:141
 msgid "Digtron Crate"
 msgstr ""
 
 #: nodes\node_crate.lua:30
 #: nodes\node_crate.lua:31
-#: nodes\node_crate.lua:130
-#: nodes\node_crate.lua:187
-#: nodes\node_crate.lua:334
+#: nodes\node_crate.lua:141
+#: nodes\node_crate.lua:199
+#: nodes\node_crate.lua:348
 msgid "Owned by @1"
 msgstr ""
 
@@ -1249,90 +1249,88 @@ msgstr ""
 msgid "No Digtron components adjacent to package"
 msgstr ""
 
-#: nodes\node_crate.lua:80
-#: nodes\node_crate.lua:81
-#: nodes\node_duplicator.lua:172
-#: nodes\node_duplicator.lua:173
-msgid "Crated Digtron"
+#: nodes\node_crate.lua:86
+#: nodes\node_duplicator.lua:182
+msgid "Crated @1-block Digtron"
 msgstr ""
 
-#: nodes\node_crate.lua:85
+#: nodes\node_crate.lua:92
 msgid "Digtron Crate (Empty)"
 msgstr ""
 
-#: nodes\node_crate.lua:107
+#: nodes\node_crate.lua:118
 msgid "Digtron Locked Crate (Empty)"
 msgstr ""
 
-#: nodes\node_crate.lua:150
-#: nodes\node_crate.lua:165
+#: nodes\node_crate.lua:161
+#: nodes\node_crate.lua:176
 msgid "Digtron Name"
 msgstr ""
 
-#: nodes\node_crate.lua:151
-#: nodes\node_crate.lua:166
+#: nodes\node_crate.lua:162
+#: nodes\node_crate.lua:177
 msgid ""
 "Save\n"
 "Title"
 msgstr ""
 
-#: nodes\node_crate.lua:152
-#: nodes\node_crate.lua:167
+#: nodes\node_crate.lua:163
+#: nodes\node_crate.lua:178
 msgid "Saves the title of this Digtron"
 msgstr ""
 
-#: nodes\node_crate.lua:153
-#: nodes\node_crate.lua:168
+#: nodes\node_crate.lua:164
+#: nodes\node_crate.lua:179
 msgid ""
 "Show\n"
 "Blocks"
 msgstr ""
 
-#: nodes\node_crate.lua:154
-#: nodes\node_crate.lua:169
+#: nodes\node_crate.lua:165
+#: nodes\node_crate.lua:180
 msgid "Shows which blocks the packed Digtron will occupy if unpacked"
 msgstr ""
 
-#: nodes\node_crate.lua:155
-#: nodes\node_crate.lua:170
+#: nodes\node_crate.lua:166
+#: nodes\node_crate.lua:181
 msgid "Unpack"
 msgstr ""
 
-#: nodes\node_crate.lua:156
-#: nodes\node_crate.lua:171
+#: nodes\node_crate.lua:167
+#: nodes\node_crate.lua:182
 msgid "Attempts to unpack the Digtron on this location"
 msgstr ""
 
-#: nodes\node_crate.lua:205
+#: nodes\node_crate.lua:217
 msgid ""
 "Unable to read layout from crate metadata, regrettably this Digtron may be "
 "corrupted."
 msgstr ""
 
-#: nodes\node_crate.lua:236
+#: nodes\node_crate.lua:248
 msgid "Unable to deploy Digtron due to protected blocks in target area"
 msgstr ""
 
-#: nodes\node_crate.lua:242
+#: nodes\node_crate.lua:254
 msgid "Unable to deploy Digtron due to obstruction in target area"
 msgstr ""
 
-#: nodes\node_crate.lua:279
+#: nodes\node_crate.lua:291
 msgid "Digtron Crate (Loaded)"
 msgstr ""
 
-#: nodes\node_crate.lua:308
+#: nodes\node_crate.lua:322
 msgid "Digtron Locked Crate (Loaded)"
 msgstr ""
 
-#: nodes\node_diggers.lua:34
+#: nodes\node_diggers.lua:37
 msgid ""
 "Digger will dig once every n steps.\n"
 "These steps are globally aligned, all diggers with\n"
 "the same period and offset will dig on the same location."
 msgstr ""
 
-#: nodes\node_diggers.lua:36
+#: nodes\node_diggers.lua:39
 msgid ""
 "Offsets the start of periodicity counting by this amount.\n"
 "For example, a digger with period 2 and offset 0 digs\n"
@@ -1340,27 +1338,27 @@ msgid ""
 "offset 1 digs every odd-numbered block."
 msgstr ""
 
-#: nodes\node_diggers.lua:80
+#: nodes\node_diggers.lua:104
 msgid "Digtron Digger Head"
 msgstr ""
 
-#: nodes\node_diggers.lua:133
+#: nodes\node_diggers.lua:157
 msgid "Digtron Intermittent Digger Head"
 msgstr ""
 
-#: nodes\node_diggers.lua:204
+#: nodes\node_diggers.lua:228
 msgid "Digtron Soft Material Digger Head"
 msgstr ""
 
-#: nodes\node_diggers.lua:259
+#: nodes\node_diggers.lua:283
 msgid "Digtron Intermittent Soft Material Digger Head"
 msgstr ""
 
-#: nodes\node_diggers.lua:333
+#: nodes\node_diggers.lua:357
 msgid "Digtron Dual Digger Head"
 msgstr ""
 
-#: nodes\node_diggers.lua:410
+#: nodes\node_diggers.lua:438
 msgid "Digtron Dual Soft Material Digger Head"
 msgstr ""
 
@@ -1419,7 +1417,7 @@ msgid ""
 "Item ejectors can always be operated manually by punching them."
 msgstr ""
 
-#: nodes\node_item_ejector.lua:105
+#: nodes\node_item_ejector.lua:112
 msgid "Digtron Inventory Ejector"
 msgstr ""
 
