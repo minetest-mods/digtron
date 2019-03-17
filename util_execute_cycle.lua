@@ -532,7 +532,7 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 			local target = minetest.get_node(location.pos)
 			local targetdef = minetest.registered_nodes[target.name]
 			if targetdef.damage_creatures ~= nil then
-				targetdef.damage_creatures(clicker, location.pos, controlling_coordinate)
+				targetdef.damage_creatures(clicker, location.pos, controlling_coordinate, items_dropped)
 			end
 		end
 	end
