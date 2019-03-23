@@ -63,7 +63,7 @@ minetest.register_node("digtron:battery_holder", {
 		inv:set_size("batteries", 8*4)
 	end,
 	
-	-- Only allow RE batteries to be placed in the inventory
+	-- Allow all items with energy storage to be placed in the inventory
 	allow_metadata_inventory_put = function(pos, listname, index, stack, player)
 		if listname == "batteries" then
 			local node_name = stack:get_name()
