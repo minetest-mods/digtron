@@ -79,6 +79,7 @@ local function eject_items(pos, node, player, eject_even_without_pipeworks, layo
 				source_node = node_image
 				source_index = index
 				source_stack = item_stack
+				node_image.meta.inventory.main[index] = nil
 				break
 			end
 		end
