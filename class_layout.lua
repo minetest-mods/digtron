@@ -49,7 +49,6 @@ local to_test = Pointset.create()
 local tested = Pointset.create()
 
 function DigtronLayout.create(pos, player)
-	collectgarbage()
 	local self = {}
 	setmetatable(self, DigtronLayout)
 
