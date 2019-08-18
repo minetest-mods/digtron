@@ -53,7 +53,7 @@ minetest.register_node("digtron:inventory", {
 	can_dig = function(pos,player)
 		local meta = minetest.get_meta(pos)
 		local inv = meta:get_inventory()
-		return inv:is_empty("main")
+		return inv:is_empty("main") and meta:get_string("digtron_id") == ""
 	end,
 		
 	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
@@ -153,7 +153,7 @@ minetest.register_node("digtron:fuelstore", {
 	can_dig = function(pos,player)
 		local meta = minetest.get_meta(pos)
 		local inv = meta:get_inventory()
-		return inv:is_empty("fuel")
+		return inv:is_empty("fuel") and meta:get_string("digtron_id") == ""
 	end,
 	
 	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
@@ -275,7 +275,7 @@ minetest.register_node("digtron:combined_storage", {
 	can_dig = function(pos,player)
 		local meta = minetest.get_meta(pos)
 		local inv = meta:get_inventory()
-		return inv:is_empty("fuel") and inv:is_empty("main")
+		return inv:is_empty("fuel") and inv:is_empty("main") and meta:get_string("digtron_id") == ""
 	end,
 	
 	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)

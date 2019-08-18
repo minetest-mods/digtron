@@ -23,11 +23,14 @@ local get_controller_unconstructed_formspec = function(pos, player_name)
 end
 
 local get_controller_constructed_formspec = function(pos, digtron_id_name, player_name)
-	digtron.ensure_inventory_exists(digtron_id_name)
+	digtron.retrieve_inventory(digtron_id_name)
 
-	return "size[9,9]button[1,1;1,1;deconstruct;Deconstruct]"
-		.. "list[detached:" .. digtron_id_name .. ";main;1,2;8,2]" -- TODO: paging system for inventory
-		.. "list[detached:" .. digtron_id_name .. ";fuel;1,7;8,2]" -- TODO: paging system for inventory
+	return "size[9,9]button[1,0;1,1;deconstruct;Deconstruct]"
+		.. "list[detached:" .. digtron_id_name .. ";main;1,1;8,2]" -- TODO: paging system for inventory
+		.. "list[detached:" .. digtron_id_name .. ";fuel;1,3.5;8,2]" -- TODO: paging system for inventory
+		.."container[1,5]list[current_player;main;0,0;8,1;]list[current_player;main;0,1.25;8,3;8]container_end[]"
+		.."listring[current_player;main]"
+		.."listring[detached:" .. digtron_id_name .. ";main]"
 end
 
 minetest.register_node("digtron:controller", {
@@ -56,7 +59,7 @@ minetest.register_node("digtron:controller", {
 	on_dig = function(pos, node, digger)
 		local meta = minetest.get_meta(pos)
 		if meta:get_string("digtron_id") ~= "" then
-			return
+			return -- TODO: special handling here!
 		else
 			return minetest.node_dig(pos, node, digger)
 		end

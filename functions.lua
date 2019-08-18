@@ -1,5 +1,8 @@
 local mod_meta = minetest.get_mod_storage()
 
+digtron.layout = {}
+digtron.adjacent = {}
+
 ------------------------------------------------------------------------------------
 -- Inventory
 
@@ -7,61 +10,61 @@ local mod_meta = minetest.get_mod_storage()
 local dirty_inventories = {}
 
 local detached_inventory_callbacks = {
-        -- Called when a player wants to move items inside the inventory.
-        -- Return value: number of items allowed to move.
-        allow_move = function(inv, from_list, from_index, to_list, to_index, count, player)
-			--allow anything in "main"
-			if to_list == "main" then
-				return count
-			end
-		
-			--only allow fuel items in "fuel"
-			local stack = inv:get_stack(from_list, from_index)
+    -- Called when a player wants to move items inside the inventory.
+    -- Return value: number of items allowed to move.
+    allow_move = function(inv, from_list, from_index, to_list, to_index, count, player)
+		--allow anything in "main"
+		if to_list == "main" then
+			return count
+		end
+	
+		--only allow fuel items in "fuel"
+		local stack = inv:get_stack(from_list, from_index)
+		if minetest.get_craft_result({method="fuel", width=1, items={stack}}).time ~= 0 then
+			return stack:get_count()
+		end
+		return 0			
+	end,
+
+    -- Called when a player wants to put something into the inventory.
+    -- Return value: number of items allowed to put.
+    -- Return value -1: Allow and don't modify item count in inventory.
+    allow_put = function(inv, listname, index, stack, player)
+		-- Only allow fuel items to be placed in fuel
+		if listname == "fuel" then
 			if minetest.get_craft_result({method="fuel", width=1, items={stack}}).time ~= 0 then
 				return stack:get_count()
+			else
+				return 0
 			end
-			return 0			
-		end,
+		end
+		return stack:get_count() -- otherwise, allow all drops
+	end,
 
-        -- Called when a player wants to put something into the inventory.
-        -- Return value: number of items allowed to put.
-        -- Return value -1: Allow and don't modify item count in inventory.
-        allow_put = function(inv, listname, index, stack, player)
-			-- Only allow fuel items to be placed in fuel
-			if listname == "fuel" then
-				if minetest.get_craft_result({method="fuel", width=1, items={stack}}).time ~= 0 then
-					return stack:get_count()
-				else
-					return 0
-				end
-			end
-			return stack:get_count() -- otherwise, allow all drops
-		end,
+    -- Called when a player wants to take something out of the inventory.
+    -- Return value: number of items allowed to take.
+    -- Return value -1: Allow and don't modify item count in inventory.
+    allow_take = function(inv, listname, index, stack, player)
+		return stack:get_count()
+	end,
 
-        -- Called when a player wants to take something out of the inventory.
-        -- Return value: number of items allowed to take.
-        -- Return value -1: Allow and don't modify item count in inventory.
-        allow_take = function(inv, listname, index, stack, player)
-			return stack:get_count()
-		end,
-
-        -- Called after the actual action has happened, according to what was
-        -- allowed.
-        -- No return value.
-		on_move = function(inv, from_list, from_index, to_list, to_index, count, player)
-			dirty_inventories[inv:get_location().name] = true
-		end,
-		on_put = function(inv, listname, index, stack, player)
-			dirty_inventories[inv:get_location().name] = true
-		end,
-		on_take = function(inv, listname, index, stack, player)
-			dirty_inventories[inv:get_location().name] = true
-		end,
-    }
+    -- Called after the actual action has happened, according to what was
+    -- allowed.
+    -- No return value.
+	on_move = function(inv, from_list, from_index, to_list, to_index, count, player)
+		dirty_inventories[inv:get_location().name] = true
+	end,
+	on_put = function(inv, listname, index, stack, player)
+		dirty_inventories[inv:get_location().name] = true
+	end,
+	on_take = function(inv, listname, index, stack, player)
+		dirty_inventories[inv:get_location().name] = true
+	end,
+}
 
 -- If the detached inventory doesn't exist, reads saved metadata version of the inventory and creates it
 -- Doesn't do anything if the detached inventory already exists, the detached inventory is authoritative
-digtron.ensure_inventory_exists = function(digtron_id_name)
+digtron.retrieve_inventory = function(digtron_id_name)
 	local inv = minetest.get_inventory({type="detached", name=digtron_id_name})
 	if inv == nil then
 		inv = minetest.create_detached_inventory(digtron_id_name, detached_inventory_callbacks)
@@ -74,8 +77,10 @@ digtron.ensure_inventory_exists = function(digtron_id_name)
 			end
 		end
 	end
+	return inv
 end
 
+-- Stores contents of detached inventory as a metadata string
 local persist_inventory = function(digtron_id_name)
 	local inv = minetest.get_inventory({type="detached", name=digtron_id_name})
 	if inv == nil then
@@ -120,24 +125,44 @@ end
 -- Deletes a Digtron record. Note: just throws everything away, this is not digtron.deconstruct.
 local dispose_id = function(digtron_id_name)
 	minetest.remove_detached_inventory(digtron_id_name)
+	digtron.layout[digtron_id_name] = nil
+	digtron.adjacent[digtron_id_name] = nil
 	mod_meta:set_string("inv_"..digtron_id_name, "")
 	mod_meta:set_string("layout_"..digtron_id_name, "")
+	mod_meta:set_string("adjacent_"..digtron_id_name, "")
 end
 
 -------------------------------------------------------------------------------------------------------
+-- Layout
 
-local persist_layout = function(digtron_id_name, layout)
-	mod_meta:set_string("layout_"..digtron_id_name, minetest.serialize(layout))
-end
-
-local retrieve_layout = function(digtron_id_name)
-	local layout_string = mod_meta:get_string("layout_"..digtron_id_name)
-	if layout_string ~= "" then
-		return minetest.deserialize(layout_string)
+local get_persist_table_function = function(identifier)
+	return function(digtron_id_name, tbl)
+		mod_meta:set_string(identifier .."_"..digtron_id_name, minetest.serialize(tbl))
+		digtron[identifier][digtron_id_name] = tbl
 	end
 end
 
---------------------------------------------------------------------------------------------------------
+local get_retrieve_table_function = function(identifier)
+	return function(digtron_id_name)
+		local current = digtron[identifier][digtron_id_name]
+		if current then
+			return current
+		end
+		local tbl_string = mod_meta:get_string(identifier.."_"..digtron_id_name)
+		if tbl_string ~= "" then
+			current = minetest.deserialize(tbl_string)
+			if current then
+				digtron[identifier][digtron_id_name] = current
+			end
+			return current
+		end
+	end
+end
+
+local persist_layout = get_persist_table_function("layout")
+local retrieve_layout = get_retrieve_table_function("layout")
+local persist_adjacent = get_persist_table_function("adjacent")
+local retrieve_adjacent = get_retrieve_table_function("adjacent")
 
 local cardinal_directions = {
 	{x=1,y=0,z=0},
@@ -147,35 +172,39 @@ local cardinal_directions = {
 	{x=0,y=0,z=1},
 	{x=0,y=0,z=-1},
 }
-local origin_hash = minetest.hash_node_position({x=0,y=0,z=0})
 
 -- recursive function searches out all connected unassigned digtron nodes
 local get_all_adjacent_digtron_nodes
-get_all_adjacent_digtron_nodes = function(pos, digtron_nodes, not_digtron, player_name)
+get_all_adjacent_digtron_nodes = function(pos, digtron_nodes, digtron_adjacent, player_name)
 	for _, dir in ipairs(cardinal_directions) do
 		local test_pos = vector.add(pos, dir)
 		local test_hash = minetest.hash_node_position(test_pos)
-		if not (digtron_nodes[test_hash] or not_digtron[test_hash]) then -- don't test twice
+		if not (digtron_nodes[test_hash] or digtron_adjacent[test_hash]) then -- don't test twice
 			local test_node = minetest.get_node(test_pos)
 			local group_value = minetest.get_item_group(test_node.name, "digtron")
 			if group_value > 0 then
 				local meta = minetest.get_meta(test_pos)
 				if meta:contains("digtron_id") then
 					-- Node is part of an existing digtron, don't incorporate it
-					not_digtron[test_hash] = true
+					digtron_adjacent[test_hash] = true
 				--elseif TODO test for protected node status using player_name
 				else
 					--test_node.group_value = group_value -- for later ease of reference
 					digtron_nodes[test_hash] = test_node
-					get_all_adjacent_digtron_nodes(test_pos, digtron_nodes, not_digtron, player_name) -- recurse
+					get_all_adjacent_digtron_nodes(test_pos, digtron_nodes, digtron_adjacent, player_name) -- recurse
 				end
 			else
 				-- don't record details, the content of this node will change as the digtron moves
-				not_digtron[test_hash] = true
+				digtron_adjacent[test_hash] = true
 			end
 		end		
 	end
 end
+
+--------------------------------------------------------------------------------------------------------
+-- Construct and deconstruct
+
+local origin_hash = minetest.hash_node_position({x=0,y=0,z=0})
 
 -- Returns the id of the new Digtron record, or nil on failure
 digtron.construct = function(pos, player_name)
@@ -196,8 +225,8 @@ digtron.construct = function(pos, player_name)
 	end
 	local root_hash = minetest.hash_node_position(pos)
 	local digtron_nodes = {[root_hash] = node} -- Nodes that are part of Digtron
-	local not_digtron = {} -- Nodes that are adjacent to Digtron but not a part of it
-	get_all_adjacent_digtron_nodes(pos, digtron_nodes, not_digtron, player_name)
+	local digtron_adjacent = {} -- Nodes that are adjacent to Digtron but not a part of it
+	get_all_adjacent_digtron_nodes(pos, digtron_nodes, digtron_adjacent, player_name)
 	
 	local digtron_id, digtron_inv = create_new_id(pos)
 	
@@ -205,7 +234,6 @@ digtron.construct = function(pos, player_name)
 	
 	for hash, node in pairs(digtron_nodes) do
 		local relative_hash = hash - root_hash + origin_hash
-		minetest.chat_send_all("constructing " .. minetest.pos_to_string(minetest.get_position_from_hash(relative_hash)))
 		local digtron_meta
 		if hash == root_hash then
 			digtron_meta = meta -- we're processing the controller, we already have a reference to its meta
@@ -229,19 +257,22 @@ digtron.construct = function(pos, player_name)
 		for listname, items in pairs(meta_table.inventory) do
 			local count = #items
 			-- increase the corresponding detached inventory size
-			minetest.chat_send_all("adding " .. count .. " to size of " .. listname)
 			digtron_inv:set_size(listname, digtron_inv:get_size(listname) + count)
 			for _, stack in ipairs(items) do
 				digtron_inv:add_item(listname, stack)
 			end
+			-- erase actual items from stored layout metadata, the detached inventory is authoritative
+			-- store the inventory size so the inventory can be easily recreated
+			meta_table.inventory[listname] = #items
 		end
-		
+			
 		node.param1 = nil -- we don't care about param1, wipe it to save space
-		layout[relative_hash] = {meta = meta_table.fields, node = node}
+		layout[relative_hash] = {meta = meta_table, node = node}
 	end
 	
 	persist_inventory(digtron_id)
 	persist_layout(digtron_id, layout)
+	persist_adjacent(digtron_id, digtron_adjacent)
 	
 	-- Wipe out the inventories of all in-world nodes, it's stored in the mod_meta now.
 	-- Wait until now to do it in case the above loop fails partway through.
@@ -254,18 +285,72 @@ digtron.construct = function(pos, player_name)
 		end
 		local inv = digtron_meta:get_inventory()
 		
-		-- TODO: wipe
+		for listname, items in pairs(inv:get_lists()) do
+			for i = 1, #items do
+				inv:set_stack(listname, i, ItemStack(""))
+			end
+		end
+		
+		digtron_meta:set_string("digtron_id", digtron_id)
 	end
 	
 	minetest.debug("constructed id " .. digtron_id)
 	return digtron_id
 end
 
--- TODO: skeletal!
 digtron.deconstruct = function(digtron_id, pos, name)
-	local meta = minetest.get_meta(pos)
+	--local meta = minetest.get_meta(pos)
+	local layout = retrieve_layout(digtron_id)
+	local inv = digtron.retrieve_inventory(digtron_id)
+	local root_hash = minetest.hash_node_position(pos)
 	
-	--TODO: go through layout and distribute inventory
+	-- Write metadata and inventory to in-world node at this location
+	for hash, data in pairs(layout) do
+		local ipos = minetest.get_position_from_hash(hash + root_hash - origin_hash)
+		local node = minetest.get_node(ipos)
+		local imeta = minetest.get_meta(ipos)
+
+		if data.node.name ~= node.name then
+			minetest.log("error", "[Digtron] digtron.deconstruct tried writing ".. digtron_id .. "'s stored metadata for node "
+				.. data.node.name .. " at " .. minetest.pos_to_string(pos) .. " but the node at that location was of type "
+				.. node.name)
+		elseif imeta:get_string("digtron_id") ~= digtron_id then
+			minetest.log("error", "[Digtron] digtron.deconstruct tried writing ".. digtron_id .. "'s stored metadata for node "
+				.. data.node.name .. " at " .. minetest.pos_to_string(pos) .. " but the node at that location had a digtron_id value of \""
+				.. imeta:get_string("digtron_id") .. "\"")
+
+		else
+			local iinv = imeta:get_inventory()
+			for listname, size in pairs(data.meta.inventory) do
+				iinv:set_size(listname, size)
+				for i, itemstack in ipairs(inv:get_list(listname)) do
+					-- add everything, putting leftovers back in the main inventory
+					inv:set_stack(listname, i, iinv:add_item(listname, itemstack))
+				end
+			end
+			
+			-- TODO: special handling for builder node inventories
+
+			-- Ensure node metadata fields are all set, too
+			for field, value in pairs(data.meta.fields) do
+				imeta:set_string(field, value)
+			end
+			
+			-- Clear digtron_id, this node is no longer part of an active digtron
+			imeta:set_string("digtron_id", "")
+		end
+	end	
 
 	dispose_id(digtron_id)
+end
+
+---------------------------------------------------------------------------------
+-- Misc
+
+digtron.can_dig = function(pos, digger)
+	local meta = minetest.get_meta(pos)
+	if meta:get_string("digtron_id") ~= "" then
+		return false
+	end
+	return true
 end
