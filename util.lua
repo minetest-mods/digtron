@@ -312,6 +312,7 @@ digtron.update_builder_item = function(pos)
 	digtron.remove_builder_item(pos)
 	node_inventory_table.pos = pos
 	local inv = minetest.get_inventory(node_inventory_table)
+	if inv == nil or inv:get_size("main") < 1 then return end
 	local item_stack = inv:get_stack("main", 1)
 	if not item_stack:is_empty() then
 		digtron.create_builder_item = item_stack:get_name()
