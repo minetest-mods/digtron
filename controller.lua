@@ -22,8 +22,9 @@ local get_controller_unconstructed_formspec = function(pos, player_name)
 	return "size[8,8]button[1,1;1,1;construct;Construct]"
 end
 
-local get_controller_constructed_formspec = function(pos, digtron_id, player_name)
-	local digtron_id_name = digtron.get_digtron_id_name(digtron_id)
+local get_controller_constructed_formspec = function(pos, digtron_id_name, player_name)
+	digtron.ensure_inventory_exists(digtron_id_name)
+
 	return "size[9,9]button[1,1;1,1;deconstruct;Deconstruct]"
 		.. "list[detached:" .. digtron_id_name .. ";main;1,2;8,2]" -- TODO: paging system for inventory
 		.. "list[detached:" .. digtron_id_name .. ";fuel;1,7;8,2]" -- TODO: paging system for inventory
@@ -54,7 +55,7 @@ minetest.register_node("digtron:controller", {
 	
 	on_dig = function(pos, node, digger)
 		local meta = minetest.get_meta(pos)
-		if meta:get("digtron_id") ~= nil then
+		if meta:get_string("digtron_id") ~= "" then
 			return
 		else
 			return minetest.node_dig(pos, node, digger)
@@ -63,9 +64,9 @@ minetest.register_node("digtron:controller", {
 	
 	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
 		local meta = minetest.get_meta(pos)
-		local digtron_id = meta:get_int("digtron_id")
+		local digtron_id = meta:get_string("digtron_id")
 		local player_name = clicker:get_player_name()
-		if digtron_id == 0 then
+		if digtron_id == "" then
 			minetest.show_formspec(player_name,
 				"digtron_controller_unconstructed:"..minetest.pos_to_string(pos)..":"..player_name,
 				get_controller_unconstructed_formspec(pos, player_name))
@@ -103,7 +104,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 		local digtron_id = digtron.construct(pos, name)
 		if digtron_id then
 			local meta = minetest.get_meta(pos)
-			meta:set_int("digtron_id", digtron_id)
+			meta:set_string("digtron_id", digtron_id)
 			minetest.show_formspec(name,
 				"digtron_controller_constructed:"..minetest.pos_to_string(pos)..":"..name..":"..digtron_id,
 				get_controller_constructed_formspec(pos, digtron_id, name))
@@ -133,8 +134,8 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 		minetest.chat_send_all("Deconstructing " .. digtron_id)
 		
 		local meta = minetest.get_meta(pos)
-		local digtron_id = meta:get_int("digtron_id")
-		if digtron_id == 0 then
+		local digtron_id = meta:get_string("digtron_id")
+		if digtron_id == "" then
 			minetest.log("error", "[Digtron] tried to deconstruct Digtron at pos "
 				.. minetest.pos_to_string(pos) .. " but it had no digtron_id in the node's metadata")
 		else

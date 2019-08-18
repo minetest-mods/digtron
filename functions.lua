@@ -1,5 +1,11 @@
 local mod_meta = minetest.get_mod_storage()
 
+------------------------------------------------------------------------------------
+-- Inventory
+
+-- indexed by digtron_id_name, set to true whenever the detached inventory's contents change
+local dirty_inventories = {}
+
 local detached_inventory_callbacks = {
         -- Called when a player wants to move items inside the inventory.
         -- Return value: number of items allowed to move.
@@ -42,35 +48,96 @@ local detached_inventory_callbacks = {
         -- Called after the actual action has happened, according to what was
         -- allowed.
         -- No return value.
---        on_move = function(inv, from_list, from_index, to_list, to_index, count, player),
---        on_put = function(inv, listname, index, stack, player),
---        on_take = function(inv, listname, index, stack, player),
+		on_move = function(inv, from_list, from_index, to_list, to_index, count, player)
+			dirty_inventories[inv:get_location().name] = true
+		end,
+		on_put = function(inv, listname, index, stack, player)
+			dirty_inventories[inv:get_location().name] = true
+		end,
+		on_take = function(inv, listname, index, stack, player)
+			dirty_inventories[inv:get_location().name] = true
+		end,
     }
 
-digtron.get_digtron_id_name = function(id)
-	return "digtron_id_" .. tostring(id)
+-- If the detached inventory doesn't exist, reads saved metadata version of the inventory and creates it
+-- Doesn't do anything if the detached inventory already exists, the detached inventory is authoritative
+digtron.ensure_inventory_exists = function(digtron_id_name)
+	local inv = minetest.get_inventory({type="detached", name=digtron_id_name})
+	if inv == nil then
+		inv = minetest.create_detached_inventory(digtron_id_name, detached_inventory_callbacks)
+		local inv_string = mod_meta:get_string("inv_"..digtron_id_name)
+		if inv_string ~= "" then
+			local inventory_table = minetest.deserialize(inv_string)
+			for listname, invlist in pairs(inventory_table) do
+				inv:set_size(listname, #invlist)
+				inv:set_list(listname, invlist)
+			end
+		end
+	end
 end
 
-local create_new_id = function(pos)
+local persist_inventory = function(digtron_id_name)
+	local inv = minetest.get_inventory({type="detached", name=digtron_id_name})
+	if inv == nil then
+		minetest.log("error", "[Digtron] persist_inventory attempted to record a nonexistent inventory "
+			.. digtron_id_name)
+		return
+	end
+	local lists = inv:get_lists()
+	
+	local persist = {}
+	for listname, invlist in pairs(lists) do
+		local inventory = {}
+		for i, stack in ipairs(invlist) do
+			table.insert(inventory, stack:to_string()) -- convert into strings for serialization
+		end		
+		persist[listname] = inventory
+	end
+	
+	mod_meta:set_string("inv_"..digtron_id_name, minetest.serialize(persist))
+end
+
+minetest.register_globalstep(function(dtime)
+	for digtron_id_name, _ in pairs(dirty_inventories) do
+		persist_inventory(digtron_id_name)
+		dirty_inventories[digtron_id_name] = nil
+	end
+end)
+
+--------------------------------------------------------------------------------------
+
+local create_new_id = function()
 	local last_id = mod_meta:get_int("last_id") -- returns 0 when uninitialized, so 0 will never be a valid digtron_id.
 	local new_id = last_id + 1
 	mod_meta:set_int("last_id", new_id) -- ensure each call to this method gets a unique number
 	
-	local digtron_id_name = digtron.get_digtron_id_name(new_id)
-	
-	mod_meta:set_string(digtron_id_name, minetest.pos_to_string(pos)) -- record that this digtron exists
+	local digtron_id_name = "digtron_id_" .. tostring(new_id)
 	local inv = minetest.create_detached_inventory(digtron_id_name, detached_inventory_callbacks)
 	
-	return new_id, inv
+	return digtron_id_name, inv
 end
 
--- Deletes a Digtron record. Note: throws everything away, this is not digtron.deconstruct.
-local dispose_id = function(id)
-	local digtron_id_name = digtron.get_digtron_id_name(id)
+-- Deletes a Digtron record. Note: just throws everything away, this is not digtron.deconstruct.
+local dispose_id = function(digtron_id_name)
 	minetest.remove_detached_inventory(digtron_id_name)
-	mod_meta:set_string(digtron_id_name, "")
+	mod_meta:set_string("inv_"..digtron_id_name, "")
+	mod_meta:set_string("layout_"..digtron_id_name, "")
 end
 
+-------------------------------------------------------------------------------------------------------
+
+local persist_layout = function(digtron_id_name, layout)
+	mod_meta:set_string("layout_"..digtron_id_name, minetest.serialize(layout))
+end
+
+local retrieve_layout = function(digtron_id_name)
+	local layout_string = mod_meta:get_string("layout_"..digtron_id_name)
+	if layout_string ~= "" then
+		return minetest.deserialize(layout_string)
+	end
+end
+
+--------------------------------------------------------------------------------------------------------
 
 local cardinal_directions = {
 	{x=1,y=0,z=0},
@@ -159,7 +226,6 @@ digtron.construct = function(pos, player_name)
 		-- Process inventories specially
 		-- TODO Builder inventory gets turned into an itemname in a special key in the builder's meta
 		-- fuel and main get added to corresponding detached inventory lists
-		-- then wipe them from the meta_table. They'll be re-added in digtron.deconstruct.
 		for listname, items in pairs(meta_table.inventory) do
 			local count = #items
 			-- increase the corresponding detached inventory size
@@ -174,13 +240,32 @@ digtron.construct = function(pos, player_name)
 		layout[relative_hash] = {meta = meta_table.fields, node = node}
 	end
 	
-	minetest.debug("constructed id " .. digtron_id .. ": " .. minetest.serialize(layout))
+	persist_inventory(digtron_id)
+	persist_layout(digtron_id, layout)
+	
+	-- Wipe out the inventories of all in-world nodes, it's stored in the mod_meta now.
+	-- Wait until now to do it in case the above loop fails partway through.
+	for hash, node in pairs(digtron_nodes) do
+		local digtron_meta
+		if hash == root_hash then
+			digtron_meta = meta -- we're processing the controller, we already have a reference to its meta
+		else
+			digtron_meta = minetest.get_meta(minetest.get_position_from_hash(hash))
+		end
+		local inv = digtron_meta:get_inventory()
+		
+		-- TODO: wipe
+	end
+	
+	minetest.debug("constructed id " .. digtron_id)
 	return digtron_id
 end
 
 -- TODO: skeletal!
 digtron.deconstruct = function(digtron_id, pos, name)
-	dispose_id(digtron_id)
 	local meta = minetest.get_meta(pos)
-	meta:set_string("digtron_id", "")
+	
+	--TODO: go through layout and distribute inventory
+
+	dispose_id(digtron_id)
 end
