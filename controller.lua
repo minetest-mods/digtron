@@ -19,18 +19,30 @@ local controller_nodebox = {
 }
 
 local get_controller_unconstructed_formspec = function(pos, player_name)
-	return "size[8,8]button[1,1;1,1;construct;Construct]"
+	local meta = minetest.get_meta(pos)
+	return "size[9,9]"
+		.. "container[0.5,0]"
+		.. "button[0,0;1,1;construct;Construct]"
+		.. "field[1.2,0.25;2,1;digtron_name;Digtron name;"..meta:get_string("digtron_name").."]"
+		.. "field_close_on_enter[digtron_name;false]"
+		.. "container_end[]"
 end
 
-local get_controller_constructed_formspec = function(pos, digtron_id_name, player_name)
-	digtron.retrieve_inventory(digtron_id_name)
-
-	return "size[9,9]button[1,0;1,1;deconstruct;Deconstruct]"
-		.. "list[detached:" .. digtron_id_name .. ";main;1,1;8,2]" -- TODO: paging system for inventory
-		.. "list[detached:" .. digtron_id_name .. ";fuel;1,3.5;8,2]" -- TODO: paging system for inventory
-		.."container[1,5]list[current_player;main;0,0;8,1;]list[current_player;main;0,1.25;8,3;8]container_end[]"
-		.."listring[current_player;main]"
-		.."listring[detached:" .. digtron_id_name .. ";main]"
+local get_controller_constructed_formspec = function(pos, digtron_id, player_name)
+	digtron.retrieve_inventory(digtron_id) -- ensures the detatched inventory exists and is populated
+	return "size[9,9]"
+		.. "container[0.5,0]"
+		.. "button[0,0;1,1;deconstruct;Deconstruct]"
+		.. "field[1.2,0.25;2,1;digtron_name;Digtron name;"..digtron.get_name(digtron_id).."]"
+		.. "field_close_on_enter[digtron_name;false]"
+		.. "container_end[]"
+		.. "container[0.5,1]"
+		.. "list[detached:" .. digtron_id .. ";main;0,0;8,2]" -- TODO: paging system for inventory
+		.. "list[detached:" .. digtron_id .. ";fuel;0,2.5;8,2]" -- TODO: paging system for inventory
+		.. "container_end[]"
+		.. "container[0.5,5]list[current_player;main;0,0;8,1;]list[current_player;main;0,1.25;8,3;8]container_end[]"
+		.. "listring[current_player;main]"
+		.. "listring[detached:" .. digtron_id .. ";main]"
 end
 
 minetest.register_node("digtron:controller", {
@@ -85,8 +97,6 @@ minetest.register_node("digtron:controller", {
 	end,
 })
 
-
-
 -- Dealing with an unconstructed Digtron controller
 minetest.register_on_player_receive_fields(function(player, formname, fields)
 	local formname_split = formname:split(":")
@@ -113,7 +123,11 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 				get_controller_constructed_formspec(pos, digtron_id, name))
 		end
 	end
-
+	
+	if fields.key_enter_field == "digtron_name" or fields.digtron_name then
+		local meta = minetest.get_meta(pos)
+		meta:set_string("digtron_name", fields.digtron_name)
+	end
 end)
 
 -- Controlling a fully armed and operational Digtron
@@ -147,6 +161,10 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 				"digtron_controller_unconstructed:"..minetest.pos_to_string(pos)..":"..name,
 				get_controller_unconstructed_formspec(pos, name))
 		end		
+	end
+	
+	if fields.key_enter_field == "digtron_name" or fields.digtron_name then
+		digtron.set_name(digtron_id, fields.digtron_name)
 	end
 	
 end)

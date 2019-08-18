@@ -6,7 +6,7 @@ digtron.adjacent = {}
 ------------------------------------------------------------------------------------
 -- Inventory
 
--- indexed by digtron_id_name, set to true whenever the detached inventory's contents change
+-- indexed by digtron_id, set to true whenever the detached inventory's contents change
 local dirty_inventories = {}
 
 local detached_inventory_callbacks = {
@@ -64,11 +64,11 @@ local detached_inventory_callbacks = {
 
 -- If the detached inventory doesn't exist, reads saved metadata version of the inventory and creates it
 -- Doesn't do anything if the detached inventory already exists, the detached inventory is authoritative
-digtron.retrieve_inventory = function(digtron_id_name)
-	local inv = minetest.get_inventory({type="detached", name=digtron_id_name})
+digtron.retrieve_inventory = function(digtron_id)
+	local inv = minetest.get_inventory({type="detached", name=digtron_id})
 	if inv == nil then
-		inv = minetest.create_detached_inventory(digtron_id_name, detached_inventory_callbacks)
-		local inv_string = mod_meta:get_string("inv_"..digtron_id_name)
+		inv = minetest.create_detached_inventory(digtron_id, detached_inventory_callbacks)
+		local inv_string = mod_meta:get_string("inv_"..digtron_id)
 		if inv_string ~= "" then
 			local inventory_table = minetest.deserialize(inv_string)
 			for listname, invlist in pairs(inventory_table) do
@@ -81,11 +81,11 @@ digtron.retrieve_inventory = function(digtron_id_name)
 end
 
 -- Stores contents of detached inventory as a metadata string
-local persist_inventory = function(digtron_id_name)
-	local inv = minetest.get_inventory({type="detached", name=digtron_id_name})
+local persist_inventory = function(digtron_id)
+	local inv = minetest.get_inventory({type="detached", name=digtron_id})
 	if inv == nil then
 		minetest.log("error", "[Digtron] persist_inventory attempted to record a nonexistent inventory "
-			.. digtron_id_name)
+			.. digtron_id)
 		return
 	end
 	local lists = inv:get_lists()
@@ -99,13 +99,13 @@ local persist_inventory = function(digtron_id_name)
 		persist[listname] = inventory
 	end
 	
-	mod_meta:set_string("inv_"..digtron_id_name, minetest.serialize(persist))
+	mod_meta:set_string("inv_"..digtron_id, minetest.serialize(persist))
 end
 
 minetest.register_globalstep(function(dtime)
-	for digtron_id_name, _ in pairs(dirty_inventories) do
-		persist_inventory(digtron_id_name)
-		dirty_inventories[digtron_id_name] = nil
+	for digtron_id, _ in pairs(dirty_inventories) do
+		persist_inventory(digtron_id)
+		dirty_inventories[digtron_id] = nil
 	end
 end)
 
@@ -116,43 +116,55 @@ local create_new_id = function()
 	local new_id = last_id + 1
 	mod_meta:set_int("last_id", new_id) -- ensure each call to this method gets a unique number
 	
-	local digtron_id_name = "digtron_id_" .. tostring(new_id)
-	local inv = minetest.create_detached_inventory(digtron_id_name, detached_inventory_callbacks)
+	local digtron_id = "digtron_id_" .. tostring(new_id)
+	local inv = minetest.create_detached_inventory(digtron_id, detached_inventory_callbacks)
 	
-	return digtron_id_name, inv
+	return digtron_id, inv
 end
 
 -- Deletes a Digtron record. Note: just throws everything away, this is not digtron.deconstruct.
-local dispose_id = function(digtron_id_name)
-	minetest.remove_detached_inventory(digtron_id_name)
-	digtron.layout[digtron_id_name] = nil
-	digtron.adjacent[digtron_id_name] = nil
-	mod_meta:set_string("inv_"..digtron_id_name, "")
-	mod_meta:set_string("layout_"..digtron_id_name, "")
-	mod_meta:set_string("adjacent_"..digtron_id_name, "")
+local dispose_id = function(digtron_id)
+	minetest.remove_detached_inventory(digtron_id)
+	digtron.layout[digtron_id] = nil
+	digtron.adjacent[digtron_id] = nil
+	mod_meta:set_string("inv_"..digtron_id, "")
+	mod_meta:set_string("layout_"..digtron_id, "")
+	mod_meta:set_string("adjacent_"..digtron_id, "")
+	mod_meta:set_string("name_"..digtron_id, "")
+end
+
+--------------------------------------------------------------------------------------------
+-- Name
+
+digtron.get_name = function(digtron_id)
+	return mod_meta:get_string("name_"..digtron_id)
+end
+
+digtron.set_name = function(digtron_id, digtron_name)
+	mod_meta:set_string("name_"..digtron_id, digtron_name)
 end
 
 -------------------------------------------------------------------------------------------------------
 -- Layout
 
 local get_persist_table_function = function(identifier)
-	return function(digtron_id_name, tbl)
-		mod_meta:set_string(identifier .."_"..digtron_id_name, minetest.serialize(tbl))
-		digtron[identifier][digtron_id_name] = tbl
+	return function(digtron_id, tbl)
+		mod_meta:set_string(identifier .."_"..digtron_id, minetest.serialize(tbl))
+		digtron[identifier][digtron_id] = tbl
 	end
 end
 
 local get_retrieve_table_function = function(identifier)
-	return function(digtron_id_name)
-		local current = digtron[identifier][digtron_id_name]
+	return function(digtron_id)
+		local current = digtron[identifier][digtron_id]
 		if current then
 			return current
 		end
-		local tbl_string = mod_meta:get_string(identifier.."_"..digtron_id_name)
+		local tbl_string = mod_meta:get_string(identifier.."_"..digtron_id)
 		if tbl_string ~= "" then
 			current = minetest.deserialize(tbl_string)
 			if current then
-				digtron[identifier][digtron_id_name] = current
+				digtron[identifier][digtron_id] = current
 			end
 			return current
 		end
@@ -207,54 +219,54 @@ end
 local origin_hash = minetest.hash_node_position({x=0,y=0,z=0})
 
 -- Returns the id of the new Digtron record, or nil on failure
-digtron.construct = function(pos, player_name)
-	local node = minetest.get_node(pos)
+digtron.construct = function(root_pos, player_name)
+	local node = minetest.get_node(root_pos)
 	-- TODO: a more generic test? Not needed with the more generic controller design, as far as I can tell
 	if node.name ~= "digtron:controller" then 
 		-- Called on an incorrect node
-		minetest.log("error", "[Digtron] digtron.construct called with pos " .. minetest.pos_to_string(pos)
+		minetest.log("error", "[Digtron] digtron.construct called with pos " .. minetest.pos_to_string(root_pos)
 			.. " but the node at this location was " .. node.name)
 		return nil
 	end
-	local meta = minetest.get_meta(pos)
-	if meta:contains("digtron_id") then
+	local root_meta = minetest.get_meta(root_pos)
+	if root_meta:contains("digtron_id") then
 		-- Already constructed. TODO: validate that the digtron_id actually exists as well
-		minetest.log("error", "[Digtron] digtron.construct called with pos " .. minetest.pos_to_string(pos)
+		minetest.log("error", "[Digtron] digtron.construct called with pos " .. minetest.pos_to_string(root_pos)
 			.. " but the controller at this location was already part of a constructed Digtron.")
 		return nil
 	end
-	local root_hash = minetest.hash_node_position(pos)
+	local root_hash = minetest.hash_node_position(root_pos)
 	local digtron_nodes = {[root_hash] = node} -- Nodes that are part of Digtron
 	local digtron_adjacent = {} -- Nodes that are adjacent to Digtron but not a part of it
-	get_all_adjacent_digtron_nodes(pos, digtron_nodes, digtron_adjacent, player_name)
+	get_all_adjacent_digtron_nodes(root_pos, digtron_nodes, digtron_adjacent, player_name)
 	
-	local digtron_id, digtron_inv = create_new_id(pos)
+	local digtron_id, digtron_inv = create_new_id(root_pos)
 	
 	local layout = {}
 	
 	for hash, node in pairs(digtron_nodes) do
 		local relative_hash = hash - root_hash + origin_hash
-		local digtron_meta
+		local current_meta
 		if hash == root_hash then
-			digtron_meta = meta -- we're processing the controller, we already have a reference to its meta
+			current_meta = root_meta -- we're processing the controller, we already have a reference to its meta
 		else
-			digtron_meta = minetest.get_meta(minetest.get_position_from_hash(hash))
+			current_meta = minetest.get_meta(minetest.get_position_from_hash(hash))
 		end
 		
-		local meta_table = digtron_meta:to_table()
+		local current_meta_table = current_meta:to_table()
 		
-		if meta_table.fields.digtron_id then
+		if current_meta_table.fields.digtron_id then
 			-- Trying to incorporate part of an existing digtron, should be impossible.
 			minetest.log("error", "[Digtron] digtron.construct tried to incorporate a Digtron node of type "
 				.. node.name .. " at " .. minetest.pos_to_string(minetest.get_position_from_hash(hash))
-				.. " that was already assigned to digtron id " .. meta_table.fields.digtron_id)
+				.. " that was already assigned to digtron id " .. current_meta_table.fields.digtron_id)
 			dispose_id(digtron_id)
 			return nil
 		end
 		-- Process inventories specially
 		-- TODO Builder inventory gets turned into an itemname in a special key in the builder's meta
 		-- fuel and main get added to corresponding detached inventory lists
-		for listname, items in pairs(meta_table.inventory) do
+		for listname, items in pairs(current_meta_table.inventory) do
 			local count = #items
 			-- increase the corresponding detached inventory size
 			digtron_inv:set_size(listname, digtron_inv:get_size(listname) + count)
@@ -263,13 +275,14 @@ digtron.construct = function(pos, player_name)
 			end
 			-- erase actual items from stored layout metadata, the detached inventory is authoritative
 			-- store the inventory size so the inventory can be easily recreated
-			meta_table.inventory[listname] = #items
+			current_meta_table.inventory[listname] = #items
 		end
 			
 		node.param1 = nil -- we don't care about param1, wipe it to save space
-		layout[relative_hash] = {meta = meta_table, node = node}
+		layout[relative_hash] = {meta = current_meta_table, node = node}
 	end
 	
+	digtron.set_name(digtron_id, root_meta:get_string("digtron_name"))
 	persist_inventory(digtron_id)
 	persist_layout(digtron_id, layout)
 	persist_adjacent(digtron_id, digtron_adjacent)
@@ -279,7 +292,7 @@ digtron.construct = function(pos, player_name)
 	for hash, node in pairs(digtron_nodes) do
 		local digtron_meta
 		if hash == root_hash then
-			digtron_meta = meta -- we're processing the controller, we already have a reference to its meta
+			digtron_meta = root_meta -- we're processing the controller, we already have a reference to its meta
 		else
 			digtron_meta = minetest.get_meta(minetest.get_position_from_hash(hash))
 		end
@@ -298,11 +311,13 @@ digtron.construct = function(pos, player_name)
 	return digtron_id
 end
 
-digtron.deconstruct = function(digtron_id, pos, name)
-	--local meta = minetest.get_meta(pos)
+digtron.deconstruct = function(digtron_id, root_pos, name)
+	local root_meta = minetest.get_meta(root_pos)
+	root_meta:set_string("digtron_name", digtron.get_name(digtron_id))
+	
 	local layout = retrieve_layout(digtron_id)
 	local inv = digtron.retrieve_inventory(digtron_id)
-	local root_hash = minetest.hash_node_position(pos)
+	local root_hash = minetest.hash_node_position(root_pos)
 	
 	-- Write metadata and inventory to in-world node at this location
 	for hash, data in pairs(layout) do
@@ -312,11 +327,11 @@ digtron.deconstruct = function(digtron_id, pos, name)
 
 		if data.node.name ~= node.name then
 			minetest.log("error", "[Digtron] digtron.deconstruct tried writing ".. digtron_id .. "'s stored metadata for node "
-				.. data.node.name .. " at " .. minetest.pos_to_string(pos) .. " but the node at that location was of type "
+				.. data.node.name .. " at " .. minetest.pos_to_string(root_pos) .. " but the node at that location was of type "
 				.. node.name)
 		elseif imeta:get_string("digtron_id") ~= digtron_id then
 			minetest.log("error", "[Digtron] digtron.deconstruct tried writing ".. digtron_id .. "'s stored metadata for node "
-				.. data.node.name .. " at " .. minetest.pos_to_string(pos) .. " but the node at that location had a digtron_id value of \""
+				.. data.node.name .. " at " .. minetest.pos_to_string(root_pos) .. " but the node at that location had a digtron_id value of \""
 				.. imeta:get_string("digtron_id") .. "\"")
 
 		else
