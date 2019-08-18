@@ -282,7 +282,7 @@ digtron.construct = function(root_pos, player_name)
 		layout[relative_hash] = {meta = current_meta_table, node = node}
 	end
 	
-	digtron.set_name(digtron_id, root_meta:get_string("digtron_name"))
+	digtron.set_name(digtron_id, root_meta:get_string("infotext"))
 	persist_inventory(digtron_id)
 	persist_layout(digtron_id, layout)
 	persist_adjacent(digtron_id, digtron_adjacent)
@@ -313,7 +313,7 @@ end
 
 digtron.deconstruct = function(digtron_id, root_pos, name)
 	local root_meta = minetest.get_meta(root_pos)
-	root_meta:set_string("digtron_name", digtron.get_name(digtron_id))
+	root_meta:set_string("infotext", digtron.get_name(digtron_id))
 	
 	local layout = retrieve_layout(digtron_id)
 	local inv = digtron.retrieve_inventory(digtron_id)

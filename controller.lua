@@ -23,7 +23,7 @@ local get_controller_unconstructed_formspec = function(pos, player_name)
 	return "size[9,9]"
 		.. "container[0.5,0]"
 		.. "button[0,0;1,1;construct;Construct]"
-		.. "field[1.2,0.25;2,1;digtron_name;Digtron name;"..meta:get_string("digtron_name").."]"
+		.. "field[1.2,0.25;2,1;digtron_name;Digtron name;"..meta:get_string("infotext").."]"
 		.. "field_close_on_enter[digtron_name;false]"
 		.. "container_end[]"
 end
@@ -70,10 +70,49 @@ minetest.register_node("digtron:controller", {
 	
 	on_dig = function(pos, node, digger)
 		local meta = minetest.get_meta(pos)
-		if meta:get_string("digtron_id") ~= "" then
-			return -- TODO: special handling here!
-		else
-			return minetest.node_dig(pos, node, digger)
+		local digtron_id = meta:get_string("digtron_id")
+		
+		local stack = ItemStack({name=node.name, count=1, wear=0})
+		local stack_meta = stack:get_meta()
+		stack_meta:set_string("digtron_id", digtron_id)
+		stack_meta:set_string("description", meta:get_string("infotext"))
+		local inv = digger:get_inventory()
+		local stack = inv:add_item("main", stack)
+		if stack:get_count() > 0 then
+			minetest.add_item(pos, stack)
+		end		
+		-- call on_dignodes callback
+		minetest.remove_node(pos)
+
+		if digtron_id ~= "" then
+			-- TODO destroy other nodes belonging to this digtron
+		end
+	end,
+	
+	--TODO: this didn't work when I blew up the digtron with TNT, investigate why
+	preserve_metadata = function(pos, oldnode, oldmeta, drops)
+		for _, dropped in ipairs(drops) do
+			if dropped:get_name() == "digtron:controller" then
+				local stack_meta = dropped:get_meta()
+				stack_meta:set_string("digtron_id", oldmeta:get_string("digtron_id"))
+				stack_meta:set_string("description", oldmeta:get_string("infotext"))
+				return
+			end
+		end
+	end,
+	
+	after_place_node = function(pos, placer, itemstack, pointed_thing)
+		local stack_meta = itemstack:get_meta()
+		local title = stack_meta:get_string("description")
+		local digtron_id = stack_meta:get_string("digtron_id")
+		
+		local meta = minetest.get_meta(pos)
+			
+		meta:set_string("infotext", title)
+		meta:set_string("digtron_id", digtron_id)
+		
+		if digtron_id ~= "" then
+			-- TODO create the other nodes belonging to this digtron
 		end
 	end,
 	
@@ -126,7 +165,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 	
 	if fields.key_enter_field == "digtron_name" or fields.digtron_name then
 		local meta = minetest.get_meta(pos)
-		meta:set_string("digtron_name", fields.digtron_name)
+		meta:set_string("infotext", fields.digtron_name)
 	end
 end)
 
@@ -164,6 +203,8 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 	end
 	
 	if fields.key_enter_field == "digtron_name" or fields.digtron_name then
+		local meta = minetest.get_meta(pos)
+		meta:set_string("infotext", fields.digtron_name)
 		digtron.set_name(digtron_id, fields.digtron_name)
 	end
 	
