@@ -245,8 +245,9 @@ minetest.register_node("digtron:combined_storage", {
 		inv:set_size("fuel", 8*1)
 	end,
 	
-	-- Only allow fuel items to be placed in fuel
+	
 	allow_metadata_inventory_put = function(pos, listname, index, stack, player)
+		-- Only allow fuel items to be placed in fuel
 		if listname == "fuel" then
 			if minetest.get_craft_result({method="fuel", width=1, items={stack}}).time ~= 0 then
 				return stack:get_count()
