@@ -89,7 +89,7 @@ minetest.register_node("digtron:controller", {
 		end
 	end,
 	
-	--TODO: this didn't work when I blew up the digtron with TNT, investigate why
+	--TODO: this didn't work when I blew up a digtron with TNT, investigate why
 	preserve_metadata = function(pos, oldnode, oldmeta, drops)
 		for _, dropped in ipairs(drops) do
 			if dropped:get_name() == "digtron:controller" then
@@ -99,6 +99,23 @@ minetest.register_node("digtron:controller", {
 				return
 			end
 		end
+	end,
+	
+	on_place = function(itemstack, placer, pointed_thing)
+        -- Shall place item and return the leftover itemstack.
+        -- The placer may be any ObjectRef or nil.
+		local stack_meta = itemstack:get_meta()
+		local digtron_id = stack_meta:get_string("digtron_id")
+		if digtron_id ~= "" then
+			-- Test if Digtron will fit the surroundings
+			-- if not, try moving it up so that the lowest y-coordinate on the Digtron is
+			-- at the y-coordinate of the place clicked on and test again.
+			-- if that fails, show ghost of Digtron and fail to place.		
+		end
+		-- 
+		
+		-- Default:
+        return minetest.item_place(itemstack, placer, pointed_thing)
 	end,
 	
 	after_place_node = function(pos, placer, itemstack, pointed_thing)
@@ -163,6 +180,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 		end
 	end
 	
+	--TODO: this isn't recording the field when using ESC to exit the formspec
 	if fields.key_enter_field == "digtron_name" or fields.digtron_name then
 		local meta = minetest.get_meta(pos)
 		meta:set_string("infotext", fields.digtron_name)
@@ -202,6 +220,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 		end		
 	end
 	
+	--TODO: this isn't recording the field when using ESC to exit the formspec
 	if fields.key_enter_field == "digtron_name" or fields.digtron_name then
 		local meta = minetest.get_meta(pos)
 		meta:set_string("infotext", fields.digtron_name)
