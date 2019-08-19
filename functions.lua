@@ -311,7 +311,30 @@ digtron.construct = function(root_pos, player_name)
 	return digtron_id
 end
 
-digtron.deconstruct = function(digtron_id, root_pos, name)
+
+-- Returns pos, node, and meta for the digtron node provided the in-world node matches the layout
+-- returns nil otherwise
+local get_valid_data = function(digtron_id, root_hash, hash, data, function_name)
+	local ipos = minetest.get_position_from_hash(hash + root_hash - origin_hash)
+	local node = minetest.get_node(ipos)
+	local imeta = minetest.get_meta(ipos)
+
+	if data.node.name ~= node.name then
+		minetest.log("error", "[Digtron] " .. function_name .. " tried interacting with one of ".. digtron_id .. "'s "
+			.. data.node.name .. "s at " .. minetest.pos_to_string(ipos) .. " but the node at that location was of type "
+			.. node.name)
+	elseif imeta:get_string("digtron_id") ~= digtron_id then
+		minetest.log("error", "[Digtron] " .. function_name .. " tried interacting with ".. digtron_id .. "'s "
+			.. data.node.name .. " at " .. minetest.pos_to_string(ipos)
+			.. " but the node at that location had a non-matching digtron_id value of \""
+			.. imeta:get_string("digtron_id") .. "\"")
+	else
+		return ipos, node, imeta
+	end
+end
+
+-- Turns the Digtron back into pieces
+digtron.deconstruct = function(digtron_id, root_pos, player_name)
 	local root_meta = minetest.get_meta(root_pos)
 	root_meta:set_string("infotext", digtron.get_name(digtron_id))
 	
@@ -321,20 +344,9 @@ digtron.deconstruct = function(digtron_id, root_pos, name)
 	
 	-- Write metadata and inventory to in-world node at this location
 	for hash, data in pairs(layout) do
-		local ipos = minetest.get_position_from_hash(hash + root_hash - origin_hash)
-		local node = minetest.get_node(ipos)
-		local imeta = minetest.get_meta(ipos)
-
-		if data.node.name ~= node.name then
-			minetest.log("error", "[Digtron] digtron.deconstruct tried writing ".. digtron_id .. "'s stored metadata for node "
-				.. data.node.name .. " at " .. minetest.pos_to_string(root_pos) .. " but the node at that location was of type "
-				.. node.name)
-		elseif imeta:get_string("digtron_id") ~= digtron_id then
-			minetest.log("error", "[Digtron] digtron.deconstruct tried writing ".. digtron_id .. "'s stored metadata for node "
-				.. data.node.name .. " at " .. minetest.pos_to_string(root_pos) .. " but the node at that location had a digtron_id value of \""
-				.. imeta:get_string("digtron_id") .. "\"")
-
-		else
+		local ipos, node, imeta = get_valid_data(digtron_id, root_hash, hash, data, "digtron.deconstruct")
+	
+		if ipos then
 			local iinv = imeta:get_inventory()
 			for listname, size in pairs(data.meta.inventory) do
 				iinv:set_size(listname, size)
@@ -357,6 +369,62 @@ digtron.deconstruct = function(digtron_id, root_pos, name)
 	end	
 
 	dispose_id(digtron_id)
+end
+
+-- Removes the in-world nodes of a digtron
+-- Does not destroy its layout info
+digtron.remove_from_world = function(digtron_id, root_pos, player_name)
+	local layout = retrieve_layout(digtron_id)
+	local root_hash = minetest.hash_node_position(root_pos)
+	local nodes_to_destroy = {}
+	for hash, data in pairs(layout) do
+		local ipos, node, imeta = get_valid_data(digtron_id, root_hash, hash, data, "digtron.destroy")
+		if ipos then
+			table.insert(nodes_to_destroy, ipos)
+		end
+	end
+	
+	-- TODO: voxelmanip might be better here?
+	minetest.bulk_set_node(nodes_to_destroy, {name="air"})	
+end
+
+digtron.build_to_world = function(digtron_id, root_pos, player_name)
+	local layout = retrieve_layout(digtron_id)
+	local root_hash = minetest.hash_node_position(root_pos)
+	local nodes_to_create = {}
+	
+	local permitted = true
+	for hash, data in pairs(layout) do
+		local ipos = minetest.get_position_from_hash(hash + root_hash - origin_hash)
+		local node = minetest.get_node(ipos)
+		local node_def = minetest.registered_nodes[node.name]
+		-- TODO: lots of testing needed here
+		if not (node_def and node_def.buildable_to) then
+			minetest.chat_send_all("not permitted due to " .. node.name .. " at " .. minetest.pos_to_string(ipos))
+			permitted = false
+			break
+		end		
+	end
+
+	if permitted then
+		-- TODO: voxelmanip might be better here, less likely than with destroy though since metadata needs to be written
+		for hash, data in pairs(layout) do
+			local ipos = minetest.get_position_from_hash(hash + root_hash - origin_hash)
+			minetest.set_node(ipos, data.node)
+			local meta = minetest.get_meta(ipos)
+			meta:set_string("digtron_id", digtron_id)
+			for field, value in pairs(data.meta.fields) do
+				meta:set_string(field, value)
+			end
+			-- Not needed - local inventories not used by active digtron, will be restored if deconstructed
+--			local inv = meta:get_inventory()
+--			for listname, size in pairs(data.meta.inventory) do
+--				inv:set_size(listname, size)
+--			end
+		end
+	end
+	
+
 end
 
 ---------------------------------------------------------------------------------

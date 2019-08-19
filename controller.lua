@@ -69,6 +69,10 @@ minetest.register_node("digtron:controller", {
 --	end,
 	
 	on_dig = function(pos, node, digger)
+		local player_name
+		if digger then
+			player_name = digger:get_player_name()
+		end
 		local meta = minetest.get_meta(pos)
 		local digtron_id = meta:get_string("digtron_id")
 		
@@ -82,10 +86,10 @@ minetest.register_node("digtron:controller", {
 			minetest.add_item(pos, stack)
 		end		
 		-- call on_dignodes callback
-		minetest.remove_node(pos)
-
 		if digtron_id ~= "" then
-			-- TODO destroy other nodes belonging to this digtron
+			digtron.remove_from_world(digtron_id, pos, player_name)
+		else
+			minetest.remove_node(pos)
 		end
 	end,
 	
@@ -104,13 +108,18 @@ minetest.register_node("digtron:controller", {
 	on_place = function(itemstack, placer, pointed_thing)
         -- Shall place item and return the leftover itemstack.
         -- The placer may be any ObjectRef or nil.
+		local player_name
+		if placer then player_name = placer:get_player_name() end
+		
 		local stack_meta = itemstack:get_meta()
 		local digtron_id = stack_meta:get_string("digtron_id")
 		if digtron_id ~= "" then
 			-- Test if Digtron will fit the surroundings
 			-- if not, try moving it up so that the lowest y-coordinate on the Digtron is
 			-- at the y-coordinate of the place clicked on and test again.
-			-- if that fails, show ghost of Digtron and fail to place.		
+			-- if that fails, show ghost of Digtron and fail to place.
+			local root_pos = minetest.get_pointed_thing_position(pointed_thing, true)
+			digtron.build_to_world(digtron_id, root_pos, player_name)
 		end
 		-- 
 		
@@ -136,7 +145,9 @@ minetest.register_node("digtron:controller", {
 	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
 		local meta = minetest.get_meta(pos)
 		local digtron_id = meta:get_string("digtron_id")
-		local player_name = clicker:get_player_name()
+		local player_name
+		if clicker then player_name = clicker:get_player_name() end
+		
 		if digtron_id == "" then
 			minetest.show_formspec(player_name,
 				"digtron_controller_unconstructed:"..minetest.pos_to_string(pos)..":"..player_name,
