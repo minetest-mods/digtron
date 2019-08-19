@@ -2,6 +2,7 @@ local mod_meta = minetest.get_mod_storage()
 
 digtron.layout = {}
 digtron.adjacent = {}
+digtron.bounding_box = {}
 
 ------------------------------------------------------------------------------------
 -- Inventory
@@ -131,6 +132,7 @@ local dispose_id = function(digtron_id)
 	mod_meta:set_string("layout_"..digtron_id, "")
 	mod_meta:set_string("adjacent_"..digtron_id, "")
 	mod_meta:set_string("name_"..digtron_id, "")
+	mod_meta:set_string("bounding_box_"..digtron_id, "")
 end
 
 --------------------------------------------------------------------------------------------
@@ -175,6 +177,8 @@ local persist_layout = get_persist_table_function("layout")
 local retrieve_layout = get_retrieve_table_function("layout")
 local persist_adjacent = get_persist_table_function("adjacent")
 local retrieve_adjacent = get_retrieve_table_function("adjacent")
+local persist_bounding_box = get_persist_table_function("bounding_box")
+local retrieve_bounding_box = get_retrieve_table_function("bounding_box")
 
 local cardinal_directions = {
 	{x=1,y=0,z=0},
@@ -185,9 +189,18 @@ local cardinal_directions = {
 	{x=0,y=0,z=-1},
 }
 
+local update_bounding_box = function(bounding_box, pos)
+	bounding_box.minp.x = math.min(bounding_box.minp.x, pos.x)
+	bounding_box.minp.y = math.min(bounding_box.minp.y, pos.y)
+	bounding_box.minp.z = math.min(bounding_box.minp.z, pos.z)
+	bounding_box.maxp.x = math.max(bounding_box.maxp.x, pos.x)
+	bounding_box.maxp.y = math.max(bounding_box.maxp.y, pos.y)
+	bounding_box.maxp.z = math.max(bounding_box.maxp.z, pos.z)
+end
+
 -- recursive function searches out all connected unassigned digtron nodes
 local get_all_adjacent_digtron_nodes
-get_all_adjacent_digtron_nodes = function(pos, digtron_nodes, digtron_adjacent, player_name)
+get_all_adjacent_digtron_nodes = function(pos, digtron_nodes, digtron_adjacent, bounding_box, player_name)
 	for _, dir in ipairs(cardinal_directions) do
 		local test_pos = vector.add(pos, dir)
 		local test_hash = minetest.hash_node_position(test_pos)
@@ -203,7 +216,8 @@ get_all_adjacent_digtron_nodes = function(pos, digtron_nodes, digtron_adjacent, 
 				else
 					--test_node.group_value = group_value -- for later ease of reference
 					digtron_nodes[test_hash] = test_node
-					get_all_adjacent_digtron_nodes(test_pos, digtron_nodes, digtron_adjacent, player_name) -- recurse
+					update_bounding_box(bounding_box, test_pos)
+					get_all_adjacent_digtron_nodes(test_pos, digtron_nodes, digtron_adjacent, bounding_box, player_name) -- recurse
 				end
 			else
 				-- don't record details, the content of this node will change as the digtron moves
@@ -238,7 +252,8 @@ digtron.construct = function(root_pos, player_name)
 	local root_hash = minetest.hash_node_position(root_pos)
 	local digtron_nodes = {[root_hash] = node} -- Nodes that are part of Digtron
 	local digtron_adjacent = {} -- Nodes that are adjacent to Digtron but not a part of it
-	get_all_adjacent_digtron_nodes(root_pos, digtron_nodes, digtron_adjacent, player_name)
+	local bounding_box = {minp=vector.new(root_pos), maxp=vector.new(root_pos)}
+	get_all_adjacent_digtron_nodes(root_pos, digtron_nodes, digtron_adjacent, bounding_box, player_name)
 	
 	local digtron_id, digtron_inv = create_new_id(root_pos)
 	
@@ -282,10 +297,14 @@ digtron.construct = function(root_pos, player_name)
 		layout[relative_hash] = {meta = current_meta_table, node = node}
 	end
 	
+	bounding_box.minp = vector.subtract(bounding_box.minp, root_pos)
+	bounding_box.maxp = vector.subtract(bounding_box.maxp, root_pos)
+	
 	digtron.set_name(digtron_id, root_meta:get_string("infotext"))
 	persist_inventory(digtron_id)
 	persist_layout(digtron_id, layout)
 	persist_adjacent(digtron_id, digtron_adjacent)
+	persist_bounding_box(digtron_id, bounding_box)
 	
 	-- Wipe out the inventories of all in-world nodes, it's stored in the mod_meta now.
 	-- Wait until now to do it in case the above loop fails partway through.
