@@ -119,12 +119,16 @@ minetest.register_node("digtron:controller", {
 			-- at the y-coordinate of the place clicked on and test again.
 			-- if that fails, show ghost of Digtron and fail to place.
 			local root_pos = minetest.get_pointed_thing_position(pointed_thing, true)
-			digtron.build_to_world(digtron_id, root_pos, player_name)
+			if digtron.build_to_world(digtron_id, root_pos, player_name) then
+				-- Note: DO NOT RESPECT CREATIVE MODE here.
+				-- If we allow multiple copies of a Digtron running around with the same digtron_id,
+				-- human sacrifice, dogs and cats living together, mass hysteria!
+				return ItemStack("")
+			end
+			return itemstack
+		else
+			return minetest.item_place(itemstack, placer, pointed_thing)
 		end
-		-- 
-		
-		-- Default:
-        return minetest.item_place(itemstack, placer, pointed_thing)
 	end,
 	
 	after_place_node = function(pos, placer, itemstack, pointed_thing)
@@ -136,10 +140,6 @@ minetest.register_node("digtron:controller", {
 			
 		meta:set_string("infotext", title)
 		meta:set_string("digtron_id", digtron_id)
-		
-		if digtron_id ~= "" then
-			-- TODO create the other nodes belonging to this digtron
-		end
 	end,
 	
 	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)

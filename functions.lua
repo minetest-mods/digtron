@@ -424,7 +424,7 @@ digtron.build_to_world = function(digtron_id, root_pos, player_name)
 		end
 	end
 	
-
+	return permitted
 end
 
 ---------------------------------------------------------------------------------
