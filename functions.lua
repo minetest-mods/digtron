@@ -4,6 +4,11 @@ digtron.layout = {}
 digtron.adjacent = {}
 digtron.bounding_box = {}
 
+-- Wipes mod_meta
+--for field, value in pairs(mod_meta:to_table().fields) do
+--	mod_meta:set_string(field, "")
+--end
+
 ------------------------------------------------------------------------------------
 -- Inventory
 
@@ -69,7 +74,7 @@ digtron.retrieve_inventory = function(digtron_id)
 	local inv = minetest.get_inventory({type="detached", name=digtron_id})
 	if inv == nil then
 		inv = minetest.create_detached_inventory(digtron_id, detached_inventory_callbacks)
-		local inv_string = mod_meta:get_string("inv_"..digtron_id)
+		local inv_string = mod_meta:get_string(digtron_id..":inv")
 		if inv_string ~= "" then
 			local inventory_table = minetest.deserialize(inv_string)
 			for listname, invlist in pairs(inventory_table) do
@@ -100,7 +105,7 @@ local persist_inventory = function(digtron_id)
 		persist[listname] = inventory
 	end
 	
-	mod_meta:set_string("inv_"..digtron_id, minetest.serialize(persist))
+	mod_meta:set_string(digtron_id..":inv", minetest.serialize(persist))
 end
 
 minetest.register_globalstep(function(dtime)
@@ -117,7 +122,7 @@ local create_new_id = function()
 	local new_id = last_id + 1
 	mod_meta:set_int("last_id", new_id) -- ensure each call to this method gets a unique number
 	
-	local digtron_id = "digtron_id_" .. tostring(new_id)
+	local digtron_id = "digtron" .. tostring(new_id)
 	local inv = minetest.create_detached_inventory(digtron_id, detached_inventory_callbacks)
 	
 	return digtron_id, inv
@@ -128,22 +133,22 @@ local dispose_id = function(digtron_id)
 	minetest.remove_detached_inventory(digtron_id)
 	digtron.layout[digtron_id] = nil
 	digtron.adjacent[digtron_id] = nil
-	mod_meta:set_string("inv_"..digtron_id, "")
-	mod_meta:set_string("layout_"..digtron_id, "")
-	mod_meta:set_string("adjacent_"..digtron_id, "")
-	mod_meta:set_string("name_"..digtron_id, "")
-	mod_meta:set_string("bounding_box_"..digtron_id, "")
+	mod_meta:set_string(digtron_id..":inv", "")
+	mod_meta:set_string(digtron_id..":layout", "")
+	mod_meta:set_string(digtron_id..":adjacent", "")
+	mod_meta:set_string(digtron_id..":name", "")
+	mod_meta:set_string(digtron_id..":bounding_box", "")
 end
 
 --------------------------------------------------------------------------------------------
 -- Name
 
 digtron.get_name = function(digtron_id)
-	return mod_meta:get_string("name_"..digtron_id)
+	return mod_meta:get_string(digtron_id..":name")
 end
 
 digtron.set_name = function(digtron_id, digtron_name)
-	mod_meta:set_string("name_"..digtron_id, digtron_name)
+	mod_meta:set_string(digtron_id..":name", digtron_name)
 end
 
 -------------------------------------------------------------------------------------------------------
@@ -151,7 +156,7 @@ end
 
 local get_persist_table_function = function(identifier)
 	return function(digtron_id, tbl)
-		mod_meta:set_string(identifier .."_"..digtron_id, minetest.serialize(tbl))
+		mod_meta:set_string(digtron_id..":"..identifier, minetest.serialize(tbl))
 		digtron[identifier][digtron_id] = tbl
 	end
 end
@@ -162,7 +167,7 @@ local get_retrieve_table_function = function(identifier)
 		if current then
 			return current
 		end
-		local tbl_string = mod_meta:get_string(identifier.."_"..digtron_id)
+		local tbl_string = mod_meta:get_string(digtron_id..":"..identifier)
 		if tbl_string ~= "" then
 			current = minetest.deserialize(tbl_string)
 			if current then
@@ -359,6 +364,14 @@ digtron.deconstruct = function(digtron_id, root_pos, player_name)
 	
 	local layout = retrieve_layout(digtron_id)
 	local inv = digtron.retrieve_inventory(digtron_id)
+	
+	if not (layout and inv) then
+		minetest.log("error", "Unable to find layout or inventory record for " .. digtron_id
+			.. ", wiping any remaining metadata for this id to prevent corruption. Sorry!")
+		dispose_id(digtron_id)
+		return
+	end
+	
 	local root_hash = minetest.hash_node_position(root_pos)
 	
 	-- Write metadata and inventory to in-world node at this location
@@ -394,6 +407,16 @@ end
 -- Does not destroy its layout info
 digtron.remove_from_world = function(digtron_id, root_pos, player_name)
 	local layout = retrieve_layout(digtron_id)
+	
+	if not layout then
+		minetest.log("error", "Unable to find layout record for " .. digtron_id
+			.. ", wiping any remaining metadata for this id to prevent corruption. Sorry!")
+		local meta = minetest.get_meta(root_pos)
+		meta:set_string("digtron_id", "")
+		dispose_id(digtron_id)
+		return
+	end
+	
 	local root_hash = minetest.hash_node_position(root_pos)
 	local nodes_to_destroy = {}
 	for hash, data in pairs(layout) do
@@ -451,7 +474,8 @@ end
 
 digtron.can_dig = function(pos, digger)
 	local meta = minetest.get_meta(pos)
-	if meta:get_string("digtron_id") ~= "" then
+	local digtron_id = meta:get_string("digtron_id")
+	if mod_meta:contains(digtron_id..":layout") then
 		return false
 	end
 	return true
