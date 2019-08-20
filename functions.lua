@@ -1,9 +1,6 @@
 local mod_meta = minetest.get_mod_storage()
 
-digtron.layout = {}
-digtron.adjacent = {}
-digtron.bounding_box = {}
-digtron.pos = {}
+local cache = {}
 
 --minetest.debug(dump(mod_meta:to_table()))
 
@@ -132,16 +129,19 @@ local create_new_id = function()
 end
 
 -- Deletes a Digtron record. Note: just throws everything away, this is not digtron.disassemble.
+local dispose_callbacks = {}
 local dispose_id = function(digtron_id)
-	minetest.remove_detached_inventory(digtron_id)
-	digtron.layout[digtron_id] = nil
-	digtron.adjacent[digtron_id] = nil
-	mod_meta:set_string(digtron_id..":inv", "")
-	mod_meta:set_string(digtron_id..":layout", "")
-	mod_meta:set_string(digtron_id..":adjacent", "")
+	-- name doesn't bother caching
 	mod_meta:set_string(digtron_id..":name", "")
-	mod_meta:set_string(digtron_id..":bounding_box", "")
-	mod_meta:set_string(digtron_id..":pos", "")
+
+	-- inventory handles itself specially too
+	mod_meta:set_string(digtron_id..":inv", "")
+	minetest.remove_detached_inventory(digtron_id)
+
+	-- clears the cache tables
+	for i, func in ipairs(dispose_callbacks) do
+		func(digtron_id)
+	end
 end
 
 --------------------------------------------------------------------------------------------
@@ -160,18 +160,24 @@ digtron.set_name = function(digtron_id, digtron_name)
 end
 
 -------------------------------------------------------------------------------------------------------
--- Layout
+-- Tables stored to metadata and cached locally
 
-local get_persist_table_function = function(identifier)
+local get_table_functions = function(identifier)
+	cache[identifier] = {}
+	-- add a callback for dispose_id
+	table.insert(dispose_callbacks, function(digtron_id)
+		mod_meta:set_string(digtron_id..":"..identifier, "")
+		cache[identifier][digtron_id] = nil
+	end)
+	
 	return function(digtron_id, tbl)
+		minetest.chat_send_all("persisting " .. identifier .. " " .. digtron_id)
 		mod_meta:set_string(digtron_id..":"..identifier, minetest.serialize(tbl))
-		digtron[identifier][digtron_id] = tbl
-	end
-end
-
-local get_retrieve_table_function = function(identifier)
-	return function(digtron_id)
-		local current = digtron[identifier][digtron_id]
+		cache[identifier][digtron_id] = tbl
+	end,
+	function(digtron_id)
+		minetest.chat_send_all("retrieving " .. identifier .. " " .. digtron_id)
+		local current = cache[identifier][digtron_id]
 		if current then
 			return current
 		end
@@ -179,23 +185,22 @@ local get_retrieve_table_function = function(identifier)
 		if tbl_string ~= "" then
 			current = minetest.deserialize(tbl_string)
 			if current then
-				digtron[identifier][digtron_id] = current
+				cache[identifier][digtron_id] = current
 			end
 			return current
 		end
 	end
 end
 
-local persist_layout = get_persist_table_function("layout")
-local retrieve_layout = get_retrieve_table_function("layout")
-local persist_adjacent = get_persist_table_function("adjacent")
-local retrieve_adjacent = get_retrieve_table_function("adjacent")
-local persist_bounding_box = get_persist_table_function("bounding_box")
-local retrieve_bounding_box = get_retrieve_table_function("bounding_box")
-local persist_pos = get_persist_table_function("pos")
-local retrieve_pos = get_retrieve_table_function("pos")
+local persist_layout, retrieve_layout = get_table_functions("layout")
+local persist_adjacent, retrieve_adjacent = get_table_functions("adjacent")
+local persist_bounding_box, retrieve_bounding_box = get_table_functions("bounding_box")
+local persist_pos, retrieve_pos = get_table_functions("pos")
 
 digtron.get_pos = retrieve_pos
+
+-------------------------------------------------------------------------------------------------------
+-- Layout creation helpers
 
 local cardinal_directions = {
 	{x=1,y=0,z=0},

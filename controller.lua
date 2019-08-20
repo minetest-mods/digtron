@@ -232,9 +232,11 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 	--TODO: this isn't recording the field when using ESC to exit the formspec
 	if fields.key_enter_field == "digtron_name" or fields.digtron_name then
 		local pos = digtron.get_pos(digtron_id)
-		local meta = minetest.get_meta(pos)
-		meta:set_string("infotext", fields.digtron_name)
-		digtron.set_name(digtron_id, fields.digtron_name)
+		if pos then
+			local meta = minetest.get_meta(pos)
+			meta:set_string("infotext", fields.digtron_name)
+			digtron.set_name(digtron_id, fields.digtron_name)
+		end
 	end
 	
 end)
