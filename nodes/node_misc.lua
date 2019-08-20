@@ -33,6 +33,7 @@ minetest.register_node("digtron:structure", {
 		}
 	},
 	can_dig = digtron.can_dig,
+	on_blast = digtron.on_blast,
 })
 
 -- A modest light source that will move with the digtron, handy for working in a tunnel you aren't bothering to install permanent lights in.
@@ -55,6 +56,7 @@ minetest.register_node("digtron:light", {
 		wall_side = {-0.5, -0.25, -0.25, -0.1875, 0.25, 0.25},
 	},
 	can_dig = digtron.can_dig,
+	on_blast = digtron.on_blast,
 })
 
 -- A simple structural panel
@@ -78,6 +80,7 @@ minetest.register_node("digtron:panel", {
 		fixed = {-0.5, -0.5, -0.5, 0.5, -0.4375, 0.5},
 	},
 	can_dig = digtron.can_dig,
+	on_blast = digtron.on_blast,
 })
 
 -- A simple structural panel
@@ -107,6 +110,7 @@ minetest.register_node("digtron:edge_panel", {
 		},
 	},
 	can_dig = digtron.can_dig,
+	on_blast = digtron.on_blast,
 })
 
 minetest.register_node("digtron:corner_panel", {
@@ -137,4 +141,5 @@ minetest.register_node("digtron:corner_panel", {
 		},
 	},
 	can_dig = digtron.can_dig,
+	on_blast = digtron.on_blast,
 })

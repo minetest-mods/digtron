@@ -37,8 +37,8 @@ local get_controller_constructed_formspec = function(pos, digtron_id, player_nam
 		.. "field_close_on_enter[digtron_name;false]"
 		.. "container_end[]"
 		.. "container[0.5,1]"
-		.. "list[detached:" .. digtron_id .. ";main;0,0;8,2]" -- TODO: paging system for inventory
-		.. "list[detached:" .. digtron_id .. ";fuel;0,2.5;8,2]" -- TODO: paging system for inventory
+		.. "list[detached:" .. digtron_id .. ";main;0,0;8,2]" -- TODO: paging system for inventory, guard against non-existent listname
+		.. "list[detached:" .. digtron_id .. ";fuel;0,2.5;8,2]" -- TODO: paging system for inventory, guard against non-existent listname
 		.. "container_end[]"
 		.. "container[0.5,5]list[current_player;main;0,0;8,1;]list[current_player;main;0,1.25;8,3;8]container_end[]"
 		.. "listring[current_player;main]"
@@ -49,7 +49,9 @@ minetest.register_node("digtron:controller", {
 	description = S("Digtron Control Module"),
 	_doc_items_longdesc = nil,
     _doc_items_usagehelp = nil,
-	groups = {cracky = 3, oddly_breakable_by_hand = 3, digtron = 1},
+	-- Note: this is not in the "digtron" group because we do not want it to be incorporated
+	-- into digtrons by mere adjacency; it must be the root node and only one root node is allowed.
+	groups = {cracky = 3, oddly_breakable_by_hand = 3},
 	paramtype = "light",
 	paramtype2= "facedir",
 	is_ground_content = false,
@@ -162,6 +164,8 @@ minetest.register_node("digtron:controller", {
 	
 	on_timer = function(pos, elapsed)
 	end,
+	
+	on_blast = digtron.on_blast,
 })
 
 -- Dealing with an unconstructed Digtron controller

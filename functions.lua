@@ -4,6 +4,8 @@ digtron.layout = {}
 digtron.adjacent = {}
 digtron.bounding_box = {}
 
+--minetest.debug(dump(mod_meta:to_table()))
+
 -- Wipes mod_meta
 --for field, value in pairs(mod_meta:to_table().fields) do
 --	mod_meta:set_string(field, "")
@@ -240,7 +242,7 @@ local origin_hash = minetest.hash_node_position({x=0,y=0,z=0})
 -- Returns the id of the new Digtron record, or nil on failure
 digtron.construct = function(root_pos, player_name)
 	local node = minetest.get_node(root_pos)
-	-- TODO: a more generic test? Not needed with the more generic controller design, as far as I can tell
+	-- TODO: a more generic test? Not needed with the more generic controller design, as far as I can tell. There's only going to be the one type of controller.
 	if node.name ~= "digtron:controller" then 
 		-- Called on an incorrect node
 		minetest.log("error", "[Digtron] digtron.construct called with pos " .. minetest.pos_to_string(root_pos)
@@ -255,9 +257,10 @@ digtron.construct = function(root_pos, player_name)
 		return nil
 	end
 	local root_hash = minetest.hash_node_position(root_pos)
-	local digtron_nodes = {[root_hash] = node} -- Nodes that are part of Digtron
+	local digtron_nodes = {[root_hash] = node} -- Nodes that are part of Digtron.
+		-- Initialize with the controller, it won't be added by get_all_adjacent_digtron_nodes
 	local digtron_adjacent = {} -- Nodes that are adjacent to Digtron but not a part of it
-	local bounding_box = {minp=vector.new(root_pos), maxp=vector.new(root_pos)}
+	local bounding_box = {minp=vector.new(root_pos), maxp=vector.new(root_pos), root = root_pos}
 	get_all_adjacent_digtron_nodes(root_pos, digtron_nodes, digtron_adjacent, bounding_box, player_name)
 	
 	local digtron_id, digtron_inv = create_new_id(root_pos)
@@ -342,19 +345,31 @@ local get_valid_data = function(digtron_id, root_hash, hash, data, function_name
 	local ipos = minetest.get_position_from_hash(hash + root_hash - origin_hash)
 	local node = minetest.get_node(ipos)
 	local imeta = minetest.get_meta(ipos)
+	local target_digtron_id = imeta:get_string("digtron_id")
 
 	if data.node.name ~= node.name then
 		minetest.log("error", "[Digtron] " .. function_name .. " tried interacting with one of ".. digtron_id .. "'s "
 			.. data.node.name .. "s at " .. minetest.pos_to_string(ipos) .. " but the node at that location was of type "
 			.. node.name)
-	elseif imeta:get_string("digtron_id") ~= digtron_id then
-		minetest.log("error", "[Digtron] " .. function_name .. " tried interacting with ".. digtron_id .. "'s "
-			.. data.node.name .. " at " .. minetest.pos_to_string(ipos)
-			.. " but the node at that location had a non-matching digtron_id value of \""
-			.. imeta:get_string("digtron_id") .. "\"")
-	else
-		return ipos, node, imeta
+		return
+	elseif target_digtron_id ~= digtron_id then
+		if target_digtron_id ~= "" then
+			minetest.log("error", "[Digtron] " .. function_name .. " tried interacting with ".. digtron_id .. "'s "
+				.. data.node.name .. " at " .. minetest.pos_to_string(ipos)
+				.. " but the node at that location had a non-matching digtron_id value of \""
+				.. target_digtron_id .. "\"")
+			return
+		else
+			-- Allow digtron to recover from bad map metadata writes, the bane of Digtron 1.0's existence
+			minetest.log("warning", "[Digtron] " .. function_name .. " tried interacting with ".. digtron_id .. "'s "
+				.. data.node.name .. " at " .. minetest.pos_to_string(ipos)
+				.. " but the node at that location had no digtron_id in its metadata. "
+				.. "Since the node type matched the layout, however, it was included anyway. It's possible "
+				.. "its metadata was not written correctly by a previous Digtron activity.")
+			return ipos, node, imeta
+		end
 	end
+	return ipos, node, imeta
 end
 
 -- Turns the Digtron back into pieces
@@ -366,8 +381,8 @@ digtron.deconstruct = function(digtron_id, root_pos, player_name)
 	local inv = digtron.retrieve_inventory(digtron_id)
 	
 	if not (layout and inv) then
-		minetest.log("error", "Unable to find layout or inventory record for " .. digtron_id
-			.. ", wiping any remaining metadata for this id to prevent corruption. Sorry!")
+		minetest.log("error", "digtron.deconstruct was unable to find either layout or inventory record for " .. digtron_id
+			.. ", deconstruction was impossible. Clearing any other remaining data for this id.")
 		dispose_id(digtron_id)
 		return
 	end
@@ -479,4 +494,30 @@ digtron.can_dig = function(pos, digger)
 		return false
 	end
 	return true
+end
+
+digtron.on_blast = function(pos, intensity)
+	if intensity < 1.0 then return end -- The Almighty Digtron ignores weak-ass explosions
+
+	local meta = minetest.get_meta(pos)
+	local digtron_id = meta:get_string("digtron_id")
+	if digtron_id ~= "" then
+		local bbox = retrieve_bounding_box(digtron_id)
+		if bbox.root then
+			digtron.deconstruct(digtron_id, bbox.root, "an explosion")
+		else
+			minetest.log("error", "[Digtron] a digtron node at " .. minetest.pos_to_string(pos)
+				.. " was hit by an explosion and had digtron_id " .. digtron_id
+				.. " but didn't have a root position recorded, so it could not be deconstructed.")
+			return
+		end
+	end
+
+	local drops = {}
+	default.get_inventory_drops(pos, "main", drops)
+	default.get_inventory_drops(pos, "fuel", drops)
+	local node = minetest.get_node(pos)
+	table.insert(drops, ItemStack(node.name))	
+	minetest.remove_node(pos)
+	return drops
 end
