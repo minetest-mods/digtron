@@ -3,6 +3,7 @@ local mod_meta = minetest.get_mod_storage()
 digtron.layout = {}
 digtron.adjacent = {}
 digtron.bounding_box = {}
+digtron.pos = {}
 
 --minetest.debug(dump(mod_meta:to_table()))
 
@@ -120,17 +121,17 @@ end)
 --------------------------------------------------------------------------------------
 
 local create_new_id = function()
-	local last_id = mod_meta:get_int("last_id") -- returns 0 when uninitialized, so 0 will never be a valid digtron_id.
-	local new_id = last_id + 1
-	mod_meta:set_int("last_id", new_id) -- ensure each call to this method gets a unique number
-	
-	local digtron_id = "digtron" .. tostring(new_id)
+	local digtron_id = "digtron" .. tostring(math.random(1, 2^21)) -- TODO: use SecureRandom()
+	-- It's super unlikely that we'll get a collision, but what the heck - maybe something will go
+	-- wrong with the random number source
+	while mod_meta:get_string(digtron_id..":layout") ~= "" do
+		digtron_id = "digtron" .. tostring(math.random(1, 2^21))
+	end	
 	local inv = minetest.create_detached_inventory(digtron_id, detached_inventory_callbacks)
-	
 	return digtron_id, inv
 end
 
--- Deletes a Digtron record. Note: just throws everything away, this is not digtron.deconstruct.
+-- Deletes a Digtron record. Note: just throws everything away, this is not digtron.disassemble.
 local dispose_id = function(digtron_id)
 	minetest.remove_detached_inventory(digtron_id)
 	digtron.layout[digtron_id] = nil
@@ -140,17 +141,22 @@ local dispose_id = function(digtron_id)
 	mod_meta:set_string(digtron_id..":adjacent", "")
 	mod_meta:set_string(digtron_id..":name", "")
 	mod_meta:set_string(digtron_id..":bounding_box", "")
+	mod_meta:set_string(digtron_id..":pos", "")
 end
 
 --------------------------------------------------------------------------------------------
 -- Name
 
+-- Not bothering with a dynamic table store for names, they're just strings with no need for serialization or deserialization
 digtron.get_name = function(digtron_id)
 	return mod_meta:get_string(digtron_id..":name")
 end
 
 digtron.set_name = function(digtron_id, digtron_name)
-	mod_meta:set_string(digtron_id..":name", digtron_name)
+	-- Don't allow a name to be set for a non-existent Digtron
+	if mod_meta:get(digtron_id..":layout") then
+		mod_meta:set_string(digtron_id..":name", digtron_name)
+	end
 end
 
 -------------------------------------------------------------------------------------------------------
@@ -186,6 +192,10 @@ local persist_adjacent = get_persist_table_function("adjacent")
 local retrieve_adjacent = get_retrieve_table_function("adjacent")
 local persist_bounding_box = get_persist_table_function("bounding_box")
 local retrieve_bounding_box = get_retrieve_table_function("bounding_box")
+local persist_pos = get_persist_table_function("pos")
+local retrieve_pos = get_retrieve_table_function("pos")
+
+digtron.get_pos = retrieve_pos
 
 local cardinal_directions = {
 	{x=1,y=0,z=0},
@@ -235,32 +245,32 @@ get_all_adjacent_digtron_nodes = function(pos, digtron_nodes, digtron_adjacent, 
 end
 
 --------------------------------------------------------------------------------------------------------
--- Construct and deconstruct
+-- assemble and disassemble
 
 local origin_hash = minetest.hash_node_position({x=0,y=0,z=0})
 
 -- Returns the id of the new Digtron record, or nil on failure
-digtron.construct = function(root_pos, player_name)
+digtron.assemble = function(root_pos, player_name)
 	local node = minetest.get_node(root_pos)
 	-- TODO: a more generic test? Not needed with the more generic controller design, as far as I can tell. There's only going to be the one type of controller.
 	if node.name ~= "digtron:controller" then 
 		-- Called on an incorrect node
-		minetest.log("error", "[Digtron] digtron.construct called with pos " .. minetest.pos_to_string(root_pos)
+		minetest.log("error", "[Digtron] digtron.assemble called with pos " .. minetest.pos_to_string(root_pos)
 			.. " but the node at this location was " .. node.name)
 		return nil
 	end
 	local root_meta = minetest.get_meta(root_pos)
 	if root_meta:contains("digtron_id") then
-		-- Already constructed. TODO: validate that the digtron_id actually exists as well
-		minetest.log("error", "[Digtron] digtron.construct called with pos " .. minetest.pos_to_string(root_pos)
-			.. " but the controller at this location was already part of a constructed Digtron.")
+		-- Already assembled. TODO: validate that the digtron_id actually exists as well
+		minetest.log("error", "[Digtron] digtron.assemble called with pos " .. minetest.pos_to_string(root_pos)
+			.. " but the controller at this location was already part of a assembled Digtron.")
 		return nil
 	end
 	local root_hash = minetest.hash_node_position(root_pos)
 	local digtron_nodes = {[root_hash] = node} -- Nodes that are part of Digtron.
 		-- Initialize with the controller, it won't be added by get_all_adjacent_digtron_nodes
 	local digtron_adjacent = {} -- Nodes that are adjacent to Digtron but not a part of it
-	local bounding_box = {minp=vector.new(root_pos), maxp=vector.new(root_pos), root = root_pos}
+	local bounding_box = {minp=vector.new(root_pos), maxp=vector.new(root_pos)}
 	get_all_adjacent_digtron_nodes(root_pos, digtron_nodes, digtron_adjacent, bounding_box, player_name)
 	
 	local digtron_id, digtron_inv = create_new_id(root_pos)
@@ -280,7 +290,7 @@ digtron.construct = function(root_pos, player_name)
 		
 		if current_meta_table.fields.digtron_id then
 			-- Trying to incorporate part of an existing digtron, should be impossible.
-			minetest.log("error", "[Digtron] digtron.construct tried to incorporate a Digtron node of type "
+			minetest.log("error", "[Digtron] digtron.assemble tried to incorporate a Digtron node of type "
 				.. node.name .. " at " .. minetest.pos_to_string(minetest.get_position_from_hash(hash))
 				.. " that was already assigned to digtron id " .. current_meta_table.fields.digtron_id)
 			dispose_id(digtron_id)
@@ -313,17 +323,18 @@ digtron.construct = function(root_pos, player_name)
 	persist_layout(digtron_id, layout)
 	persist_adjacent(digtron_id, digtron_adjacent)
 	persist_bounding_box(digtron_id, bounding_box)
+	persist_pos(digtron_id, root_pos)
 	
 	-- Wipe out the inventories of all in-world nodes, it's stored in the mod_meta now.
 	-- Wait until now to do it in case the above loop fails partway through.
 	for hash, node in pairs(digtron_nodes) do
-		local digtron_meta
+		local node_meta
 		if hash == root_hash then
-			digtron_meta = root_meta -- we're processing the controller, we already have a reference to its meta
+			node_meta = root_meta -- we're processing the controller, we already have a reference to its meta
 		else
-			digtron_meta = minetest.get_meta(minetest.get_position_from_hash(hash))
+			node_meta = minetest.get_meta(minetest.get_position_from_hash(hash))
 		end
-		local inv = digtron_meta:get_inventory()
+		local inv = node_meta:get_inventory()
 		
 		for listname, items in pairs(inv:get_lists()) do
 			for i = 1, #items do
@@ -331,10 +342,13 @@ digtron.construct = function(root_pos, player_name)
 			end
 		end
 		
-		digtron_meta:set_string("digtron_id", digtron_id)
+		node_meta:set_string("digtron_id", digtron_id)
+		node_meta:mark_as_private("digtron_id")
 	end
+
+	minetest.log("action", "Digtron " .. digtron_id .. " assembled at " .. minetest.pos_to_string(root_pos)
+		.. " by " .. player_name)
 	
-	minetest.debug("constructed id " .. digtron_id)
 	return digtron_id
 end
 
@@ -342,38 +356,41 @@ end
 -- Returns pos, node, and meta for the digtron node provided the in-world node matches the layout
 -- returns nil otherwise
 local get_valid_data = function(digtron_id, root_hash, hash, data, function_name)
-	local ipos = minetest.get_position_from_hash(hash + root_hash - origin_hash)
-	local node = minetest.get_node(ipos)
-	local imeta = minetest.get_meta(ipos)
-	local target_digtron_id = imeta:get_string("digtron_id")
+	local node_pos = minetest.get_position_from_hash(hash + root_hash - origin_hash)
+	local node = minetest.get_node(node_pos)
+	local node_meta = minetest.get_meta(node_pos)
+	local target_digtron_id = node_meta:get_string("digtron_id")
 
 	if data.node.name ~= node.name then
 		minetest.log("error", "[Digtron] " .. function_name .. " tried interacting with one of ".. digtron_id .. "'s "
-			.. data.node.name .. "s at " .. minetest.pos_to_string(ipos) .. " but the node at that location was of type "
+			.. data.node.name .. "s at " .. minetest.pos_to_string(node_pos) .. " but the node at that location was of type "
 			.. node.name)
 		return
 	elseif target_digtron_id ~= digtron_id then
 		if target_digtron_id ~= "" then
 			minetest.log("error", "[Digtron] " .. function_name .. " tried interacting with ".. digtron_id .. "'s "
-				.. data.node.name .. " at " .. minetest.pos_to_string(ipos)
+				.. data.node.name .. " at " .. minetest.pos_to_string(node_pos)
 				.. " but the node at that location had a non-matching digtron_id value of \""
 				.. target_digtron_id .. "\"")
 			return
 		else
 			-- Allow digtron to recover from bad map metadata writes, the bane of Digtron 1.0's existence
 			minetest.log("warning", "[Digtron] " .. function_name .. " tried interacting with ".. digtron_id .. "'s "
-				.. data.node.name .. " at " .. minetest.pos_to_string(ipos)
+				.. data.node.name .. " at " .. minetest.pos_to_string(node_pos)
 				.. " but the node at that location had no digtron_id in its metadata. "
 				.. "Since the node type matched the layout, however, it was included anyway. It's possible "
 				.. "its metadata was not written correctly by a previous Digtron activity.")
-			return ipos, node, imeta
+			return node_pos, node, node_meta
 		end
 	end
-	return ipos, node, imeta
+	return node_pos, node, node_meta
 end
 
 -- Turns the Digtron back into pieces
-digtron.deconstruct = function(digtron_id, root_pos, player_name)
+digtron.disassemble = function(digtron_id, player_name)
+	local bbox = retrieve_bounding_box(digtron_id)
+	local root_pos = retrieve_pos(digtron_id)
+
 	local root_meta = minetest.get_meta(root_pos)
 	root_meta:set_string("infotext", digtron.get_name(digtron_id))
 	
@@ -381,8 +398,8 @@ digtron.deconstruct = function(digtron_id, root_pos, player_name)
 	local inv = digtron.retrieve_inventory(digtron_id)
 	
 	if not (layout and inv) then
-		minetest.log("error", "digtron.deconstruct was unable to find either layout or inventory record for " .. digtron_id
-			.. ", deconstruction was impossible. Clearing any other remaining data for this id.")
+		minetest.log("error", "digtron.disassemble was unable to find either layout or inventory record for " .. digtron_id
+			.. ", disassembly was impossible. Clearing any other remaining data for this id.")
 		dispose_id(digtron_id)
 		return
 	end
@@ -391,15 +408,15 @@ digtron.deconstruct = function(digtron_id, root_pos, player_name)
 	
 	-- Write metadata and inventory to in-world node at this location
 	for hash, data in pairs(layout) do
-		local ipos, node, imeta = get_valid_data(digtron_id, root_hash, hash, data, "digtron.deconstruct")
+		local node_pos, node, node_meta = get_valid_data(digtron_id, root_hash, hash, data, "digtron.disassemble")
 	
-		if ipos then
-			local iinv = imeta:get_inventory()
+		if node_pos then
+			local node_inv = node_meta:get_inventory()
 			for listname, size in pairs(data.meta.inventory) do
-				iinv:set_size(listname, size)
+				node_inv:set_size(listname, size)
 				for i, itemstack in ipairs(inv:get_list(listname)) do
 					-- add everything, putting leftovers back in the main inventory
-					inv:set_stack(listname, i, iinv:add_item(listname, itemstack))
+					inv:set_stack(listname, i, node_inv:add_item(listname, itemstack))
 				end
 			end
 			
@@ -407,15 +424,17 @@ digtron.deconstruct = function(digtron_id, root_pos, player_name)
 
 			-- Ensure node metadata fields are all set, too
 			for field, value in pairs(data.meta.fields) do
-				imeta:set_string(field, value)
+				node_meta:set_string(field, value)
 			end
 			
 			-- Clear digtron_id, this node is no longer part of an active digtron
-			imeta:set_string("digtron_id", "")
+			node_meta:set_string("digtron_id", "")
 		end
 	end	
 
 	dispose_id(digtron_id)
+	
+	return root_pos
 end
 
 -- Removes the in-world nodes of a digtron
@@ -435,9 +454,9 @@ digtron.remove_from_world = function(digtron_id, root_pos, player_name)
 	local root_hash = minetest.hash_node_position(root_pos)
 	local nodes_to_destroy = {}
 	for hash, data in pairs(layout) do
-		local ipos, node, imeta = get_valid_data(digtron_id, root_hash, hash, data, "digtron.destroy")
-		if ipos then
-			table.insert(nodes_to_destroy, ipos)
+		local node_pos, node, node_meta = get_valid_data(digtron_id, root_hash, hash, data, "digtron.destroy")
+		if node_pos then
+			table.insert(nodes_to_destroy, node_pos)
 		end
 	end
 	
@@ -452,12 +471,12 @@ digtron.build_to_world = function(digtron_id, root_pos, player_name)
 	
 	local permitted = true
 	for hash, data in pairs(layout) do
-		local ipos = minetest.get_position_from_hash(hash + root_hash - origin_hash)
-		local node = minetest.get_node(ipos)
+		local node_pos = minetest.get_position_from_hash(hash + root_hash - origin_hash)
+		local node = minetest.get_node(node_pos)
 		local node_def = minetest.registered_nodes[node.name]
 		-- TODO: lots of testing needed here
 		if not (node_def and node_def.buildable_to) then
-			minetest.chat_send_all("not permitted due to " .. node.name .. " at " .. minetest.pos_to_string(ipos))
+			minetest.chat_send_all("not permitted due to " .. node.name .. " at " .. minetest.pos_to_string(node_pos))
 			permitted = false
 			break
 		end		
@@ -466,22 +485,23 @@ digtron.build_to_world = function(digtron_id, root_pos, player_name)
 	if permitted then
 		-- TODO: voxelmanip might be better here, less likely than with destroy though since metadata needs to be written
 		for hash, data in pairs(layout) do
-			local ipos = minetest.get_position_from_hash(hash + root_hash - origin_hash)
-			minetest.set_node(ipos, data.node)
-			local meta = minetest.get_meta(ipos)
-			meta:set_string("digtron_id", digtron_id)
+			local node_pos = minetest.get_position_from_hash(hash + root_hash - origin_hash)
+			minetest.set_node(node_pos, data.node)
+			local meta = minetest.get_meta(node_pos)
 			for field, value in pairs(data.meta.fields) do
 				meta:set_string(field, value)
 			end
-			-- Not needed - local inventories not used by active digtron, will be restored if deconstructed
+			meta:set_string("digtron_id", digtron_id)
+			meta:mark_as_private("digtron_id")
+			-- Not needed - local inventories not used by active digtron, will be restored if disassembled
 --			local inv = meta:get_inventory()
 --			for listname, size in pairs(data.meta.inventory) do
 --				inv:set_size(listname, size)
 --			end
 		end
 		local bbox = retrieve_bounding_box(digtron_id)
-		bbox.root = root_pos
 		persist_bounding_box(digtron_id, bbox)
+		persist_pos(digtron_id, root_pos)
 	end
 	
 	return permitted
@@ -503,12 +523,13 @@ digtron.can_dig = function(pos, digger)
 	local node = minetest.get_node(pos)
 	
 	local bbox = retrieve_bounding_box(digtron_id)
+	local root_pos = retrieve_pos(digtron_id)
 	local layout = retrieve_layout(digtron_id)
-	if bbox == nil or bbox.root == nil or layout == nil then
+	if bbox == nil or root_pos == nil or layout == nil then
 		-- Somehow, this belongs to a digtron id that's missing information that should exist in persistence.
 		local missing = ""
 		if bbox == nil then missing = missing .. "bounding_box " end
-		if bbox ~= nil and bbox.root == nil then missing = missing .. "root_pos " end
+		if root_pos == nil then missing = missing .. "root_pos " end
 		if layout == nil then missing = missing .. "layout " end
 		
 		minetest.log("error", "[Digtron] can_dig was called on a " .. node.name .. " at location "
@@ -520,7 +541,7 @@ digtron.can_dig = function(pos, digger)
 		return true
 	end
 	
-	local root_hash = minetest.hash_node_position(bbox.root)
+	local root_hash = minetest.hash_node_position(root_pos)
 	local here_hash = minetest.hash_node_position(pos)
 	local layout_hash = here_hash - root_hash + origin_hash
 	local layout_data = layout[layout_hash]
@@ -550,13 +571,10 @@ digtron.on_blast = function(pos, intensity)
 	local meta = minetest.get_meta(pos)
 	local digtron_id = meta:get_string("digtron_id")
 	if digtron_id ~= "" then
-		local bbox = retrieve_bounding_box(digtron_id)
-		if bbox.root then
-			digtron.deconstruct(digtron_id, bbox.root, "an explosion")
-		else
+		if not digtron.disassemble(digtron_id, "an explosion") then
 			minetest.log("error", "[Digtron] a digtron node at " .. minetest.pos_to_string(pos)
 				.. " was hit by an explosion and had digtron_id " .. digtron_id
-				.. " but didn't have a root position recorded, so it could not be deconstructed.")
+				.. " but didn't have a root position recorded, so it could not be disassembled.")
 			return
 		end
 	end
@@ -568,4 +586,38 @@ digtron.on_blast = function(pos, intensity)
 	table.insert(drops, ItemStack(node.name))	
 	minetest.remove_node(pos)
 	return drops
+end
+
+
+------------------------------------------------------------------------------------
+-- Creative trash
+
+-- This is wrapped in an after() call as a workaround for to https://github.com/minetest/minetest/issues/8827
+if minetest.get_modpath("creative") then
+	minetest.after(1, function()
+		if minetest.get_inventory({type="detached", name="creative_trash"}) then
+			if minetest.remove_detached_inventory("creative_trash") then
+				-- Create the trash field
+				local trash = minetest.create_detached_inventory("creative_trash", {
+					-- Allow the stack to be placed and remove it in on_put()
+					-- This allows the creative inventory to restore the stack
+					allow_put = function(inv, listname, index, stack, player)
+						return stack:get_count()
+					end,
+					on_put = function(inv, listname, index, stack, player)
+						local stack = inv:get_stack(listname, index)
+						local stack_meta = stack:get_meta()
+						local digtron_id = stack_meta:get_string("digtron_id")
+						if digtron_id ~= "" then
+							minetest.log("action", player:get_player_name() .. " disposed of " .. digtron_id
+								.. " in the creative inventory's trash receptacle.")
+							dispose_id(digtron_id)
+						end
+						inv:set_list(listname, {})
+					end,
+				})
+				trash:set_size("main", 1)
+			end
+		end
+	end)
 end

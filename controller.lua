@@ -2,6 +2,11 @@
 local MP = minetest.get_modpath(minetest.get_current_modname())
 local S, NS = dofile(MP.."/intllib.lua")
 
+-- This allows us to know which digtron the player has a formspec open for without
+-- sending the digtron_id over the network
+local player_interacting_with_digtron_id = {}
+local player_interacting_with_digtron_pos = {}
+
 local controller_nodebox = {
 	type = "fixed",
 	fixed = {
@@ -18,23 +23,24 @@ local controller_nodebox = {
 	},
 }
 
-local get_controller_unconstructed_formspec = function(pos, player_name)
+local get_controller_unassembled_formspec = function(pos, player_name)
 	local meta = minetest.get_meta(pos)
 	return "size[9,9]"
 		.. "container[0.5,0]"
-		.. "button[0,0;1,1;construct;Construct]"
+		.. "button[0,0;1,1;assemble;Assemble]"
 		.. "field[1.2,0.25;2,1;digtron_name;Digtron name;"..meta:get_string("infotext").."]"
 		.. "field_close_on_enter[digtron_name;false]"
 		.. "container_end[]"
 end
 
-local get_controller_constructed_formspec = function(pos, digtron_id, player_name)
+local get_controller_assembled_formspec = function(pos, digtron_id, player_name)
 	digtron.retrieve_inventory(digtron_id) -- ensures the detatched inventory exists and is populated
 	return "size[9,9]"
 		.. "container[0.5,0]"
-		.. "button[0,0;1,1;deconstruct;Deconstruct]"
+		.. "button[0,0;1,1;disassemble;Disassemble]"
 		.. "field[1.2,0.25;2,1;digtron_name;Digtron name;"..digtron.get_name(digtron_id).."]"
 		.. "field_close_on_enter[digtron_name;false]"
+		.. "button[3,0;1,1;move_forward;Move forward]"
 		.. "container_end[]"
 		.. "container[0.5,1]"
 		.. "list[detached:" .. digtron_id .. ";main;0,0;8,2]" -- TODO: paging system for inventory, guard against non-existent listname
@@ -141,23 +147,26 @@ minetest.register_node("digtron:controller", {
 			
 		meta:set_string("infotext", title)
 		meta:set_string("digtron_id", digtron_id)
+		meta:mark_as_private("digtron_id")
 	end,
 	
 	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
+		if clicker == nil then return end
 		local meta = minetest.get_meta(pos)
 		local digtron_id = meta:get_string("digtron_id")
-		local player_name
-		if clicker then player_name = clicker:get_player_name() end
+		local player_name = clicker:get_player_name()
 		
 		if digtron_id == "" then
+			player_interacting_with_digtron_pos[player_name] = pos
 			minetest.show_formspec(player_name,
-				"digtron_controller_unconstructed:"..minetest.pos_to_string(pos)..":"..player_name,
-				get_controller_unconstructed_formspec(pos, player_name))
+				"digtron:controller_unassembled",
+				get_controller_unassembled_formspec(pos, player_name))
 		else
 			-- initialized
+			player_interacting_with_digtron_id[player_name] = digtron_id
 			minetest.show_formspec(player_name,
-				"digtron_controller_constructed:"..minetest.pos_to_string(pos)..":"..player_name..":"..digtron_id,
-				get_controller_constructed_formspec(pos, digtron_id, player_name))
+				"digtron:controller_assembled",
+				get_controller_assembled_formspec(pos, digtron_id, player_name))
 		end
 	end,
 	
@@ -167,30 +176,26 @@ minetest.register_node("digtron:controller", {
 	on_blast = digtron.on_blast,
 })
 
--- Dealing with an unconstructed Digtron controller
+-- Dealing with an unassembled Digtron controller
 minetest.register_on_player_receive_fields(function(player, formname, fields)
-	local formname_split = formname:split(":")
-	if #formname_split ~= 3 or formname_split[1] ~= "digtron_controller_unconstructed" then
+	if formname ~= "digtron:controller_unassembled" then
 		return
 	end
-	local pos = minetest.string_to_pos(formname_split[2])
-	if pos == nil then
-		minetest.log("error", "[Digtron] Unable to parse position from formspec name " .. formname)
-		return
-	end
-	local name = formname_split[3]
-	if player:get_player_name() ~= name then
-		return
-	end
+	local name = player:get_player_name()
+	local pos = player_interacting_with_digtron_pos[name]
+	
+	if pos == nil then return end
 
-	if fields.construct then
-		local digtron_id = digtron.construct(pos, name)
+	if fields.assemble then
+		local digtron_id = digtron.assemble(pos, name)
 		if digtron_id then
 			local meta = minetest.get_meta(pos)
 			meta:set_string("digtron_id", digtron_id)
+			meta:mark_as_private("digtron_id")
+			player_interacting_with_digtron_id[name] = digtron_id
 			minetest.show_formspec(name,
-				"digtron_controller_constructed:"..minetest.pos_to_string(pos)..":"..name..":"..digtron_id,
-				get_controller_constructed_formspec(pos, digtron_id, name))
+				"digtron:controller_assembled",
+				get_controller_assembled_formspec(pos, digtron_id, name))
 		end
 	end
 	
@@ -203,39 +208,30 @@ end)
 
 -- Controlling a fully armed and operational Digtron
 minetest.register_on_player_receive_fields(function(player, formname, fields)
-	local formname_split = formname:split(":")
-	if #formname_split ~= 4 or formname_split[1] ~= "digtron_controller_constructed" then
+	if formname ~= "digtron:controller_assembled" then
 		return
 	end
-	local pos = minetest.string_to_pos(formname_split[2])
-	if pos == nil then
-		minetest.log("error", "[Digtron] Unable to parse position from formspec name " .. formname)
-		return
-	end
-	local name = formname_split[3]
-	if player:get_player_name() ~= name then
-		return
-	end
-	local digtron_id = formname_split[4]
+	local name = player:get_player_name()
+	local digtron_id = player_interacting_with_digtron_id[name]
+	if digtron_id == nil then return end
 	
-	if fields.deconstruct then
-		minetest.chat_send_all("Deconstructing " .. digtron_id)
-		
-		local meta = minetest.get_meta(pos)
-		local digtron_id = meta:get_string("digtron_id")
-		if digtron_id == "" then
-			minetest.log("error", "[Digtron] tried to deconstruct Digtron at pos "
-				.. minetest.pos_to_string(pos) .. " but it had no digtron_id in the node's metadata")
-		else
-			digtron.deconstruct(digtron_id, pos, name)
+	if fields.disassemble then
+		local pos = digtron.disassemble(digtron_id, name)
+		if pos then
+			player_interacting_with_digtron_pos[name] = pos
 			minetest.show_formspec(name,
-				"digtron_controller_unconstructed:"..minetest.pos_to_string(pos)..":"..name,
-				get_controller_unconstructed_formspec(pos, name))
+				"digtron:controller_unassembled",
+					get_controller_unassembled_formspec(pos, name))
 		end		
+	end
+	
+	if fields.move_forward then
+		
 	end
 	
 	--TODO: this isn't recording the field when using ESC to exit the formspec
 	if fields.key_enter_field == "digtron_name" or fields.digtron_name then
+		local pos = digtron.get_pos(digtron_id)
 		local meta = minetest.get_meta(pos)
 		meta:set_string("infotext", fields.digtron_name)
 		digtron.set_name(digtron_id, fields.digtron_name)
