@@ -95,7 +95,6 @@ minetest.register_node("digtron:controller", {
 		end
 	end,
 	
-	--TODO: this didn't work when I blew up a digtron with TNT, investigate why
 	preserve_metadata = function(pos, oldnode, oldmeta, drops)
 		for _, dropped in ipairs(drops) do
 			if dropped:get_name() == "digtron:controller" then

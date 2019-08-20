@@ -479,6 +479,9 @@ digtron.build_to_world = function(digtron_id, root_pos, player_name)
 --				inv:set_size(listname, size)
 --			end
 		end
+		local bbox = retrieve_bounding_box(digtron_id)
+		bbox.root = root_pos
+		persist_bounding_box(digtron_id, bbox)
 	end
 	
 	return permitted
@@ -487,15 +490,60 @@ end
 ---------------------------------------------------------------------------------
 -- Misc
 
+-- If the digtron node has an assigned ID and a layout for that ID exists and
+-- a matching node exists in the layout then don't let it be dug.
+-- TODO: add protection check?
 digtron.can_dig = function(pos, digger)
 	local meta = minetest.get_meta(pos)
 	local digtron_id = meta:get_string("digtron_id")
-	if mod_meta:contains(digtron_id..":layout") then
-		return false
+	if digtron_id == "" then
+		return true
 	end
-	return true
+
+	local node = minetest.get_node(pos)
+	
+	local bbox = retrieve_bounding_box(digtron_id)
+	local layout = retrieve_layout(digtron_id)
+	if bbox == nil or bbox.root == nil or layout == nil then
+		-- Somehow, this belongs to a digtron id that's missing information that should exist in persistence.
+		local missing = ""
+		if bbox == nil then missing = missing .. "bounding_box " end
+		if bbox ~= nil and bbox.root == nil then missing = missing .. "root_pos " end
+		if layout == nil then missing = missing .. "layout " end
+		
+		minetest.log("error", "[Digtron] can_dig was called on a " .. node.name .. " at location "
+			.. minetest.pos_to_string(pos) .. " that claimed to belong to " .. digtron_id
+			.. ". However, layout and/or location data are missing: " .. missing)
+		-- May be better to do this to prevent node duplication. But we're already in bug land here so tread gently.
+		--minetest.remove_node(pos)
+		--return false
+		return true
+	end
+	
+	local root_hash = minetest.hash_node_position(bbox.root)
+	local here_hash = minetest.hash_node_position(pos)
+	local layout_hash = here_hash - root_hash + origin_hash
+	local layout_data = layout[layout_hash]
+	if layout_data == nil or layout_data.node == nil then
+		minetest.log("error", "[Digtron] can_dig was called on a " .. node.name .. " at location "
+			.. minetest.pos_to_string(pos) .. " that claimed to belong to " .. digtron_id
+			.. ". However, the layout for that digtron_id didn't contain any corresponding node at its location.")
+		return true
+	end
+	if layout_data.node.name ~= node.name or layout_data.node.param2 ~= node.param2 then
+		minetest.log("error", "[Digtron] can_dig was called on a " .. node.name .. " with param2 "
+			.. node.param2 .." at location " .. minetest.pos_to_string(pos) .. " that belonged to " .. digtron_id
+			.. ". However, the layout for that digtron_id contained a " .. layout_data.node.name
+			.. "with param2 ".. layout_data.node.param2 .. " at its location.")
+		return true
+	end
+	
+	-- We're part of a valid Digtron. No touchy.
+	return false
 end
 
+-- put this on all Digtron nodes. If other inventory types are added (eg, batteries)
+-- update this.
 digtron.on_blast = function(pos, intensity)
 	if intensity < 1.0 then return end -- The Almighty Digtron ignores weak-ass explosions
 
