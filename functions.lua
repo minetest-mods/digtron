@@ -469,10 +469,10 @@ digtron.remove_from_world = function(digtron_id, root_pos, player_name)
 	minetest.bulk_set_node(nodes_to_destroy, {name="air"})	
 end
 
-digtron.build_to_world = function(digtron_id, root_pos, player_name)
+-- Tests if a Digtron can be built at the designated location
+digtron.is_buildable_to = function(digtron_id, root_pos, player_name, show_visualization)
 	local layout = retrieve_layout(digtron_id)
 	local root_hash = minetest.hash_node_position(root_pos)
-	local nodes_to_create = {}
 	
 	local permitted = true
 	for hash, data in pairs(layout) do
@@ -482,34 +482,49 @@ digtron.build_to_world = function(digtron_id, root_pos, player_name)
 		-- TODO: lots of testing needed here
 		if not (node_def and node_def.buildable_to) then
 			minetest.chat_send_all("not permitted due to " .. node.name .. " at " .. minetest.pos_to_string(node_pos))
-			permitted = false
-			break
-		end		
-	end
-
-	if permitted then
-		-- TODO: voxelmanip might be better here, less likely than with destroy though since metadata needs to be written
-		for hash, data in pairs(layout) do
-			local node_pos = minetest.get_position_from_hash(hash + root_hash - origin_hash)
-			minetest.set_node(node_pos, data.node)
-			local meta = minetest.get_meta(node_pos)
-			for field, value in pairs(data.meta.fields) do
-				meta:set_string(field, value)
+			if not show_visualization then
+				return false
+			else
+				permitted = false
+				digtron.safe_add_entity(node_pos, "digtron:marker_crate_bad")
 			end
-			meta:set_string("digtron_id", digtron_id)
-			meta:mark_as_private("digtron_id")
-			-- Not needed - local inventories not used by active digtron, will be restored if disassembled
---			local inv = meta:get_inventory()
---			for listname, size in pairs(data.meta.inventory) do
---				inv:set_size(listname, size)
---			end
+		elseif show_visualization then
+			digtron.safe_add_entity(node_pos, "digtron:marker_crate_good")
 		end
-		local bbox = retrieve_bounding_box(digtron_id)
-		persist_bounding_box(digtron_id, bbox)
-		persist_pos(digtron_id, root_pos)
+	end
+	return permitted
+end
+
+-- Places the Digtron into the world.
+digtron.build_to_world = function(digtron_id, root_pos, player_name)
+	local layout = retrieve_layout(digtron_id)
+	local root_hash = minetest.hash_node_position(root_pos)
+	
+	if not digtron.is_buildable_to(digtron_id, root_pos, player_name, true) then
+		return false
 	end
 	
-	return permitted
+	-- TODO: voxelmanip might be better here, less likely than with destroy though since metadata needs to be written
+	for hash, data in pairs(layout) do
+		local node_pos = minetest.get_position_from_hash(hash + root_hash - origin_hash)
+		minetest.set_node(node_pos, data.node)
+		local meta = minetest.get_meta(node_pos)
+		for field, value in pairs(data.meta.fields) do
+			meta:set_string(field, value)
+		end
+		meta:set_string("digtron_id", digtron_id)
+		meta:mark_as_private("digtron_id")
+		-- Not needed - local inventories not used by active digtron, will be restored if disassembled
+--		local inv = meta:get_inventory()
+--		for listname, size in pairs(data.meta.inventory) do
+--			inv:set_size(listname, size)
+--		end
+	end
+	local bbox = retrieve_bounding_box(digtron_id)
+	persist_bounding_box(digtron_id, bbox)
+	persist_pos(digtron_id, root_pos)
+	
+	return true
 end
 
 ---------------------------------------------------------------------------------
