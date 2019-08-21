@@ -125,12 +125,27 @@ minetest.register_node("digtron:controller", {
 			-- if not, try moving it up so that the lowest y-coordinate on the Digtron is
 			-- at the y-coordinate of the place clicked on and test again.
 			-- if that fails, show ghost of Digtron and fail to place.
-			local root_pos = minetest.get_pointed_thing_position(pointed_thing, true)
-			if digtron.build_to_world(digtron_id, root_pos, player_name) then
-				-- Note: DO NOT RESPECT CREATIVE MODE here.
-				-- If we allow multiple copies of a Digtron running around with the same digtron_id,
-				-- human sacrifice, dogs and cats living together, mass hysteria!
-				return ItemStack("")
+			
+			local target_pos
+			local below_node = minetest.get_node(pointed_thing.under)
+			local below_def = minetest.registered_nodes[below_node.name]
+			if below_def.buildable_to then
+				target_pos = pointed_thing.under
+			else
+				target_pos = pointed_thing.above
+			end
+
+			if target_pos then
+				local success, succeeded, failed = digtron.is_buildable_to(digtron_id, target_pos, player_name)
+				if success then
+					digtron.build_to_world(digtron_id, target_pos, player_name)
+					-- Note: DO NOT RESPECT CREATIVE MODE here.
+					-- If we allow multiple copies of a Digtron running around with the same digtron_id,
+					-- human sacrifice, dogs and cats living together, mass hysteria!
+					return ItemStack("")
+				else
+					digtron.show_buildable_nodes(succeeded, failed)
+				end
 			end
 			return itemstack
 		else
@@ -226,7 +241,15 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 	end
 	
 	if fields.move_forward then
-		
+		local pos = digtron.get_pos(digtron_id)
+		if pos then
+			local node = minetest.get_node(pos)
+			if node.name == "digtron:controller" then
+				local dir = minetest.facedir_to_dir(node.param2)
+				local dest_pos = vector.add(dir, pos)
+				digtron.move(digtron_id, dest_pos)
+			end
+		end		
 	end
 	
 	--TODO: this isn't recording the field when using ESC to exit the formspec

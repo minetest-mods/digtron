@@ -470,40 +470,53 @@ digtron.remove_from_world = function(digtron_id, root_pos, player_name)
 end
 
 -- Tests if a Digtron can be built at the designated location
-digtron.is_buildable_to = function(digtron_id, root_pos, player_name, show_visualization)
+--TODO implement ignore_nodes, needed for ignoring self nodes and nodes that have been flagged as dug
+digtron.is_buildable_to = function(digtron_id, root_pos, player_name, ignore_nodes, return_immediately_on_failure)
 	local layout = retrieve_layout(digtron_id)
 	local root_hash = minetest.hash_node_position(root_pos)
-	
+	local show_anything = show_successes or show_failures
+	local succeeded = {}
+	local failed = {}	
 	local permitted = true
+	
 	for hash, data in pairs(layout) do
 		local node_pos = minetest.get_position_from_hash(hash + root_hash - origin_hash)
 		local node = minetest.get_node(node_pos)
 		local node_def = minetest.registered_nodes[node.name]
 		-- TODO: lots of testing needed here
 		if not (node_def and node_def.buildable_to) then
-			minetest.chat_send_all("not permitted due to " .. node.name .. " at " .. minetest.pos_to_string(node_pos))
-			if not show_visualization then
-				return false
+			if return_immediately_on_failure then
+				return false -- no need to test further, don't return node positions
 			else
 				permitted = false
-				digtron.safe_add_entity(node_pos, "digtron:marker_crate_bad")
+				table.insert(failed, node_pos)
 			end
-		elseif show_visualization then
-			digtron.safe_add_entity(node_pos, "digtron:marker_crate_good")
+		elseif not return_immediately_on_failure then
+			table.insert(succeeded, node_pos)
 		end
 	end
-	return permitted
+	
+	return permitted, succeeded, failed
+end
+
+digtron.show_buildable_nodes = function(succeeded, failed)
+	if succeeded then
+		for _, pos in ipairs(succeeded) do
+			digtron.safe_add_entity(pos, "digtron:marker_crate_good")
+		end
+	end
+	if failed then
+		for _, pos in ipairs(failed) do
+			digtron.safe_add_entity(pos, "digtron:marker_crate_bad")
+		end
+	end
 end
 
 -- Places the Digtron into the world.
 digtron.build_to_world = function(digtron_id, root_pos, player_name)
 	local layout = retrieve_layout(digtron_id)
 	local root_hash = minetest.hash_node_position(root_pos)
-	
-	if not digtron.is_buildable_to(digtron_id, root_pos, player_name, true) then
-		return false
-	end
-	
+		
 	-- TODO: voxelmanip might be better here, less likely than with destroy though since metadata needs to be written
 	for hash, data in pairs(layout) do
 		local node_pos = minetest.get_position_from_hash(hash + root_hash - origin_hash)
@@ -526,6 +539,12 @@ digtron.build_to_world = function(digtron_id, root_pos, player_name)
 	
 	return true
 end
+
+digtron.move = function(digtron_id, dest_pos, player_name)
+	minetest.chat_send_all("move attempt")
+	
+end
+
 
 ---------------------------------------------------------------------------------
 -- Misc
