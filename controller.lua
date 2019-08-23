@@ -72,6 +72,7 @@ minetest.register_node("digtron:controller", {
 	},
 	drawtype = "nodebox",
 	node_box = controller_nodebox,
+	sounds = default.node_sound_metal_defaults(),
 	
 --	on_construct = function(pos)
 --	end,
@@ -95,7 +96,10 @@ minetest.register_node("digtron:controller", {
 		end		
 		-- call on_dignodes callback
 		if digtron_id ~= "" then
-			digtron.remove_from_world(digtron_id, pos, player_name)
+			local removed = digtron.remove_from_world(digtron_id, pos, player_name)
+			for _, removed_pos in ipairs(removed) do
+				minetest.check_for_falling(removed_pos)
+			end
 		else
 			minetest.remove_node(pos)
 		end
@@ -139,12 +143,14 @@ minetest.register_node("digtron:controller", {
 				local success, succeeded, failed = digtron.is_buildable_to(digtron_id, target_pos, player_name)
 				if success then
 					digtron.build_to_world(digtron_id, target_pos, player_name)
+					minetest.sound_play("digtron_machine_assemble", {gain = 0.5, pos=root_pos})
 					-- Note: DO NOT RESPECT CREATIVE MODE here.
 					-- If we allow multiple copies of a Digtron running around with the same digtron_id,
 					-- human sacrifice, dogs and cats living together, mass hysteria!
 					return ItemStack("")
 				else
 					digtron.show_buildable_nodes(succeeded, failed)
+					minetest.sound_play("digtron_buzzer", {gain = 0.5, pos=root_pos})
 				end
 			end
 			return itemstack
@@ -226,17 +232,17 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 	if formname ~= "digtron:controller_assembled" then
 		return
 	end
-	local name = player:get_player_name()
-	local digtron_id = player_interacting_with_digtron_id[name]
+	local player_name = player:get_player_name()
+	local digtron_id = player_interacting_with_digtron_id[player_name]
 	if digtron_id == nil then return end
 	
 	if fields.disassemble then
-		local pos = digtron.disassemble(digtron_id, name)
+		local pos = digtron.disassemble(digtron_id, player_name)
 		if pos then
-			player_interacting_with_digtron_pos[name] = pos
-			minetest.show_formspec(name,
+			player_interacting_with_digtron_pos[player_name] = pos
+			minetest.show_formspec(player_name,
 				"digtron:controller_unassembled",
-					get_controller_unassembled_formspec(pos, name))
+					get_controller_unassembled_formspec(pos, player_name))
 		end		
 	end
 	
@@ -247,7 +253,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 			if node.name == "digtron:controller" then
 				local dir = minetest.facedir_to_dir(node.param2)
 				local dest_pos = vector.add(dir, pos)
-				digtron.move(digtron_id, dest_pos)
+				digtron.move(digtron_id, dest_pos, player_name)
 			end
 		end		
 	end

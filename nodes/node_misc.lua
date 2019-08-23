@@ -10,7 +10,7 @@ minetest.register_node("digtron:structure", {
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 1},
 	tiles = {"digtron_plate.png"},
 	drawtype = "nodebox",
-	sounds = digtron.metal_sounds,
+	sounds = default.node_sound_metal_defaults(),
 	climbable = true,
 	walkable = false,
 	paramtype = "light",
@@ -69,7 +69,7 @@ minetest.register_node("digtron:panel", {
 	drawtype = "nodebox",
 	paramtype = "light",
 	is_ground_content = false,
-	sounds = digtron.metal_sounds,
+	sounds = default.node_sound_metal_defaults(),
 	paramtype2 = "facedir",
 	node_box = {
 		type = "fixed",
@@ -93,7 +93,7 @@ minetest.register_node("digtron:edge_panel", {
 	drawtype = "nodebox",
 	paramtype = "light",
 	is_ground_content = false,
-	sounds = digtron.metal_sounds,
+	sounds = default.node_sound_metal_defaults(),
 	paramtype2 = "facedir",
 	node_box = {
 		type = "fixed",
@@ -122,7 +122,7 @@ minetest.register_node("digtron:corner_panel", {
 	drawtype = "nodebox",
 	paramtype = "light",
 	is_ground_content = false,
-	sounds = digtron.metal_sounds,
+	sounds = default.node_sound_metal_defaults(),
 	paramtype2 = "facedir",
 	node_box = {
 		type = "fixed",

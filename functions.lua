@@ -164,19 +164,13 @@ end
 
 local get_table_functions = function(identifier)
 	cache[identifier] = {}
-	-- add a callback for dispose_id
-	table.insert(dispose_callbacks, function(digtron_id)
-		mod_meta:set_string(digtron_id..":"..identifier, "")
-		cache[identifier][digtron_id] = nil
-	end)
 	
-	return function(digtron_id, tbl)
-		minetest.chat_send_all("persisting " .. identifier .. " " .. digtron_id)
+	local persist_func = function(digtron_id, tbl)
 		mod_meta:set_string(digtron_id..":"..identifier, minetest.serialize(tbl))
 		cache[identifier][digtron_id] = tbl
-	end,
-	function(digtron_id)
-		minetest.chat_send_all("retrieving " .. identifier .. " " .. digtron_id)
+	end
+	
+	local retrieve_func = function(digtron_id)
 		local current = cache[identifier][digtron_id]
 		if current then
 			return current
@@ -190,12 +184,22 @@ local get_table_functions = function(identifier)
 			return current
 		end
 	end
+	
+	local dispose_func = function(digtron_id)
+		mod_meta:set_string(digtron_id..":"..identifier, "")
+		cache[identifier][digtron_id] = nil
+	end
+	
+	-- add a callback for dispose_id
+	table.insert(dispose_callbacks, dispose_func)
+	
+	return persist_func, retrieve_func, dispose_func
 end
 
 local persist_layout, retrieve_layout = get_table_functions("layout")
 local persist_adjacent, retrieve_adjacent = get_table_functions("adjacent")
 local persist_bounding_box, retrieve_bounding_box = get_table_functions("bounding_box")
-local persist_pos, retrieve_pos = get_table_functions("pos")
+local persist_pos, retrieve_pos, dispose_pos = get_table_functions("pos")
 
 digtron.get_pos = retrieve_pos
 
@@ -315,6 +319,12 @@ digtron.assemble = function(root_pos, player_name)
 			-- store the inventory size so the inventory can be easily recreated
 			current_meta_table.inventory[listname] = #items
 		end
+		
+		local node_def = minetest.registered_nodes[node.name]
+		if node_def and node_def._digtron_assembled_node then
+			node.name = node_def._digtron_assembled_node
+			minetest.swap_node(minetest.get_position_from_hash(hash), node)
+		end
 			
 		node.param1 = nil -- we don't care about param1, wipe it to save space
 		layout[relative_hash] = {meta = current_meta_table, node = node}
@@ -353,6 +363,7 @@ digtron.assemble = function(root_pos, player_name)
 
 	minetest.log("action", "Digtron " .. digtron_id .. " assembled at " .. minetest.pos_to_string(root_pos)
 		.. " by " .. player_name)
+	minetest.sound_play("digtron_machine_assemble", {gain = 0.5, pos=root_pos})
 	
 	return digtron_id
 end
@@ -361,7 +372,8 @@ end
 -- Returns pos, node, and meta for the digtron node provided the in-world node matches the layout
 -- returns nil otherwise
 local get_valid_data = function(digtron_id, root_hash, hash, data, function_name)
-	local node_pos = minetest.get_position_from_hash(hash + root_hash - origin_hash)
+	local node_hash = hash + root_hash - origin_hash -- TODO may want to return this as well?
+	local node_pos = minetest.get_position_from_hash(node_hash)
 	local node = minetest.get_node(node_pos)
 	local node_meta = minetest.get_meta(node_pos)
 	local target_digtron_id = node_meta:get_string("digtron_id")
@@ -425,6 +437,11 @@ digtron.disassemble = function(digtron_id, player_name)
 				end
 			end
 			
+			local node_def = minetest.registered_nodes[node.name]
+			if node_def and node_def._digtron_disassembled_node then
+				minetest.swap_node(node_pos, {name=node_def._digtron_disassembled_node, param2=node.param2})
+			end
+			
 			-- TODO: special handling for builder node inventories
 
 			-- Ensure node metadata fields are all set, too
@@ -437,13 +454,18 @@ digtron.disassemble = function(digtron_id, player_name)
 		end
 	end	
 
+	minetest.log("action", "Digtron " .. digtron_id .. " disassembled at " .. minetest.pos_to_string(root_pos)
+		.. " by " .. player_name)
+	minetest.sound_play("digtron_machine_disassemble", {gain = 0.5, pos=root_pos})
+
 	dispose_id(digtron_id)
-	
+
 	return root_pos
 end
 
 -- Removes the in-world nodes of a digtron
 -- Does not destroy its layout info
+-- returns a table of vectors of all the nodes that were removed
 digtron.remove_from_world = function(digtron_id, root_pos, player_name)
 	local layout = retrieve_layout(digtron_id)
 	
@@ -453,7 +475,7 @@ digtron.remove_from_world = function(digtron_id, root_pos, player_name)
 		local meta = minetest.get_meta(root_pos)
 		meta:set_string("digtron_id", "")
 		dispose_id(digtron_id)
-		return
+		return {}
 	end
 	
 	local root_hash = minetest.hash_node_position(root_pos)
@@ -466,25 +488,41 @@ digtron.remove_from_world = function(digtron_id, root_pos, player_name)
 	end
 	
 	-- TODO: voxelmanip might be better here?
-	minetest.bulk_set_node(nodes_to_destroy, {name="air"})	
+	minetest.bulk_set_node(nodes_to_destroy, {name="air"})
+	dispose_pos(digtron_id)
+	return nodes_to_destroy
 end
 
 -- Tests if a Digtron can be built at the designated location
---TODO implement ignore_nodes, needed for ignoring self nodes and nodes that have been flagged as dug
+--TODO implement ignore_nodes, needed for ignoring nodes that have been flagged as dug
 digtron.is_buildable_to = function(digtron_id, root_pos, player_name, ignore_nodes, return_immediately_on_failure)
 	local layout = retrieve_layout(digtron_id)
+	
+	-- If this digtron is already in-world, we're likely testing as part of a movement attempt.
+	-- Record its existing node locations, they will be treated as buildable_to
+	local old_pos = retrieve_pos(digtron_id)
+	local old_hashes = {}
+	if old_pos then
+		local old_root_hash = minetest.hash_node_position(old_pos)
+		local old_root_minus_origin = old_root_hash - origin_hash
+		for layout_hash, _ in pairs(layout) do
+			old_hashes[layout_hash + old_root_minus_origin] = true
+		end
+	end
+	
 	local root_hash = minetest.hash_node_position(root_pos)
-	local show_anything = show_successes or show_failures
+	local root_minus_origin = root_hash - origin_hash
 	local succeeded = {}
 	local failed = {}	
 	local permitted = true
 	
-	for hash, data in pairs(layout) do
-		local node_pos = minetest.get_position_from_hash(hash + root_hash - origin_hash)
+	for layout_hash, data in pairs(layout) do
+		local node_hash = layout_hash + root_minus_origin
+		local node_pos = minetest.get_position_from_hash(node_hash)
 		local node = minetest.get_node(node_pos)
 		local node_def = minetest.registered_nodes[node.name]
 		-- TODO: lots of testing needed here
-		if not (node_def and node_def.buildable_to) then
+		if not ((node_def and node_def.buildable_to) or old_hashes[node_hash]) then
 			if return_immediately_on_failure then
 				return false -- no need to test further, don't return node positions
 			else
@@ -499,25 +537,11 @@ digtron.is_buildable_to = function(digtron_id, root_pos, player_name, ignore_nod
 	return permitted, succeeded, failed
 end
 
-digtron.show_buildable_nodes = function(succeeded, failed)
-	if succeeded then
-		for _, pos in ipairs(succeeded) do
-			digtron.safe_add_entity(pos, "digtron:marker_crate_good")
-		end
-	end
-	if failed then
-		for _, pos in ipairs(failed) do
-			digtron.safe_add_entity(pos, "digtron:marker_crate_bad")
-		end
-	end
-end
-
 -- Places the Digtron into the world.
 digtron.build_to_world = function(digtron_id, root_pos, player_name)
 	local layout = retrieve_layout(digtron_id)
 	local root_hash = minetest.hash_node_position(root_pos)
 		
-	-- TODO: voxelmanip might be better here, less likely than with destroy though since metadata needs to be written
 	for hash, data in pairs(layout) do
 		local node_pos = minetest.get_position_from_hash(hash + root_hash - origin_hash)
 		minetest.set_node(node_pos, data.node)
@@ -527,11 +551,6 @@ digtron.build_to_world = function(digtron_id, root_pos, player_name)
 		end
 		meta:set_string("digtron_id", digtron_id)
 		meta:mark_as_private("digtron_id")
-		-- Not needed - local inventories not used by active digtron, will be restored if disassembled
---		local inv = meta:get_inventory()
---		for listname, size in pairs(data.meta.inventory) do
---			inv:set_size(listname, size)
---		end
 	end
 	local bbox = retrieve_bounding_box(digtron_id)
 	persist_bounding_box(digtron_id, bbox)
@@ -542,7 +561,23 @@ end
 
 digtron.move = function(digtron_id, dest_pos, player_name)
 	minetest.chat_send_all("move attempt")
-	
+	local current_pos = retrieve_pos(digtron_id)
+	if current_pos == nil then
+		minetest.chat_send_all("no pos recorded for digtron")
+		return
+	end
+	local permitted, succeeded, failed = digtron.is_buildable_to(digtron_id, dest_pos, player_name)
+	if permitted then
+		local removed = digtron.remove_from_world(digtron_id, current_pos, player_name)
+		digtron.build_to_world(digtron_id, dest_pos, player_name)
+		minetest.sound_play("digtron_truck", {gain = 0.5, pos=dest_pos})
+		for _, removed_pos in ipairs(removed) do
+			minetest.check_for_falling(removed_pos)
+		end
+	else
+		digtron.show_buildable_nodes({}, failed)
+		minetest.sound_play("digtron_squeal", {gain = 0.5, pos=current_pos})
+	end	
 end
 
 

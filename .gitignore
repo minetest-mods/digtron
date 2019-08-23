@@ -17,6 +17,9 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# Blender files
+*.blend
+
 # =========================
 # Operating System Files
 # =========================

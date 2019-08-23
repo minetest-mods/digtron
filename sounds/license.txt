@@ -1,16 +1,16 @@
 The sounds in this folder were sampled from source .wavs from Freesound.org. Specifically:
 
-buzzer.ogg - https://freesound.org/people/hypocore/sounds/164090/ - public domain via CC 1.0 by hypocore
-construction.ogg - https://www.freesound.org/people/mediapetros/sounds/109117/ - under the CC BY 3.0 license by mediapetros
-dingding.ogg - https://www.freesound.org/people/JohnsonBrandEditing/sounds/173932/ public domain via CC 1.0 by JohnsonBrandEditing
-honk.ogg - https://freesound.org/people/bigmanjoe/sounds/349922/ public domain via CC 1.0 by bigmanjoe
-machine1.ogg and machine2.ogg - https://www.freesound.org/people/nuckan/sounds/212941/ public domain via CC 1.0 by nuckan
-sploosh.ogg - https://www.freesound.org/people/mr_marcello/sounds/257609/ public domain via CC 1.0 by mr_marcello
-squeal.ogg - https://www.freesound.org/people/RutgerMuller/sounds/104026/ public domain via CC 1.0 by RutgerMuller
-truck.ogg - https://www.freesound.org/people/jberkuta14/sounds/134898/ public domain via CC 1.0 by jberkuta14
-whirr.ogg - https://www.freesound.org/people/daveincamas/sounds/25034/ - under the CC BY 3.0 license by daveincamas
-woopwoopwoop.ogg - https://www.freesound.org/people/gregconquest/sounds/188012/ public domain via CC 1.0 by gregconquest
-steam_puff.ogg - https://freesound.org/people/Aiwha/sounds/250703/ under the CC BY 3.0 license by Aiwha
+digtron_buzzer.ogg - https://freesound.org/people/hypocore/sounds/164090/ - public domain via CC 1.0 by hypocore
+digtron_construction.ogg - https://www.freesound.org/people/mediapetros/sounds/109117/ - under the CC BY 3.0 license by mediapetros
+digtron_dingding.ogg - https://www.freesound.org/people/JohnsonBrandEditing/sounds/173932/ public domain via CC 1.0 by JohnsonBrandEditing
+digtron_honk.ogg - https://freesound.org/people/bigmanjoe/sounds/349922/ public domain via CC 1.0 by bigmanjoe
+digtron_machine_assemble.ogg and digtron_machine_disassemble.ogg - https://www.freesound.org/people/nuckan/sounds/212941/ public domain via CC 1.0 by nuckan
+digtron_sploosh.ogg - https://www.freesound.org/people/mr_marcello/sounds/257609/ public domain via CC 1.0 by mr_marcello
+digtron_squeal.ogg - https://www.freesound.org/people/RutgerMuller/sounds/104026/ public domain via CC 1.0 by RutgerMuller
+digtron_truck.ogg - https://www.freesound.org/people/jberkuta14/sounds/134898/ public domain via CC 1.0 by jberkuta14
+digtron_whirr.ogg - https://www.freesound.org/people/daveincamas/sounds/25034/ - under the CC BY 3.0 license by daveincamas
+digtron_woopwoopwoop.ogg - https://www.freesound.org/people/gregconquest/sounds/188012/ public domain via CC 1.0 by gregconquest
+digtron_steam_puff.ogg - https://freesound.org/people/Aiwha/sounds/250703/ under the CC BY 3.0 license by Aiwha
 
 
 Creative Commons Attribution 3.0 license:

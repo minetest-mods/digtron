@@ -1,11 +1,9 @@
 -- The default minetest.add_entity crashes with an exception if you try adding an entity in an unloaded area
 -- this wrapper catches that exception and just ignores it.
-digtron.safe_add_entity = function(pos, name)
-	success, ret = pcall(minetest.add_entity, pos, name)
+safe_add_entity = function(pos, name)
+	local success, ret = pcall(minetest.add_entity, pos, name)
 	if success then return ret else return nil end
 end
-
-local safe_add_entity = digtron.safe_add_entity
 
 -------------------------------------------------------------------------------------------------
 -- For displaying where things get built under which periodicities
@@ -77,6 +75,20 @@ end
 
 -----------------------------------------------------------------------------------------------
 -- For displaying whether nodes are part of a digtron or are obstructed
+
+digtron.show_buildable_nodes = function(succeeded, failed)
+	if succeeded then
+		for _, pos in ipairs(succeeded) do
+			safe_add_entity(pos, "digtron:marker_crate_good")
+		end
+	end
+	if failed then
+		for _, pos in ipairs(failed) do
+			safe_add_entity(pos, "digtron:marker_crate_bad")
+		end
+	end
+end
+
 
 minetest.register_entity("digtron:marker_crate_good", {
 	initial_properties = {
