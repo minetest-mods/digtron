@@ -466,15 +466,24 @@ end
 -- Removes the in-world nodes of a digtron
 -- Does not destroy its layout info
 -- returns a table of vectors of all the nodes that were removed
-digtron.remove_from_world = function(digtron_id, root_pos, player_name)
+digtron.remove_from_world = function(digtron_id, player_name)
 	local layout = retrieve_layout(digtron_id)
+	local root_pos = retrieve_pos(digtron_id)
 	
 	if not layout then
-		minetest.log("error", "Unable to find layout record for " .. digtron_id
+		minetest.log("error", "digtron.remove_from_world Unable to find layout record for " .. digtron_id
 			.. ", wiping any remaining metadata for this id to prevent corruption. Sorry!")
-		local meta = minetest.get_meta(root_pos)
-		meta:set_string("digtron_id", "")
+		if root_pos then
+			local meta = minetest.get_meta(root_pos)
+			meta:set_string("digtron_id", "")
+		end
 		dispose_id(digtron_id)
+		return {}
+	end
+	
+	if not root_pos then
+		minetest.log("error", "digtron.remove_from_world Unable to find position for " .. digtron_id
+			.. ", it may have already been removed from the world.")
 		return {}
 	end
 	
@@ -541,9 +550,10 @@ end
 digtron.build_to_world = function(digtron_id, root_pos, player_name)
 	local layout = retrieve_layout(digtron_id)
 	local root_hash = minetest.hash_node_position(root_pos)
+	local root_hash_minus_origin = root_hash - origin_hash
 		
 	for hash, data in pairs(layout) do
-		local node_pos = minetest.get_position_from_hash(hash + root_hash - origin_hash)
+		local node_pos = minetest.get_position_from_hash(hash + root_hash_minus_origin)
 		minetest.set_node(node_pos, data.node)
 		local meta = minetest.get_meta(node_pos)
 		for field, value in pairs(data.meta.fields) do
@@ -561,14 +571,9 @@ end
 
 digtron.move = function(digtron_id, dest_pos, player_name)
 	minetest.chat_send_all("move attempt")
-	local current_pos = retrieve_pos(digtron_id)
-	if current_pos == nil then
-		minetest.chat_send_all("no pos recorded for digtron")
-		return
-	end
 	local permitted, succeeded, failed = digtron.is_buildable_to(digtron_id, dest_pos, player_name)
 	if permitted then
-		local removed = digtron.remove_from_world(digtron_id, current_pos, player_name)
+		local removed = digtron.remove_from_world(digtron_id, player_name)
 		digtron.build_to_world(digtron_id, dest_pos, player_name)
 		minetest.sound_play("digtron_truck", {gain = 0.5, pos=dest_pos})
 		for _, removed_pos in ipairs(removed) do
@@ -576,13 +581,66 @@ digtron.move = function(digtron_id, dest_pos, player_name)
 		end
 	else
 		digtron.show_buildable_nodes({}, failed)
-		minetest.sound_play("digtron_squeal", {gain = 0.5, pos=current_pos})
+		minetest.sound_play("digtron_squeal", {gain = 0.5, pos=dest_pos})
 	end	
 end
 
 
+digtron.predict_dig = function(digtron_id, player_name)
+	local layout = retrieve_layout(digtron_id)
+	local root_pos = retrieve_pos(digtron_id)
+	-- TODO standard check for nil returns, not bothering right now because I'm lazy
+	local root_hash = minetest.hash_node_position(root_pos)
+	local root_hash_minus_origin = root_hash - origin_hash
+	
+	local products = {}
+	local dug_positions = {}
+	local cost = 0
+	
+	for hash, data in pairs(layout) do
+		if data.node.name == "digtron:digger" then -- TODO: something better than this based on group, ideally pre-gather this info on assembly
+			local node_pos = minetest.get_position_from_hash(hash + root_hash_minus_origin)
+			local target_pos = vector.add(node_pos, minetest.facedir_to_dir(data.node.param2))
+			if not layout[minetest.hash_node_position(target_pos)] then -- check if the digger is pointed inward, if so ignore it. TODO some way to cull these permanently upon assembly, probably factoring in to the "something better than this" above
+				--TODO protection test, can_dig test, periodicity test
+				--if minetest.get_item_group(target.name, "digtron") ~= 0 or
+					--minetest.get_item_group(target.name, "digtron_protected") ~= 0 or
+					--minetest.get_item_group(target.name, "immortal") ~= 0 then
+				local target_node = minetest.get_node(target_pos)
+				
+				-- TODO: move this into some kind of shared definition
+				--if digtron.config.uses_resources then
+				--	if minetest.get_item_group(target.name, "cracky") ~= 0 then
+				--		in_known_group = true
+				--		material_cost = math.max(material_cost, digtron.config.dig_cost_cracky)
+				--	end
+				--	if minetest.get_item_group(target.name, "crumbly") ~= 0 then
+				--		in_known_group = true
+				--		material_cost = math.max(material_cost, digtron.config.dig_cost_crumbly)
+				--	end
+				--	if minetest.get_item_group(target.name, "choppy") ~= 0 then
+				--		in_known_group = true
+				--		material_cost = math.max(material_cost, digtron.config.dig_cost_choppy)
+				--	end
+				--	if not in_known_group then
+				--		material_cost = digtron.config.dig_cost_default
+				--	end
+				--end
+	
+				local drops = minetest.get_node_drops(target_node.name, "")
+				for _, drop in ipairs(drops) do
+					products[drop] = (products[drop] or 0) + 1
+				end
+				table.insert(dug_positions, target_pos)
+			end
+		end
+	end
+
+	return products, dug_positions, cost
+end
+
 ---------------------------------------------------------------------------------
--- Misc
+-- Node callbacks
 
 -- If the digtron node has an assigned ID and a layout for that ID exists and
 -- a matching node exists in the layout then don't let it be dug.

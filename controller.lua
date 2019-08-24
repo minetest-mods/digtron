@@ -41,6 +41,7 @@ local get_controller_assembled_formspec = function(pos, digtron_id, player_name)
 		.. "field[1.2,0.25;2,1;digtron_name;Digtron name;"..digtron.get_name(digtron_id).."]"
 		.. "field_close_on_enter[digtron_name;false]"
 		.. "button[3,0;1,1;move_forward;Move forward]"
+		.. "button[4,0;1,1;test_dig;Test dig]"
 		.. "container_end[]"
 		.. "container[0.5,1]"
 		.. "list[detached:" .. digtron_id .. ";main;0,0;8,2]" -- TODO: paging system for inventory, guard against non-existent listname
@@ -96,7 +97,7 @@ minetest.register_node("digtron:controller", {
 		end		
 		-- call on_dignodes callback
 		if digtron_id ~= "" then
-			local removed = digtron.remove_from_world(digtron_id, pos, player_name)
+			local removed = digtron.remove_from_world(digtron_id, player_name)
 			for _, removed_pos in ipairs(removed) do
 				minetest.check_for_falling(removed_pos)
 			end
@@ -256,6 +257,12 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 				digtron.move(digtron_id, dest_pos, player_name)
 			end
 		end		
+	end
+	
+	if fields.test_dig then
+		local products, nodes_to_dig, cost = digtron.predict_dig(digtron_id, player_name)
+		minetest.chat_send_all("products: " .. dump(products))
+		minetest.chat_send_all("positions: " .. dump(nodes_to_dig))
 	end
 	
 	--TODO: this isn't recording the field when using ESC to exit the formspec
