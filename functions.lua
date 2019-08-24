@@ -256,7 +256,6 @@ end
 --------------------------------------------------------------------------------------------------------
 -- assemble and disassemble
 
-local origin_hash = minetest.hash_node_position({x=0,y=0,z=0})
 
 -- Returns the id of the new Digtron record, or nil on failure
 digtron.assemble = function(root_pos, player_name)
@@ -287,7 +286,7 @@ digtron.assemble = function(root_pos, player_name)
 	local layout = {}
 	
 	for hash, node in pairs(digtron_nodes) do
-		local relative_hash = hash - root_hash + origin_hash
+		local relative_hash = hash - root_hash
 		local current_meta
 		if hash == root_hash then
 			current_meta = root_meta -- we're processing the controller, we already have a reference to its meta
@@ -372,7 +371,7 @@ end
 -- Returns pos, node, and meta for the digtron node provided the in-world node matches the layout
 -- returns nil otherwise
 local get_valid_data = function(digtron_id, root_hash, hash, data, function_name)
-	local node_hash = hash + root_hash - origin_hash -- TODO may want to return this as well?
+	local node_hash = hash + root_hash -- TODO may want to return this as well?
 	local node_pos = minetest.get_position_from_hash(node_hash)
 	local node = minetest.get_node(node_pos)
 	local node_meta = minetest.get_meta(node_pos)
@@ -407,6 +406,11 @@ end
 digtron.disassemble = function(digtron_id, player_name)
 	local bbox = retrieve_bounding_box(digtron_id)
 	local root_pos = retrieve_pos(digtron_id)
+	if not root_pos then
+		minetest.log("error", "digtron.disassemble was unable to find a position for " .. digtron_id
+			.. ", disassembly was impossible. Has the digtron been removed from world?")
+		return
+	end
 
 	local root_meta = minetest.get_meta(root_pos)
 	root_meta:set_string("infotext", digtron.get_name(digtron_id))
@@ -513,20 +517,18 @@ digtron.is_buildable_to = function(digtron_id, root_pos, player_name, ignore_nod
 	local old_hashes = {}
 	if old_pos then
 		local old_root_hash = minetest.hash_node_position(old_pos)
-		local old_root_minus_origin = old_root_hash - origin_hash
 		for layout_hash, _ in pairs(layout) do
-			old_hashes[layout_hash + old_root_minus_origin] = true
+			old_hashes[layout_hash + old_root_hash] = true
 		end
 	end
 	
 	local root_hash = minetest.hash_node_position(root_pos)
-	local root_minus_origin = root_hash - origin_hash
 	local succeeded = {}
 	local failed = {}	
 	local permitted = true
 	
 	for layout_hash, data in pairs(layout) do
-		local node_hash = layout_hash + root_minus_origin
+		local node_hash = layout_hash + root_hash
 		local node_pos = minetest.get_position_from_hash(node_hash)
 		local node = minetest.get_node(node_pos)
 		local node_def = minetest.registered_nodes[node.name]
@@ -550,10 +552,9 @@ end
 digtron.build_to_world = function(digtron_id, root_pos, player_name)
 	local layout = retrieve_layout(digtron_id)
 	local root_hash = minetest.hash_node_position(root_pos)
-	local root_hash_minus_origin = root_hash - origin_hash
 		
 	for hash, data in pairs(layout) do
-		local node_pos = minetest.get_position_from_hash(hash + root_hash_minus_origin)
+		local node_pos = minetest.get_position_from_hash(hash + root_hash)
 		minetest.set_node(node_pos, data.node)
 		local meta = minetest.get_meta(node_pos)
 		for field, value in pairs(data.meta.fields) do
@@ -589,9 +590,8 @@ end
 digtron.predict_dig = function(digtron_id, player_name)
 	local layout = retrieve_layout(digtron_id)
 	local root_pos = retrieve_pos(digtron_id)
-	-- TODO standard check for nil returns, not bothering right now because I'm lazy
+	if not (layout and root_pos) then return end -- TODO error messages etc
 	local root_hash = minetest.hash_node_position(root_pos)
-	local root_hash_minus_origin = root_hash - origin_hash
 	
 	local products = {}
 	local dug_positions = {}
@@ -599,7 +599,7 @@ digtron.predict_dig = function(digtron_id, player_name)
 	
 	for hash, data in pairs(layout) do
 		if data.node.name == "digtron:digger" then -- TODO: something better than this based on group, ideally pre-gather this info on assembly
-			local node_pos = minetest.get_position_from_hash(hash + root_hash_minus_origin)
+			local node_pos = minetest.get_position_from_hash(hash + root_hash)
 			local target_pos = vector.add(node_pos, minetest.facedir_to_dir(data.node.param2))
 			if not layout[minetest.hash_node_position(target_pos)] then -- check if the digger is pointed inward, if so ignore it. TODO some way to cull these permanently upon assembly, probably factoring in to the "something better than this" above
 				--TODO protection test, can_dig test, periodicity test
@@ -675,7 +675,7 @@ digtron.can_dig = function(pos, digger)
 	
 	local root_hash = minetest.hash_node_position(root_pos)
 	local here_hash = minetest.hash_node_position(pos)
-	local layout_hash = here_hash - root_hash + origin_hash
+	local layout_hash = here_hash - root_hash
 	local layout_data = layout[layout_hash]
 	if layout_data == nil or layout_data.node == nil then
 		minetest.log("error", "[Digtron] can_dig was called on a " .. node.name .. " at location "
