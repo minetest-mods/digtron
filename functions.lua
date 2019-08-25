@@ -656,8 +656,8 @@ local predict_dig = function(digtron_id, player_name)
 	return leftovers, dug_positions, cost
 end
 
--- Removes nodes and records node info so on-dig callbacks can be called later
-local get_and_remove_nodes = function(nodes_to_dig)
+-- Removes nodes and records node info so execute_dug_callbacks can be called later
+local get_and_remove_nodes = function(nodes_to_dig, player_name)
 	local ret = {}
 	for _, pos in ipairs(nodes_to_dig) do
 		local record = {}
@@ -667,7 +667,43 @@ local get_and_remove_nodes = function(nodes_to_dig)
 		minetest.remove_node(pos)
 		table.insert(ret, record)
 	end
+	
+	local nodes_dug_count = #nodes_to_dig
+	if nodes_dug_count > 0 then
+		local pluralized = "node"
+		if nodes_dug_count > 1 then
+			pluralized = "nodes"
+		end
+		minetest.log("action", nodes_dug_count .. " " .. pluralized .. " dug by "
+			.. digtron_id .. " near ".. minetest.pos_to_string(new_root_pos)
+			.. " operated by by " .. player_name)
+	end
+
 	return ret
+end
+
+local execute_dug_callbacks = function(dug_data)
+	-- Execute various on-dig callbacks for the nodes that Digtron dug
+	for _, dug_data in ipairs(nodes_dug) do
+		local old_pos = dug_data.pos
+		local old_node = dug_data.node
+		local old_name = old_node.name
+
+		for _, callback in ipairs(minetest.registered_on_dignodes) do
+			-- Copy pos and node because callback can modify them
+			local pos_copy = {x=old_pos.x, y=old_pos.y, z=old_pos.z}
+			local oldnode_copy = {name=old_name, param1=old_node.param1, param2=old_node.param2}
+			callback(pos_copy, oldnode_copy, digtron.fake_player)
+		end
+
+		local old_def = minetest.registered_nodes[old_name]
+		if old_def ~= nil then
+			local old_after_dig = old_def.after_dig_node
+			if old_after_dig ~= nil then
+				old_after_dig(old_pos, old_node, dug_data.meta, digtron.fake_player)
+			end
+		end
+	end
 end
 
 digtron.execute_cycle = function(digtron_id, player_name)
@@ -679,23 +715,16 @@ digtron.execute_cycle = function(digtron_id, player_name)
 
 	if buildable_to then
 		digtron.fake_player:update(old_root_pos, player_name)
+		
+		-- Removing old nodes
 		local removed = digtron.remove_from_world(digtron_id, player_name)
+		local nodes_dug = get_and_remove_nodes(nodes_to_dig, player_name)
 		
-		local nodes_dug = get_and_remove_nodes(nodes_to_dig)
-		
-		local nodes_dug_count = #nodes_to_dig
-		if nodes_dug_count > 0 then
-			local pluralized = "node"
-			if nodes_dug_count > 1 then
-				pluralized = "nodes"
-			end
-			minetest.log("action", nodes_dug_count .. " " .. pluralized .. " dug by "
-				.. digtron_id .. " near ".. minetest.pos_to_string(new_root_pos)
-				.. " operated by by " .. player_name)
-		end
-			
+		-- Building new Digtron
 		digtron.build_to_world(digtron_id, new_root_pos, player_name)
 		minetest.sound_play("digtron_construction", {gain = 0.5, pos=new_root_pos})
+		
+		-- TODO add build portion of the cycle
 		
 		-- Don't need to do fancy callback checking for digtron nodes since I made all those
 		-- nodes and I know they don't have anything that needs to be done for them.
@@ -704,28 +733,8 @@ digtron.execute_cycle = function(digtron_id, player_name)
 			minetest.check_for_falling(removed_pos)
 		end
 
-		-- Execute various on-dig callbacks for the nodes that Digtron dug
 		-- Must be called after digtron.build_to_world because it triggers falling nodes
-		for _, dug_data in ipairs(nodes_dug) do
-			local old_pos = dug_data.pos
-			local old_node = dug_data.node
-			local old_name = old_node.name
-
-			for _, callback in ipairs(minetest.registered_on_dignodes) do
-				-- Copy pos and node because callback can modify them
-				local pos_copy = {x=old_pos.x, y=old_pos.y, z=old_pos.z}
-				local oldnode_copy = {name=old_name, param1=old_node.param1, param2=old_node.param2}
-				callback(pos_copy, oldnode_copy, digtron.fake_player)
-			end
-
-			local old_def = minetest.registered_nodes[old_name]
-			if old_def ~= nil then
-				local old_after_dig = old_def.after_dig_node
-				if old_after_dig ~= nil then
-					old_after_dig(old_pos, old_node, dug_data.meta, digtron.fake_player)
-				end
-			end
-		end
+		execute_dug_callbacks(nodes_dug)
 	
 		commit_predictive_inventory(digtron_id)
 	else
