@@ -1,6 +1,8 @@
 digtron = {}
 digtron.doc = {} -- TODO: move to doc file
 
+digtron.mod_meta = minetest.get_mod_storage()
+
 local modpath = minetest.get_modpath(minetest.get_current_modname())
 
 dofile(modpath.."/config.lua")
