@@ -137,7 +137,7 @@ local clear_predictive_inventory = function(digtron_id)
 	minetest.remove_detached_inventory("digtron_predictive_"..digtron_id)
 	predictive_inventory[digtron_id] = nil
 	
-	if not next(predictive_inventory) then
+	if next(predictive_inventory) ~= nil then
 		minetest.log("warning", "[Digtron] multiple predictive inventories were in existence, this shouldn't be happening. File an issue with Digtron programmers.")
 	end
 end

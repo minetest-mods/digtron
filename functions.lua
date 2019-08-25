@@ -30,8 +30,7 @@ local create_new_id = function()
 	while mod_meta:get_string(digtron_id..":layout") ~= "" do
 		digtron_id = "digtron" .. tostring(math.random(1, 2^21))
 	end	
-	local inv = minetest.create_detached_inventory(digtron_id, detached_inventory_callbacks)
-	return digtron_id, inv
+	return digtron_id
 end
 
 -- Deletes a Digtron record. Note: just throws everything away, this is not digtron.disassemble.
@@ -273,7 +272,8 @@ digtron.assemble = function(root_pos, player_name)
 	-- use this info, but it's small and IMO not worth the complexity.
 	get_all_digtron_nodes(root_pos, digtron_nodes, digtron_adjacent, player_name)
 	
-	local digtron_id, digtron_inv = create_new_id(root_pos)
+	local digtron_id = create_new_id(root_pos)
+	local digtron_inv = retrieve_inventory(digtron_id)
 	
 	local layout = {}
 	
@@ -536,7 +536,7 @@ digtron.is_buildable_to = function(digtron_id, root_pos, player_name, ignore_nod
 		if not (
 			(node_def and node_def.buildable_to)
 			or ignore_hashes[node_hash]) or
-			minetest.is_protected(target_pos, player_name)
+			minetest.is_protected(node_pos, player_name)
 		then
 			if return_immediately_on_failure then
 				return false -- no need to test further, don't return node positions
@@ -656,27 +656,80 @@ local predict_dig = function(digtron_id, player_name)
 	return leftovers, dug_positions, cost
 end
 
+-- Removes nodes and records node info so on-dig callbacks can be called later
+local get_and_remove_nodes = function(nodes_to_dig)
+	local ret = {}
+	for _, pos in ipairs(nodes_to_dig) do
+		local record = {}
+		record.pos = pos
+		record.node = minetest.get_node(pos)
+		record.meta = minetest.get_meta(pos)
+		minetest.remove_node(pos)
+		table.insert(ret, record)
+	end
+	return ret
+end
+
 digtron.execute_cycle = function(digtron_id, player_name)
 	local leftovers, nodes_to_dig, cost = predict_dig(digtron_id, player_name)
-	local root_pos = retrieve_pos(digtron_id)
-	local root_node = minetest.get_node(root_pos)
-	local new_pos = vector.add(root_pos, cardinal_dirs[facedir_to_dir_index(root_node.param2)])
-	local buildable_to, succeeded, failed = digtron.is_buildable_to(digtron_id, new_pos, player_name, nodes_to_dig, return_immediately_on_failure)
+	local old_root_pos = retrieve_pos(digtron_id)
+	local root_node = minetest.get_node(old_root_pos)
+	local new_root_pos = vector.add(old_root_pos, cardinal_dirs[facedir_to_dir_index(root_node.param2)])
+	local buildable_to, succeeded, failed = digtron.is_buildable_to(digtron_id, new_root_pos, player_name, nodes_to_dig)
 
 	if buildable_to then
+		digtron.fake_player:update(old_root_pos, player_name)
 		local removed = digtron.remove_from_world(digtron_id, player_name)
-		minetest.bulk_set_node(nodes_to_dig, {name="air"})
-		digtron.build_to_world(digtron_id, new_pos, player_name)
-		minetest.sound_play("digtron_construction", {gain = 0.5, pos=new_pos})
+		
+		local nodes_dug = get_and_remove_nodes(nodes_to_dig)
+		
+		local nodes_dug_count = #nodes_to_dig
+		if nodes_dug_count > 0 then
+			local pluralized = "node"
+			if nodes_dug_count > 1 then
+				pluralized = "nodes"
+			end
+			minetest.log("action", nodes_dug_count .. " " .. pluralized .. " dug by "
+				.. digtron_id .. " near ".. minetest.pos_to_string(new_root_pos)
+				.. " operated by by " .. player_name)
+		end
+			
+		digtron.build_to_world(digtron_id, new_root_pos, player_name)
+		minetest.sound_play("digtron_construction", {gain = 0.5, pos=new_root_pos})
+		
+		-- Don't need to do fancy callback checking for digtron nodes since I made all those
+		-- nodes and I know they don't have anything that needs to be done for them.
+		-- Just check for falling nodes.
 		for _, removed_pos in ipairs(removed) do
 			minetest.check_for_falling(removed_pos)
 		end
-		for _, dug_pos in ipairs(nodes_to_dig) do
-			-- TODO: other on-dug callbacks
-			minetest.check_for_falling(dug_pos)
+
+		-- Execute various on-dig callbacks for the nodes that Digtron dug
+		-- Must be called after digtron.build_to_world because it triggers falling nodes
+		for _, dug_data in ipairs(nodes_dug) do
+			local old_pos = dug_data.pos
+			local old_node = dug_data.node
+			local old_name = old_node.name
+
+			for _, callback in ipairs(minetest.registered_on_dignodes) do
+				-- Copy pos and node because callback can modify them
+				local pos_copy = {x=old_pos.x, y=old_pos.y, z=old_pos.z}
+				local oldnode_copy = {name=old_name, param1=old_node.param1, param2=old_node.param2}
+				callback(pos_copy, oldnode_copy, digtron.fake_player)
+			end
+
+			local old_def = minetest.registered_nodes[old_name]
+			if old_def ~= nil then
+				local old_after_dig = old_def.after_dig_node
+				if old_after_dig ~= nil then
+					old_after_dig(old_pos, old_node, dug_data.meta, digtron.fake_player)
+				end
+			end
 		end
+	
 		commit_predictive_inventory(digtron_id)
 	else
+		clear_predictive_inventory(digtron_id)
 		digtron.show_buildable_nodes({}, failed)
 		minetest.sound_play("digtron_squeal", {gain = 0.5, pos=new_pos})
 	end
