@@ -144,14 +144,14 @@ minetest.register_node("digtron:controller", {
 				local success, succeeded, failed = digtron.is_buildable_to(digtron_id, target_pos, player_name)
 				if success then
 					digtron.build_to_world(digtron_id, target_pos, player_name)
-					minetest.sound_play("digtron_machine_assemble", {gain = 0.5, pos=root_pos})
+					minetest.sound_play("digtron_machine_assemble", {gain = 0.5, pos=target_pos})
 					-- Note: DO NOT RESPECT CREATIVE MODE here.
 					-- If we allow multiple copies of a Digtron running around with the same digtron_id,
-					-- human sacrifice, dogs and cats living together, mass hysteria!
+					-- human sacrifice, dogs and cats living together, mass hysteria
 					return ItemStack("")
 				else
 					digtron.show_buildable_nodes(succeeded, failed)
-					minetest.sound_play("digtron_buzzer", {gain = 0.5, pos=root_pos})
+					minetest.sound_play("digtron_buzzer", {gain = 0.5, pos=target_pos})
 				end
 			end
 			return itemstack

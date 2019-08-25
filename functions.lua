@@ -197,8 +197,6 @@ local get_table_functions = function(identifier)
 end
 
 local persist_layout, retrieve_layout = get_table_functions("layout")
-local persist_adjacent, retrieve_adjacent = get_table_functions("adjacent")
-local persist_bounding_box, retrieve_bounding_box = get_table_functions("bounding_box")
 local persist_pos, retrieve_pos, dispose_pos = get_table_functions("pos")
 
 digtron.get_pos = retrieve_pos
@@ -206,28 +204,39 @@ digtron.get_pos = retrieve_pos
 -------------------------------------------------------------------------------------------------------
 -- Layout creation helpers
 
-local cardinal_directions = {
-	{x=1,y=0,z=0},
-	{x=-1,y=0,z=0},
-	{x=0,y=1,z=0},
-	{x=0,y=-1,z=0},
-	{x=0,y=0,z=1},
-	{x=0,y=0,z=-1},
+local cardinal_dirs = {
+	{x= 0, y=0,  z= 1},
+	{x= 1, y=0,  z= 0},
+	{x= 0, y=0,  z=-1},
+	{x=-1, y=0,  z= 0},
+	{x= 0, y=-1, z= 0},
+	{x= 0, y=1,  z= 0},
+}
+-- Mapping from facedir value to index in cardinal_dirs.
+local facedir_to_dir_map = {
+	[0]=1, 2, 3, 4,
+	5, 2, 6, 4,
+	6, 2, 5, 4,
+	1, 5, 3, 6,
+	1, 6, 3, 5,
+	1, 4, 3, 2,
 }
 
-local update_bounding_box = function(bounding_box, pos)
-	bounding_box.minp.x = math.min(bounding_box.minp.x, pos.x)
-	bounding_box.minp.y = math.min(bounding_box.minp.y, pos.y)
-	bounding_box.minp.z = math.min(bounding_box.minp.z, pos.z)
-	bounding_box.maxp.x = math.max(bounding_box.maxp.x, pos.x)
-	bounding_box.maxp.y = math.max(bounding_box.maxp.y, pos.y)
-	bounding_box.maxp.z = math.max(bounding_box.maxp.z, pos.z)
+-- Turn the cardinal directions into a set of integers you can add to a hash to step in that direction.
+local cardinal_dirs_hash = {}
+for i, dir in ipairs(cardinal_dirs) do
+	cardinal_dirs_hash[i] = minetest.hash_node_position(dir) - minetest.hash_node_position({x=0, y=0, z=0})
+end
+
+-- Given a facedir, returns an index into either cardinal_dirs or cardinal_dirs_hash that 
+local facedir_to_dir_index = function(param2)
+	return facedir_to_dir_map[param2 % 32]
 end
 
 -- recursive function searches out all connected unassigned digtron nodes
-local get_all_adjacent_digtron_nodes
-get_all_adjacent_digtron_nodes = function(pos, digtron_nodes, digtron_adjacent, bounding_box, player_name)
-	for _, dir in ipairs(cardinal_directions) do
+local get_all_digtron_nodes
+get_all_digtron_nodes = function(pos, digtron_nodes, digtron_adjacent, player_name)
+	for _, dir in ipairs(cardinal_dirs) do
 		local test_pos = vector.add(pos, dir)
 		local test_hash = minetest.hash_node_position(test_pos)
 		if not (digtron_nodes[test_hash] or digtron_adjacent[test_hash]) then -- don't test twice
@@ -242,8 +251,7 @@ get_all_adjacent_digtron_nodes = function(pos, digtron_nodes, digtron_adjacent, 
 				else
 					--test_node.group_value = group_value -- for later ease of reference
 					digtron_nodes[test_hash] = test_node
-					update_bounding_box(bounding_box, test_pos)
-					get_all_adjacent_digtron_nodes(test_pos, digtron_nodes, digtron_adjacent, bounding_box, player_name) -- recurse
+					get_all_digtron_nodes(test_pos, digtron_nodes, digtron_adjacent, player_name) -- recurse
 				end
 			else
 				-- don't record details, the content of this node will change as the digtron moves
@@ -252,6 +260,82 @@ get_all_adjacent_digtron_nodes = function(pos, digtron_nodes, digtron_adjacent, 
 		end		
 	end
 end
+
+-------------------------------------------------------------------------------------------------
+-- Cache-only data, not persisted
+
+cache_bounding_box = {}
+local update_bounding_box = function(bounding_box, pos)
+	bounding_box.minp.x = math.min(bounding_box.minp.x, pos.x)
+	bounding_box.minp.y = math.min(bounding_box.minp.y, pos.y)
+	bounding_box.minp.z = math.min(bounding_box.minp.z, pos.z)
+	bounding_box.maxp.x = math.max(bounding_box.maxp.x, pos.x)
+	bounding_box.maxp.y = math.max(bounding_box.maxp.y, pos.y)
+	bounding_box.maxp.z = math.max(bounding_box.maxp.z, pos.z)
+end
+local retrieve_bounding_box = function(digtron_id)
+	local val = cache_bounding_box[digtron_id]
+	if val then return val end
+	
+	local layout = retrieve_layout(digtron_id)
+	if layout == nil then return nil end
+
+	local bbox = {minp = {x=0, y=0, z=0}, maxp = {x=0, y=0, z=0}}
+	for hash, data in pairs(layout) do
+		update_bounding_box(bbox, minetest.get_position_from_hash(hash))
+	end
+	cache_bounding_box[digtron_id] = bbox
+	return bbox	
+end
+
+cache_all_adjacent_pos = {}
+cache_all_digger_targets = {}
+local refresh_adjacent = function(digtron_id)
+	local layout = retrieve_layout(digtron_id)
+	if layout == nil then return nil end
+	
+	local adjacent = {}
+	local adjacent_to_diggers = {}
+	for hash, data in pairs(layout) do
+		for _, dir_hash in ipairs(cardinal_dirs_hash) do
+			local potential_adjacent = hash+dir_hash
+			if layout[potential_adjacent] == nil then
+				adjacent[potential_adjacent] = true
+			end
+		end
+		
+		if minetest.get_item_group(data.node.name, "digtron") == 3 then
+			local potential_target = hash + cardinal_dirs_hash[facedir_to_dir_index(data.node.param2)]
+			if layout[potential_target] == nil then
+				local fields = data.meta.fields
+				adjacent_to_diggers[potential_target] = {periodicity = fields.periodicity, offset = fields.offset}
+			end
+		end		
+	end
+	cache_all_adjacent_pos[digtron_id] = adjacent
+	cache_all_digger_targets[digtron_id] = adjacent_to_diggers
+end
+local retrieve_all_adjacent_pos = function(digtron_id)
+	local val = cache_all_adjacent_pos[digtron_id]
+	if val then return val end
+	refresh_adjacent(digtron_id)
+	return cache_all_adjacent_pos[digtron_id]
+end
+local retrieve_all_digger_targets = function(digtron_id)
+	local val = cache_all_digger_targets[digtron_id]
+	if val then return val end
+	refresh_adjacent(digtron_id)
+	return cache_all_digger_targets[digtron_id]
+end
+
+-- call this whenever a stored layout is modified (eg, by rotating it)
+-- automatically called on dispose
+local invalidate_layout_cache = function(digtron_id)
+	cache_bounding_box[digtron_id] = nil
+	cache_all_adjacent_pos[digtron_id] = nil
+	cache_all_digger_targets[digtron_id] = nil
+end
+table.insert(dispose_callbacks, invalidate_layout_cache)
 
 --------------------------------------------------------------------------------------------------------
 -- assemble and disassemble
@@ -278,8 +362,7 @@ digtron.assemble = function(root_pos, player_name)
 	local digtron_nodes = {[root_hash] = node} -- Nodes that are part of Digtron.
 		-- Initialize with the controller, it won't be added by get_all_adjacent_digtron_nodes
 	local digtron_adjacent = {} -- Nodes that are adjacent to Digtron but not a part of it
-	local bounding_box = {minp=vector.new(root_pos), maxp=vector.new(root_pos)}
-	get_all_adjacent_digtron_nodes(root_pos, digtron_nodes, digtron_adjacent, bounding_box, player_name)
+	get_all_digtron_nodes(root_pos, digtron_nodes, digtron_adjacent, player_name)
 	
 	local digtron_id, digtron_inv = create_new_id(root_pos)
 	
@@ -329,14 +412,10 @@ digtron.assemble = function(root_pos, player_name)
 		layout[relative_hash] = {meta = current_meta_table, node = node}
 	end
 	
-	bounding_box.minp = vector.subtract(bounding_box.minp, root_pos)
-	bounding_box.maxp = vector.subtract(bounding_box.maxp, root_pos)
-	
 	digtron.set_name(digtron_id, root_meta:get_string("infotext"))
 	persist_inventory(digtron_id)
 	persist_layout(digtron_id, layout)
-	persist_adjacent(digtron_id, digtron_adjacent)
-	persist_bounding_box(digtron_id, bounding_box)
+	invalidate_layout_cache(digtron_id)
 	persist_pos(digtron_id, root_pos)
 	
 	-- Wipe out the inventories of all in-world nodes, it's stored in the mod_meta now.
@@ -563,8 +642,6 @@ digtron.build_to_world = function(digtron_id, root_pos, player_name)
 		meta:set_string("digtron_id", digtron_id)
 		meta:mark_as_private("digtron_id")
 	end
-	local bbox = retrieve_bounding_box(digtron_id)
-	persist_bounding_box(digtron_id, bbox)
 	persist_pos(digtron_id, root_pos)
 	
 	return true
@@ -597,16 +674,22 @@ digtron.predict_dig = function(digtron_id, player_name)
 	local dug_positions = {}
 	local cost = 0
 	
-	for hash, data in pairs(layout) do
-		if data.node.name == "digtron:digger" then -- TODO: something better than this based on group, ideally pre-gather this info on assembly
-			local node_pos = minetest.get_position_from_hash(hash + root_hash)
-			local target_pos = vector.add(node_pos, minetest.facedir_to_dir(data.node.param2))
-			if not layout[minetest.hash_node_position(target_pos)] then -- check if the digger is pointed inward, if so ignore it. TODO some way to cull these permanently upon assembly, probably factoring in to the "something better than this" above
-				--TODO protection test, can_dig test, periodicity test
-				--if minetest.get_item_group(target.name, "digtron") ~= 0 or
-					--minetest.get_item_group(target.name, "digtron_protected") ~= 0 or
-					--minetest.get_item_group(target.name, "immortal") ~= 0 then
-				local target_node = minetest.get_node(target_pos)
+	for target_hash, digger_data in pairs(retrieve_all_digger_targets(digtron_id)) do
+		local target_pos = minetest.get_position_from_hash(target_hash + root_hash)
+		local target_node = minetest.get_node(target_pos)
+		local target_name = target_node.name
+		local targetdef = minetest.registered_nodes[target_name]
+		--TODO periodicity/offset test
+		if minetest.get_item_group(target_name, "digtron") == 0 and
+			minetest.get_item_group(target_name, "digtron_protected") == 0 and
+			minetest.get_item_group(target_name, "immortal") == 0 and
+			(
+				targetdef == nil or -- can dig undefined nodes, why not
+				targetdef.can_dig == nil or
+				targetdef.can_dig(target_pos, minetest.get_player_by_name(player_name))
+			) and
+			not minetest.is_protected(target_pos, player_name)
+			then
 				
 				-- TODO: move this into some kind of shared definition
 				--if digtron.config.uses_resources then
@@ -627,12 +710,11 @@ digtron.predict_dig = function(digtron_id, player_name)
 				--	end
 				--end
 	
-				local drops = minetest.get_node_drops(target_node.name, "")
-				for _, drop in ipairs(drops) do
-					products[drop] = (products[drop] or 0) + 1
-				end
-				table.insert(dug_positions, target_pos)
+			local drops = minetest.get_node_drops(target_name, "")
+			for _, drop in ipairs(drops) do
+				products[drop] = (products[drop] or 0) + 1
 			end
+			table.insert(dug_positions, target_pos)
 		end
 	end
 
@@ -654,13 +736,11 @@ digtron.can_dig = function(pos, digger)
 
 	local node = minetest.get_node(pos)
 	
-	local bbox = retrieve_bounding_box(digtron_id)
 	local root_pos = retrieve_pos(digtron_id)
 	local layout = retrieve_layout(digtron_id)
-	if bbox == nil or root_pos == nil or layout == nil then
+	if root_pos == nil or layout == nil then
 		-- Somehow, this belongs to a digtron id that's missing information that should exist in persistence.
 		local missing = ""
-		if bbox == nil then missing = missing .. "bounding_box " end
 		if root_pos == nil then missing = missing .. "root_pos " end
 		if layout == nil then missing = missing .. "layout " end
 		
