@@ -1,13 +1,9 @@
 digtron = {}
-digtron.doc = {}
-
-digtron.config = {}
-
-digtron.config.marker_crate_bad_duration = 5
-digtron.config.marker_crate_good_duration = 5
+digtron.doc = {} -- TODO: move to doc file
 
 local modpath = minetest.get_modpath(minetest.get_current_modname())
 
+dofile(modpath.."/config.lua")
 dofile(modpath.."/entities.lua")
 dofile(modpath.."/functions.lua")
 dofile(modpath.."/controller.lua")

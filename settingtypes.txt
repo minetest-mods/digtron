@@ -1,0 +1,51 @@
+#This can cause digtrons to operate without consuming fuel or building materials,
+#though they still check whether they have enough in inventory.
+#It's a separate setting from regular creative mode.
+digtron_uses_resources (Digtron uses resources) bool true
+
+#When true, lava counts as protected blocks.
+digtron_lava_impassible (Lava is impassible to Digtrons) bool true
+
+#Sets how much HP damage a digger does. Soft material diggers do half this.
+#Set to 0 to disable damage entirely.
+digtron_damage_hp (Diggers damage this many hp) int 8
+
+#How many seconds a digtron waits between cycles.
+#Auto-controllers can make this wait longer, but cannot make it shorter.
+digtron_cycle_time (Minimum Digtron cycle time in seconds) float 1.0 0.0 60.0
+
+#How many Digtron blocks can be moved for each adjacent
+#solid block that the Digtron has traction against
+digtron_traction_factor (Digtron traction factor) float 3.0 0.0 1000.0
+
+#The maximum extrusion setting permitted for a Digtron builder module.
+digtron_maximum_extrusion (Digtron maximum extrusion) int 25 1 100
+
+digtron_marker_crate_good_duration (Duration that 'good' crate markers last) float 3.0 0.0 100.0
+digtron_marker_crate_bad_duration (Duration that 'bad' crate markers last) float 9.0 0.0 100.0
+
+#When a Digtron encounters unloaded map blocks, cause them to load
+#so that the Digtron can continue moving.
+digtron_emerge_unloaded_mapblocks (Emerge unloaded map blocks) bool true
+
+[Fuel costs]
+
+#eg, stone.
+#In a default Minetest game one lump of coal provides 40.0 units of fuel.
+digtron_dig_cost_cracky (Fuel cost for digging cracky blocks) float 1.0 0.0 100.0
+# eg, dirt, sand.
+#In a default Minetest game one lump of coal provides 40.0 units of fuel.
+digtron_dig_cost_crumbly (Fuel cost for digging crumbly blocks) float 0.5 0.0 100.0
+#eg, wood.
+#In a default Minetest game one lump of coal provides 40.0 units of fuel.
+digtron_dig_cost_choppy (Fuel cost for digging choppy blocks) float 0.75 0.0 100.0
+#Fuel cost to dig a block that doesn't fall into one of the other categories.
+#In a default Minetest game one lump of coal provides 40.0 units of fuel.
+digtron_dig_cost_default (Fuel cost for digging other block types) float 0.5 0.0 100.0
+#How much fuel is required to build a block
+digtron_build_cost (Fuel cost to build one block) float 1.0 0.0 100.0
+
+#If the [technic] mod is installed Digtron can draw power from technic batteries.
+#A full battery holds 10000 electrical units. This is divided by the power ratio
+#setting to convert it into fuel units.
+digtron_power_ratio (Electrical charge to coal heat conversion ratio) int 1 1000 100

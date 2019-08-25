@@ -573,7 +573,7 @@ digtron.remove_from_world = function(digtron_id, player_name)
 	local root_hash = minetest.hash_node_position(root_pos)
 	local nodes_to_destroy = {}
 	for hash, data in pairs(layout) do
-		local node_pos, node, node_meta = get_valid_data(digtron_id, root_hash, hash, data, "digtron.destroy")
+		local node_pos = get_valid_data(digtron_id, root_hash, hash, data, "digtron.destroy")
 		if node_pos then
 			table.insert(nodes_to_destroy, node_pos)
 		end
@@ -607,12 +607,17 @@ digtron.is_buildable_to = function(digtron_id, root_pos, player_name, ignore_nod
 	local permitted = true
 	
 	for layout_hash, data in pairs(layout) do
+		-- Don't use get_valid_data, the Digtron isn't in-world yet
 		local node_hash = layout_hash + root_hash
 		local node_pos = minetest.get_position_from_hash(node_hash)
 		local node = minetest.get_node(node_pos)
 		local node_def = minetest.registered_nodes[node.name]
 		-- TODO: lots of testing needed here
-		if not ((node_def and node_def.buildable_to) or old_hashes[node_hash]) then
+		if not (
+			(node_def and node_def.buildable_to)
+			or old_hashes[node_hash]) or
+			minetest.is_protected(target_pos, player_name)
+		then
 			if return_immediately_on_failure then
 				return false -- no need to test further, don't return node positions
 			else
@@ -633,6 +638,7 @@ digtron.build_to_world = function(digtron_id, root_pos, player_name)
 	local root_hash = minetest.hash_node_position(root_pos)
 		
 	for hash, data in pairs(layout) do
+		-- Don't use get_valid_data, the Digtron isn't in-world yet
 		local node_pos = minetest.get_position_from_hash(hash + root_hash)
 		minetest.set_node(node_pos, data.node)
 		local meta = minetest.get_meta(node_pos)
@@ -680,7 +686,9 @@ digtron.predict_dig = function(digtron_id, player_name)
 		local target_name = target_node.name
 		local targetdef = minetest.registered_nodes[target_name]
 		--TODO periodicity/offset test
-		if minetest.get_item_group(target_name, "digtron") == 0 and
+		if
+			target_name ~= "air" and -- TODO: generalise this somehow for liquids and other undiggables
+			minetest.get_item_group(target_name, "digtron") == 0 and
 			minetest.get_item_group(target_name, "digtron_protected") == 0 and
 			minetest.get_item_group(target_name, "immortal") == 0 and
 			(
@@ -689,26 +697,27 @@ digtron.predict_dig = function(digtron_id, player_name)
 				targetdef.can_dig(target_pos, minetest.get_player_by_name(player_name))
 			) and
 			not minetest.is_protected(target_pos, player_name)
-			then
-				
-				-- TODO: move this into some kind of shared definition
-				--if digtron.config.uses_resources then
-				--	if minetest.get_item_group(target.name, "cracky") ~= 0 then
-				--		in_known_group = true
-				--		material_cost = math.max(material_cost, digtron.config.dig_cost_cracky)
-				--	end
-				--	if minetest.get_item_group(target.name, "crumbly") ~= 0 then
-				--		in_known_group = true
-				--		material_cost = math.max(material_cost, digtron.config.dig_cost_crumbly)
-				--	end
-				--	if minetest.get_item_group(target.name, "choppy") ~= 0 then
-				--		in_known_group = true
-				--		material_cost = math.max(material_cost, digtron.config.dig_cost_choppy)
-				--	end
-				--	if not in_known_group then
-				--		material_cost = digtron.config.dig_cost_default
-				--	end
-				--end
+		then
+			local material_cost = 0
+			if digtron.config.uses_resources then
+				local in_known_group = false
+				if minetest.get_item_group(target_name, "cracky") ~= 0 then
+					in_known_group = true
+					material_cost = math.max(material_cost, digtron.config.dig_cost_cracky)
+				end
+				if minetest.get_item_group(target_name, "crumbly") ~= 0 then
+					in_known_group = true
+					material_cost = math.max(material_cost, digtron.config.dig_cost_crumbly)
+				end
+				if minetest.get_item_group(target_name, "choppy") ~= 0 then
+					in_known_group = true
+					material_cost = math.max(material_cost, digtron.config.dig_cost_choppy)
+				end
+				if not in_known_group then
+					material_cost = digtron.config.dig_cost_default
+				end
+			end
+			cost = cost + material_cost
 	
 			local drops = minetest.get_node_drops(target_name, "")
 			for _, drop in ipairs(drops) do
@@ -804,32 +813,25 @@ end
 ------------------------------------------------------------------------------------
 -- Creative trash
 
--- This is wrapped in an after() call as a workaround for to https://github.com/minetest/minetest/issues/8827
+-- Catch when someone throws a Digtron controller with an ID into the trash, dispose
+-- of the persisted layout.
 if minetest.get_modpath("creative") then
-	minetest.after(1, function()
-		if minetest.get_inventory({type="detached", name="creative_trash"}) then
-			if minetest.remove_detached_inventory("creative_trash") then
-				-- Create the trash field
-				local trash = minetest.create_detached_inventory("creative_trash", {
-					-- Allow the stack to be placed and remove it in on_put()
-					-- This allows the creative inventory to restore the stack
-					allow_put = function(inv, listname, index, stack, player)
-						return stack:get_count()
-					end,
-					on_put = function(inv, listname, index, stack, player)
-						local stack = inv:get_stack(listname, index)
-						local stack_meta = stack:get_meta()
-						local digtron_id = stack_meta:get_string("digtron_id")
-						if digtron_id ~= "" then
-							minetest.log("action", player:get_player_name() .. " disposed of " .. digtron_id
-								.. " in the creative inventory's trash receptacle.")
-							dispose_id(digtron_id)
-						end
-						inv:set_list(listname, {})
-					end,
-				})
-				trash:set_size("main", 1)
+	local trash = minetest.detached_inventories["creative_trash"]
+	if trash then
+		local old_on_put = trash.on_put
+		if old_on_put then
+			local digtron_on_put = function(inv, listname, index, stack, player)
+				local stack = inv:get_stack(listname, index)
+				local stack_meta = stack:get_meta()
+				local digtron_id = stack_meta:get_string("digtron_id")
+				if stack:get_name() == "digtron:controller" and digtron_id ~= "" then
+					minetest.log("action", player:get_player_name() .. " disposed of " .. digtron_id
+						.. " in the creative inventory's trash receptacle.")
+					dispose_id(digtron_id)
+				end
+				return old_on_put(inv, listname, index, stack, player)
 			end
+		trash.on_put = digtron_on_put
 		end
-	end)
+	end
 end
