@@ -308,7 +308,7 @@ local refresh_adjacent = function(digtron_id)
 			local potential_target = hash + cardinal_dirs_hash[facedir_to_dir_index(data.node.param2)]
 			if layout[potential_target] == nil then
 				local fields = data.meta.fields
-				adjacent_to_diggers[potential_target] = {periodicity = fields.periodicity, offset = fields.offset}
+				adjacent_to_diggers[potential_target] = {period = fields.period, offset = fields.offset}
 			end
 		end		
 	end
