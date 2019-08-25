@@ -657,7 +657,7 @@ local predict_dig = function(digtron_id, player_name)
 end
 
 -- Removes nodes and records node info so execute_dug_callbacks can be called later
-local get_and_remove_nodes = function(nodes_to_dig, player_name)
+local get_and_remove_nodes = function(nodes_to_dig)
 	local ret = {}
 	for _, pos in ipairs(nodes_to_dig) do
 		local record = {}
@@ -667,7 +667,10 @@ local get_and_remove_nodes = function(nodes_to_dig, player_name)
 		minetest.remove_node(pos)
 		table.insert(ret, record)
 	end
-	
+	return ret
+end
+
+local log_dug_nodes = function(nodes_to_dig, digtron_id, root_pos, player_name)
 	local nodes_dug_count = #nodes_to_dig
 	if nodes_dug_count > 0 then
 		local pluralized = "node"
@@ -675,14 +678,12 @@ local get_and_remove_nodes = function(nodes_to_dig, player_name)
 			pluralized = "nodes"
 		end
 		minetest.log("action", nodes_dug_count .. " " .. pluralized .. " dug by "
-			.. digtron_id .. " near ".. minetest.pos_to_string(new_root_pos)
+			.. digtron_id .. " near ".. minetest.pos_to_string(root_pos)
 			.. " operated by by " .. player_name)
 	end
-
-	return ret
 end
 
-local execute_dug_callbacks = function(dug_data)
+local execute_dug_callbacks = function(nodes_dug)
 	-- Execute various on-dig callbacks for the nodes that Digtron dug
 	for _, dug_data in ipairs(nodes_dug) do
 		local old_pos = dug_data.pos
@@ -719,6 +720,7 @@ digtron.execute_cycle = function(digtron_id, player_name)
 		-- Removing old nodes
 		local removed = digtron.remove_from_world(digtron_id, player_name)
 		local nodes_dug = get_and_remove_nodes(nodes_to_dig, player_name)
+		log_dug_nodes(nodes_to_dig, digtron_id, old_root_pos, player_name)
 		
 		-- Building new Digtron
 		digtron.build_to_world(digtron_id, new_root_pos, player_name)
