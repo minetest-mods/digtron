@@ -19,7 +19,7 @@ local get_predictive_inventory = inventory_functions.get_predictive_inventory
 local commit_predictive_inventory = inventory_functions.commit_predictive_inventory
 local clear_predictive_inventory = inventory_functions.clear_predictive_inventory
 
-digtron.retrieve_inventory = retrieve_inventory
+digtron.retrieve_inventory = retrieve_inventory -- used by formspecs
 
 --------------------------------------------------------------------------------------
 
@@ -134,7 +134,8 @@ for i, dir in ipairs(cardinal_dirs) do
 	cardinal_dirs_hash[i] = minetest.hash_node_position(dir) - minetest.hash_node_position({x=0, y=0, z=0})
 end
 
--- Given a facedir, returns an index into either cardinal_dirs or cardinal_dirs_hash that 
+-- Given a facedir, returns an index into either cardinal_dirs or cardinal_dirs_hash that
+-- can be used to determine what this node is "aimed" at
 local facedir_to_dir_index = function(param2)
 	return facedir_to_dir_map[param2 % 32]
 end
@@ -160,7 +161,7 @@ get_all_digtron_nodes = function(pos, digtron_nodes, digtron_adjacent, player_na
 					get_all_digtron_nodes(test_pos, digtron_nodes, digtron_adjacent, player_name) -- recurse
 				end
 			else
-				-- don't record details, the content of this node will change as the digtron moves
+				-- don't record details, just keeping track of Digtron's borders
 				digtron_adjacent[test_hash] = true
 			end
 		end		
@@ -267,7 +268,9 @@ digtron.assemble = function(root_pos, player_name)
 	local root_hash = minetest.hash_node_position(root_pos)
 	local digtron_nodes = {[root_hash] = node} -- Nodes that are part of Digtron.
 		-- Initialize with the controller, it won't be added by get_all_adjacent_digtron_nodes
-	local digtron_adjacent = {} -- Nodes that are adjacent to Digtron but not a part of it
+	local digtron_adjacent = {} -- Nodes that are adjacent to Digtron but not a part of it.
+	-- There's a slight inefficiency in throwing away digtron_adjacent when retrieve_all_adjacent_pos could
+	-- use this info, but it's small and IMO not worth the complexity.
 	get_all_digtron_nodes(root_pos, digtron_nodes, digtron_adjacent, player_name)
 	
 	local digtron_id, digtron_inv = create_new_id(root_pos)
@@ -351,7 +354,6 @@ digtron.assemble = function(root_pos, player_name)
 	
 	return digtron_id
 end
-
 
 -- Returns pos, node, and meta for the digtron node provided the in-world node matches the layout
 -- returns nil otherwise
@@ -500,18 +502,22 @@ digtron.remove_from_world = function(digtron_id, player_name)
 end
 
 -- Tests if a Digtron can be built at the designated location
---TODO implement ignore_nodes, needed for ignoring nodes that have been flagged as dug
 digtron.is_buildable_to = function(digtron_id, root_pos, player_name, ignore_nodes, return_immediately_on_failure)
 	local layout = retrieve_layout(digtron_id)
 	
 	-- If this digtron is already in-world, we're likely testing as part of a movement attempt.
 	-- Record its existing node locations, they will be treated as buildable_to
 	local old_pos = retrieve_pos(digtron_id)
-	local old_hashes = {}
+	local ignore_hashes = {}
 	if old_pos then
 		local old_root_hash = minetest.hash_node_position(old_pos)
 		for layout_hash, _ in pairs(layout) do
-			old_hashes[layout_hash + old_root_hash] = true
+			ignore_hashes[layout_hash + old_root_hash] = true
+		end
+	end
+	if ignore_nodes then
+		for _, ignore_pos in ipairs(ignore_nodes) do
+			ignore_hashes[minetest.hash_node_position(ignore_pos)] = true
 		end
 	end
 	
@@ -529,7 +535,7 @@ digtron.is_buildable_to = function(digtron_id, root_pos, player_name, ignore_nod
 		-- TODO: lots of testing needed here
 		if not (
 			(node_def and node_def.buildable_to)
-			or old_hashes[node_hash]) or
+			or ignore_hashes[node_hash]) or
 			minetest.is_protected(target_pos, player_name)
 		then
 			if return_immediately_on_failure then
@@ -568,7 +574,6 @@ digtron.build_to_world = function(digtron_id, root_pos, player_name)
 end
 
 digtron.move = function(digtron_id, dest_pos, player_name)
-	minetest.chat_send_all("move attempt")
 	local permitted, succeeded, failed = digtron.is_buildable_to(digtron_id, dest_pos, player_name)
 	if permitted then
 		local removed = digtron.remove_from_world(digtron_id, player_name)
@@ -583,13 +588,18 @@ digtron.move = function(digtron_id, dest_pos, player_name)
 	end	
 end
 
-digtron.predict_dig = function(digtron_id, player_name)
+local predict_dig = function(digtron_id, player_name)
+	local predictive_inv = get_predictive_inventory(digtron_id)
 	local layout = retrieve_layout(digtron_id)
 	local root_pos = retrieve_pos(digtron_id)
-	if not (layout and root_pos) then return end -- TODO error messages etc
+	if not (layout and root_pos and predictive_inv) then
+		minetest.log("error", "[Digtron] predict_dig failed to retrieve either "
+			.."a predictive inventory, a layout, or a root position for " .. digtron_id)
+		return
+	end
 	local root_hash = minetest.hash_node_position(root_pos)
 	
-	local products = {}
+	local leftovers = {}
 	local dug_positions = {}
 	local cost = 0
 	
@@ -634,14 +644,44 @@ digtron.predict_dig = function(digtron_id, player_name)
 	
 			local drops = minetest.get_node_drops(target_name, "")
 			for _, drop in ipairs(drops) do
-				products[drop] = (products[drop] or 0) + 1
+				local leftover = predictive_inv:add_item("main", ItemStack(drop))
+				if leftover:get_count() > 0 then
+					table.insert(leftovers, leftover)
+				end
 			end
 			table.insert(dug_positions, target_pos)
 		end
 	end
 
-	return products, dug_positions, cost
+	return leftovers, dug_positions, cost
 end
+
+digtron.execute_cycle = function(digtron_id, player_name)
+	local leftovers, nodes_to_dig, cost = predict_dig(digtron_id, player_name)
+	local root_pos = retrieve_pos(digtron_id)
+	local root_node = minetest.get_node(root_pos)
+	local new_pos = vector.add(root_pos, cardinal_dirs[facedir_to_dir_index(root_node.param2)])
+	local buildable_to, succeeded, failed = digtron.is_buildable_to(digtron_id, new_pos, player_name, nodes_to_dig, return_immediately_on_failure)
+
+	if buildable_to then
+		local removed = digtron.remove_from_world(digtron_id, player_name)
+		minetest.bulk_set_node(nodes_to_dig, {name="air"})
+		digtron.build_to_world(digtron_id, new_pos, player_name)
+		minetest.sound_play("digtron_construction", {gain = 0.5, pos=new_pos})
+		for _, removed_pos in ipairs(removed) do
+			minetest.check_for_falling(removed_pos)
+		end
+		for _, dug_pos in ipairs(nodes_to_dig) do
+			-- TODO: other on-dug callbacks
+			minetest.check_for_falling(dug_pos)
+		end
+		commit_predictive_inventory(digtron_id)
+	else
+		digtron.show_buildable_nodes({}, failed)
+		minetest.sound_play("digtron_squeal", {gain = 0.5, pos=new_pos})
+	end
+end
+
 
 ---------------------------------------------------------------------------------
 -- Node callbacks

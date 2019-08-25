@@ -260,10 +260,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 	end
 	
 	if fields.test_dig then
-		local products, nodes_to_dig, cost = digtron.predict_dig(digtron_id, player_name)
-		minetest.chat_send_all("products: " .. dump(products))
-		minetest.chat_send_all("positions: " .. dump(nodes_to_dig))
-		minetest.chat_send_all("cost: " .. cost)
+		digtron.execute_cycle(digtron_id, player_name)
 	end
 	
 	--TODO: this isn't recording the field when using ESC to exit the formspec

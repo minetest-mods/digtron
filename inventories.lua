@@ -110,39 +110,20 @@ local predictive_inventory = {}
 -- Copies digtron's inventory into a temporary location so that a dig cycle can be run
 -- using it without affecting the actual inventory until everything's been confirmed to work
 local get_predictive_inventory = function(digtron_id)
+	local existing = predictive_inventory[digtron_id]
+	if existing then return existing end
+	
 	local predictive_inv = minetest.create_detached_inventory("digtron_predictive_"..digtron_id, detached_inventory_callbacks)
 	predictive_inventory[digtron_id] = predictive_inv
-	local source_inv = digtron.retrieve_inventory(digtron_id)
+	local source_inv = retrieve_inventory(digtron_id)
 	
 	-- Populate predictive inventory with the digtron's contents
-	for _, listname in ipairs(source_inv:get_lists()) do
-		predictive_inv:set_size(listname, source_inv:get_size(listname))
-		predictive_inv:set_list(listname, source_inv:get_list(listname))
+	for listname, invlist in pairs(source_inv:get_lists()) do
+		predictive_inv:set_size(listname, #invlist)
+		predictive_inv:set_list(listname, invlist)
 	end
 	
 	return predictive_inv
-end
--- Copies the predictive inventory's contents into the actual digtron's inventory after success
-local commit_predictive_inventory = function(digtron_id)
-	local predictive_inv = predictive_inventory[digtron_id]
-	if not predictive_inv then
-		minetest.log("error", "[Digtron] commit_predictive_inventory called for " .. digtron_id
-			.. " but predictive inventory did not exist")
-		return
-	end
-
-	local source_inv = digtron.retrieve_inventory(digtron_id)
-	for _, listname in ipairs(predictive_inv:get_lists()) do
-		source_inv:set_list(listname, predictive_inv:get_list(listname))
-	end
-	dirty_inventories[digtron_id] = true
-
-	minetest.remove_detached_inventory("digtron_predictive_"..digtron_id)
-	predictive_inventory[digtron_id] = nil
-	
-	if not next(predictive_inventory) then
-		minetest.log("warning", "[Digtron] multiple predictive inventories were in existence, this shouldn't be happening. File an issue with Digtron programmers.")
-	end
 end
 -- Wipes predictive inventory without committing it (eg, on failure of predicted operation)
 local clear_predictive_inventory = function(digtron_id)
@@ -159,6 +140,22 @@ local clear_predictive_inventory = function(digtron_id)
 	if not next(predictive_inventory) then
 		minetest.log("warning", "[Digtron] multiple predictive inventories were in existence, this shouldn't be happening. File an issue with Digtron programmers.")
 	end
+end
+-- Copies the predictive inventory's contents into the actual digtron's inventory and wipes the predictive inventory
+local commit_predictive_inventory = function(digtron_id)
+	local predictive_inv = predictive_inventory[digtron_id]
+	if not predictive_inv then
+		minetest.log("error", "[Digtron] commit_predictive_inventory called for " .. digtron_id
+			.. " but predictive inventory did not exist")
+		return
+	end
+
+	local source_inv = retrieve_inventory(digtron_id)
+	for listname, invlist in pairs(predictive_inv:get_lists()) do
+		source_inv:set_list(listname, invlist)
+	end
+	dirty_inventories[digtron_id] = true
+	clear_predictive_inventory(digtron_id)
 end
 
 return {

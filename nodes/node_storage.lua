@@ -24,7 +24,7 @@ minetest.register_node("digtron:inventory", {
 	_doc_items_longdesc = digtron.doc.inventory_longdesc,
 	_doc_items_usagehelp = digtron.doc.inventory_usagehelp,
 	groups = {cracky = 3, oddly_breakable_by_hand=3, digtron = 2, tubedevice = 1, tubedevice_receiver = 1},
-	sounds = digtron.metal_sounds,
+	sounds = default.node_sound_metal_defaults(),
 	paramtype2= "facedir",
 	drawtype = "nodebox",
 	node_box = {
@@ -112,7 +112,7 @@ minetest.register_node("digtron:fuelstore", {
 	_doc_items_longdesc = digtron.doc.fuelstore_longdesc,
 	_doc_items_usagehelp = digtron.doc.fuelstore_usagehelp,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 5, tubedevice = 1, tubedevice_receiver = 1},
-	sounds = digtron.metal_sounds,
+	sounds = default.node_sound_metal_defaults(),
 	paramtype2= "facedir",
 	drawtype = "nodebox",
 	node_box = {
@@ -220,7 +220,7 @@ minetest.register_node("digtron:combined_storage", {
 	_doc_items_longdesc = digtron.doc.combined_storage_longdesc,
     _doc_items_usagehelp = digtron.doc.combined_storage_usagehelp,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 6, tubedevice = 1, tubedevice_receiver = 1},
-	sounds = digtron.metal_sounds,
+	sounds = default.node_sound_metal_defaults(),
 	paramtype2= "facedir",
 	drawtype = "nodebox",
 	node_box = {
