@@ -119,14 +119,7 @@ local cardinal_dirs = {
 }
 digtron.cardinal_dirs = cardinal_dirs -- used by builder entities as well
 -- Mapping from facedir value to index in cardinal_dirs.
-local facedir_to_dir_map = {
-	[0]=1, 2, 3, 4,
-	5, 2, 6, 4,
-	6, 2, 5, 4,
-	1, 5, 3, 6,
-	1, 6, 3, 5,
-	1, 4, 3, 2,
-}
+local facedir_to_dir_map = digtron.facedir_to_dir_map
 
 -- Turn the cardinal directions into a set of integers you can add to a hash to step in that direction.
 local cardinal_dirs_hash = {}
@@ -225,10 +218,11 @@ local refresh_adjacent = function(digtron_id)
 			if layout[potential_target] == nil then
 				local fields = data.meta.fields
 				adjacent_to_builders[potential_target] = {
-					period = fields.period,
-					offset = fields.offset,
+					period = tonumber(fields.period) or 1,
+					offset = tonumber(fields.offset) or 0,
 					item = fields.item,
-					facing = fields.facing,
+					facing = tonumber(fields.facing) or 0,
+					extrusion = tonumber(fields.extrusion) or 1,
 				}
 			end
 		end
@@ -783,6 +777,8 @@ local predict_build = function(digtron_id, new_pos, player_name, ignore_nodes)
 				cost = cost + digtron.config.build_cost
 			end
 			
+			-- TODO handle extrusion
+			
 			table.insert(built_nodes, {
 				pos = target_pos,
 				node = {name=item, param2=facing },
@@ -795,10 +791,17 @@ local predict_build = function(digtron_id, new_pos, player_name, ignore_nodes)
 end
 
 local build_nodes = function(built_nodes)
+	local leftovers = {}
 	for _, build_info in ipairs(built_nodes) do
-		-- TODO: much more complicated than this, see hacked place_item method and stuff
-		minetest.set_node(build_info.pos, build_info.node)
-	end	
+		local item_stack = ItemStack(build_info.node.name)
+		local buildpos = build_info.pos
+		local build_facing = build_info.node.param2
+		local returned_stack, success = digtron.item_place_node(item_stack, digtron.fake_player, buildpos, build_facing)
+		if returned_stack:get_count() > 0 then
+			table.insert(leftovers, returned_stack)
+		end
+	end
+	return leftovers
 end
 
 local execute_built_callbacks = function(built_nodes)
@@ -825,7 +828,7 @@ end
 -- Execute cycle
 
 digtron.execute_cycle = function(digtron_id, player_name)
-	local leftovers, nodes_to_dig, dig_cost = predict_dig(digtron_id, player_name)
+	local dig_leftovers, nodes_to_dig, dig_cost = predict_dig(digtron_id, player_name)
 	local old_root_pos = retrieve_pos(digtron_id)
 	local root_node = minetest.get_node(old_root_pos)
 	local new_root_pos = vector.add(old_root_pos, cardinal_dirs[facedir_to_dir_index(root_node.param2)])
@@ -845,7 +848,8 @@ digtron.execute_cycle = function(digtron_id, player_name)
 		digtron.build_to_world(digtron_id, new_root_pos, player_name)
 		minetest.sound_play("digtron_construction", {gain = 0.5, pos=new_root_pos})
 		
-		build_nodes(built_nodes)
+		local build_leftovers = build_nodes(built_nodes, player_name)
+		-- There shouldn't normally be build_leftovers, but it's possible.
 		
 		-- Don't need to do fancy callback checking for digtron nodes since I made all those
 		-- nodes and I know they don't have anything that needs to be done for them.
@@ -857,6 +861,8 @@ digtron.execute_cycle = function(digtron_id, player_name)
 		-- Must be called after digtron.build_to_world because it triggers falling nodes
 		execute_dug_callbacks(nodes_dug)
 		execute_built_callbacks(built_nodes)
+		
+		-- TODO try putting dig_leftovers and build_leftovers into the inventory one last time before ejecting it
 	
 		commit_predictive_inventory(digtron_id)
 	else

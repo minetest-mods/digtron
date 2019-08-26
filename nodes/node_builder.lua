@@ -78,6 +78,16 @@ local inv = minetest.create_detached_inventory("digtron:builder_item", {
 			return 0
 		end
 		
+		local stack_def = minetest.registered_nodes[item]
+		if not stack_def and not digtron.whitelisted_on_place(item) then
+			return 0 -- don't allow craft items unless their on_place is whitelisted.
+		end
+		
+		-- If we're adding a wallmounted item and the build facing is greater than 5, reset it to 0
+		if stack_def ~= nil and stack_def.paramtype2 == "wallmounted" and tonumber(meta:get_int("facing")) > 5 then
+			meta:set_int("facing", 0)
+		end
+		
 		meta:set_string("item", item)
 		digtron.update_builder_item(pos)
 		minetest.show_formspec(player_name, "digtron:builder", get_formspec(pos))
@@ -140,29 +150,31 @@ minetest.register_on_player_receive_fields(function(sender, formname, fields)
 	local extrusion = tonumber(fields.extrusion)
 	
 	if period and period > 0 then
-		meta:set_int("period", math.floor(tonumber(fields.period)))
+		meta:set_int("period", math.floor(period))
 	else
 		period = meta:get_int("period")
 	end
 	if offset then
-		meta:set_int("offset", math.floor(tonumber(fields.offset)))
+		meta:set_int("offset", math.floor(offset))
 	else
 		offset = meta:get_int("offset")
 	end
 	if facing and facing >= 0 and facing < 24 then
-		local inv = meta:get_inventory()
-		local target_item = inv:get_stack("main",1)
+		local target_item = ItemStack(meta:get_string("item"))
 		if target_item:get_definition().paramtype2 == "wallmounted" then
 			if facing < 6 then
-				meta:set_int("facing", math.floor(facing))
+				meta:set_int("facing", facing)
 				-- wallmounted facings only run from 0-5
 			end
 		else
 			meta:set_int("facing", math.floor(facing))
 		end
+	else
+		facing = meta:get_int("facing")
 	end
+	
 	if extrusion and extrusion > 0 and extrusion <= digtron.config.maximum_extrusion then
-		meta:set_int("extrusion", math.floor(tonumber(fields.extrusion)))
+		meta:set_int("extrusion", math.floor(extrusion))
 	else
 		extrusion = meta:get_int("extrusion")
 	end
