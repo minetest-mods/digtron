@@ -2,6 +2,7 @@
 local MP = minetest.get_modpath(minetest.get_current_modname())
 local S, NS = dofile(MP.."/intllib.lua")
 
+-- TODO: make global
 local player_interacting_with_digtron_pos = {}
 
 local get_formspec = function(pos, player_name)

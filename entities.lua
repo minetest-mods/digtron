@@ -160,11 +160,10 @@ end
 
 digtron.update_builder_item = function(pos)
 	digtron.remove_builder_item(pos)
-	node_inventory_table.pos = pos
-	local inv = minetest.get_inventory(node_inventory_table)
-	local item_stack = inv:get_stack("main", 1)
-	if not item_stack:is_empty() then
-		digtron.create_builder_item = item_stack:get_name()
+	local meta = minetest.get_meta(pos)
+	local item = meta:get_string("builder_item")
+	if item ~= "" then
+		digtron.create_builder_item = item
 		minetest.add_entity(pos,"digtron:builder_item")
 	end
 end

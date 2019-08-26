@@ -173,7 +173,13 @@ minetest.register_node("digtron:controller", {
 	end,
 	
 	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
+		local returnstack, success = digtron.on_rightclick(pos, node, clicker, itemstack, pointed_thing)
+		if returnstack then
+			return returnstack, success
+		end
+
 		if clicker == nil then return end
+		
 		local meta = minetest.get_meta(pos)
 		local digtron_id = meta:get_string("digtron_id")
 		local player_name = clicker:get_player_name()

@@ -6,9 +6,6 @@ local S, NS = dofile(MP.."/intllib.lua")
 
 local get_inventory_formspec = function(pos, player_name)
 	return "size[8,9.3]" ..
-	default.gui_bg ..
-	default.gui_bg_img ..
-	default.gui_slots ..
 	"label[0,0;" .. S("Inventory items") .. "]" ..
 	"list[nodemeta:"..pos.x..","..pos.y..","..pos.z..";main;0,0.6;8,4;]" ..
 	"list[current_player;main;0,5.15;8,1;]" ..
@@ -57,6 +54,13 @@ minetest.register_node("digtron:inventory", {
 	on_blast = digtron.on_blast,
 		
 	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
+		local returnstack, success = digtron.on_rightclick(pos, node, clicker, itemstack, pointed_thing)
+		if returnstack then
+			return returnstack, success
+		end
+
+		if clicker == nil then return end
+
 		local meta = minetest.get_meta(pos)
 		local digtron_id = meta:get("digtron_id")
 		local player_name = clicker:get_player_name()
@@ -65,7 +69,8 @@ minetest.register_node("digtron:inventory", {
 				"digtron_inventory:"..minetest.pos_to_string(pos)..":"..player_name,
 				get_inventory_formspec(pos, player_name))
 		else
-			minetest.chat_send_player(clicker:get_player_name(), "This Digtron is active, interact with its inventory via the controller node.")
+			minetest.sound_play({name = "digtron_error", gain = 0.1}, {to_player=account.name})
+			minetest.chat_send_player(clicker:get_player_name(), "This Digtron is active, interact with it via the controller node.")
 		end
 	end,
 
@@ -94,9 +99,6 @@ minetest.register_node("digtron:inventory", {
 
 local get_fuelstore_formspec = function(pos, player_name)
 	return "size[8,9.3]" ..
-	default.gui_bg ..
-	default.gui_bg_img ..
-	default.gui_slots ..
 	"label[0,0;" .. S("Fuel items") .. "]" ..
 	"list[nodemeta:"..pos.x..","..pos.y..","..pos.z..";fuel;0,0.6;8,4;]" ..
 	"list[current_player;main;0,5.15;8,1;]" ..
@@ -157,6 +159,13 @@ minetest.register_node("digtron:fuelstore", {
 	on_blast = digtron.on_blast,
 	
 	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
+		local returnstack, success = digtron.on_rightclick(pos, node, clicker, itemstack, pointed_thing)
+		if returnstack then
+			return returnstack, success
+		end
+
+		if clicker == nil then return end
+
 		local meta = minetest.get_meta(pos)
 		local digtron_id = meta:get("digtron_id")
 		local player_name = clicker:get_player_name()
@@ -165,7 +174,8 @@ minetest.register_node("digtron:fuelstore", {
 				"digtron_fuelstore:"..minetest.pos_to_string(pos)..":"..player_name,
 				get_fuelstore_formspec(pos, player_name))
 		else
-			minetest.chat_send_player(clicker:get_player_name(), "This Digtron is active, interact with its inventory via the controller node.")
+			minetest.sound_play({name = "digtron_error", gain = 0.1}, {to_player=account.name})
+			minetest.chat_send_player(clicker:get_player_name(), "This Digtron is active, interact with it via the controller node.")
 		end
 	end,
 
@@ -200,9 +210,6 @@ minetest.register_node("digtron:fuelstore", {
 --
 local get_combined_formspec = function(pos, player_name)
 	return "size[8,9.9]" ..
-	default.gui_bg ..
-	default.gui_bg_img ..
-	default.gui_slots ..
 	"label[0,0;" .. S("Inventory items") .. "]" ..
 	"list[nodemeta:"..pos.x..","..pos.y..","..pos.z..";main;0,0.6;8,3;]" ..
 	"label[0,3.5;" .. S("Fuel items") .. "]" ..
@@ -279,6 +286,13 @@ minetest.register_node("digtron:combined_storage", {
 	on_blast = digtron.on_blast,
 	
 	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
+		local returnstack, success = digtron.on_rightclick(pos, node, clicker, itemstack, pointed_thing)
+		if returnstack then
+			return returnstack, success
+		end
+
+		if clicker == nil then return end
+
 		local meta = minetest.get_meta(pos)
 		local digtron_id = meta:get("digtron_id")
 		local player_name = clicker:get_player_name()
@@ -287,7 +301,8 @@ minetest.register_node("digtron:combined_storage", {
 				"digtron_combined_storage:"..minetest.pos_to_string(pos)..":"..player_name,
 				get_combined_formspec(pos, player_name))
 		else
-			minetest.chat_send_player(clicker:get_player_name(), "This Digtron is active, interact with its inventory via the controller node.")
+			minetest.sound_play({name = "digtron_error", gain = 0.1}, {to_player=account.name})
+			minetest.chat_send_player(clicker:get_player_name(), "This Digtron is active, interact with it via the controller node.")
 		end
 	end,
 --		

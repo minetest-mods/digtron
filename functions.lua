@@ -394,7 +394,7 @@ digtron.disassemble = function(digtron_id, player_name)
 	local bbox = retrieve_bounding_box(digtron_id)
 	local root_pos = retrieve_pos(digtron_id)
 	if not root_pos then
-		minetest.log("error", "digtron.disassemble was unable to find a position for " .. digtron_id
+		minetest.log("error", "[Digtron] digtron.disassemble was unable to find a position for " .. digtron_id
 			.. ", disassembly was impossible. Has the digtron been removed from world?")
 		return
 	end
@@ -406,7 +406,7 @@ digtron.disassemble = function(digtron_id, player_name)
 	local inv = digtron.retrieve_inventory(digtron_id)
 	
 	if not (layout and inv) then
-		minetest.log("error", "digtron.disassemble was unable to find either layout or inventory record for " .. digtron_id
+		minetest.log("error", "[Digtron] digtron.disassemble was unable to find either layout or inventory record for " .. digtron_id
 			.. ", disassembly was impossible. Clearing any other remaining data for this id.")
 		dispose_id(digtron_id)
 		return
@@ -470,7 +470,7 @@ digtron.remove_from_world = function(digtron_id, player_name)
 	local root_pos = retrieve_pos(digtron_id)
 	
 	if not layout then
-		minetest.log("error", "digtron.remove_from_world Unable to find layout record for " .. digtron_id
+		minetest.log("error", "[Digtron] digtron.remove_from_world Unable to find layout record for " .. digtron_id
 			.. ", wiping any remaining metadata for this id to prevent corruption. Sorry!")
 		if root_pos then
 			local meta = minetest.get_meta(root_pos)
@@ -481,7 +481,7 @@ digtron.remove_from_world = function(digtron_id, player_name)
 	end
 	
 	if not root_pos then
-		minetest.log("error", "digtron.remove_from_world Unable to find position for " .. digtron_id
+		minetest.log("error", "[Digtron] digtron.remove_from_world Unable to find position for " .. digtron_id
 			.. ", it may have already been removed from the world.")
 		return {}
 	end
@@ -826,6 +826,19 @@ digtron.on_blast = function(pos, intensity)
 	return drops
 end
 
+-- Use this inside other on_rightclicks for configuring Digtron nodes, this
+-- overrides if you're right-clicking with another Digtron node and assumes
+-- that you're trying to build it.
+digtron.on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
+	local item_def = itemstack:get_definition()
+	if item_def.type == "node" and minetest.get_item_group(itemstack:get_name(), "digtron") > 0 then
+		local returnstack, success = minetest.item_place_node(itemstack, clicker, pointed_thing)
+		if success and item_def.sounds and item_def.sounds.place and item_def.sounds.place.name then
+			minetest.sound_play(item_def.sounds.place, {pos = pos})
+		end
+		return returnstack, success
+	end
+end
 
 ------------------------------------------------------------------------------------
 -- Creative trash
