@@ -117,6 +117,7 @@ local cardinal_dirs = {
 	{x= 0, y=-1, z= 0},
 	{x= 0, y=1,  z= 0},
 }
+digtron.cardinal_dirs = cardinal_dirs -- used by builder entities as well
 -- Mapping from facedir value to index in cardinal_dirs.
 local facedir_to_dir_map = {
 	[0]=1, 2, 3, 4,
@@ -196,12 +197,14 @@ end
 
 cache_all_adjacent_pos = {}
 cache_all_digger_targets = {}
+cache_all_builder_targets = {}
 local refresh_adjacent = function(digtron_id)
 	local layout = retrieve_layout(digtron_id)
 	if layout == nil then return nil end
 	
 	local adjacent = {}
 	local adjacent_to_diggers = {}
+	local adjacent_to_builders = {}
 	for hash, data in pairs(layout) do
 		for _, dir_hash in ipairs(cardinal_dirs_hash) do
 			local potential_adjacent = hash+dir_hash
@@ -216,10 +219,23 @@ local refresh_adjacent = function(digtron_id)
 				local fields = data.meta.fields
 				adjacent_to_diggers[potential_target] = {period = fields.period, offset = fields.offset}
 			end
-		end		
+		end
+		if minetest.get_item_group(data.node.name, "digtron") == 4 then
+			local potential_target = hash + cardinal_dirs_hash[facedir_to_dir_index(data.node.param2)]
+			if layout[potential_target] == nil then
+				local fields = data.meta.fields
+				adjacent_to_builders[potential_target] = {
+					period = fields.period,
+					offset = fields.offset,
+					item = fields.item,
+					facing = fields.facing,
+				}
+			end
+		end
 	end
 	cache_all_adjacent_pos[digtron_id] = adjacent
 	cache_all_digger_targets[digtron_id] = adjacent_to_diggers
+	cache_all_builder_targets[digtron_id] = adjacent_to_builders	
 end
 local retrieve_all_adjacent_pos = function(digtron_id)
 	local val = cache_all_adjacent_pos[digtron_id]
@@ -233,6 +249,12 @@ local retrieve_all_digger_targets = function(digtron_id)
 	refresh_adjacent(digtron_id)
 	return cache_all_digger_targets[digtron_id]
 end
+local retrieve_all_builder_targets = function(digtron_id)
+	local val = cache_all_builder_targets[digtron_id]
+	if val then return val end
+	refresh_adjacent(digtron_id)
+	return cache_all_builder_targets[digtron_id]
+end
 
 -- call this whenever a stored layout is modified (eg, by rotating it)
 -- automatically called on dispose
@@ -240,12 +262,12 @@ local invalidate_layout_cache = function(digtron_id)
 	cache_bounding_box[digtron_id] = nil
 	cache_all_adjacent_pos[digtron_id] = nil
 	cache_all_digger_targets[digtron_id] = nil
+	cache_all_builder_targets[digtron_id] = nil
 end
 table.insert(dispose_callbacks, invalidate_layout_cache)
 
 --------------------------------------------------------------------------------------------------------
 -- assemble and disassemble
-
 
 -- Returns the id of the new Digtron record, or nil on failure
 digtron.assemble = function(root_pos, player_name)
@@ -462,6 +484,9 @@ digtron.disassemble = function(digtron_id, player_name)
 	return root_pos
 end
 
+------------------------------------------------------------------------------------------
+-- Moving Digtrons around
+
 -- Removes the in-world nodes of a digtron
 -- Does not destroy its layout info
 -- returns a table of vectors of all the nodes that were removed
@@ -588,13 +613,15 @@ digtron.move = function(digtron_id, dest_pos, player_name)
 	end	
 end
 
+------------------------------------------------------------------------------------
+-- Digging
+
 local predict_dig = function(digtron_id, player_name)
 	local predictive_inv = get_predictive_inventory(digtron_id)
-	local layout = retrieve_layout(digtron_id)
 	local root_pos = retrieve_pos(digtron_id)
-	if not (layout and root_pos and predictive_inv) then
+	if not (root_pos and predictive_inv) then
 		minetest.log("error", "[Digtron] predict_dig failed to retrieve either "
-			.."a predictive inventory, a layout, or a root position for " .. digtron_id)
+			.."a predictive inventory or a root position for " .. digtron_id)
 		return
 	end
 	local root_hash = minetest.hash_node_position(root_pos)
@@ -707,14 +734,106 @@ local execute_dug_callbacks = function(nodes_dug)
 	end
 end
 
+------------------------------------------------------------------------------------------------------
+-- Building
+
+-- need to provide new_pos because Digtron moves before building
+local predict_build = function(digtron_id, new_pos, player_name, ignore_nodes)
+	local predictive_inv = get_predictive_inventory(digtron_id)
+	if not predictive_inv then
+		minetest.log("error", "[Digtron] predict_build failed to retrieve "
+			.."a predictive inventory for " .. digtron_id)
+		return
+	end
+	local root_hash = minetest.hash_node_position(new_pos)
+
+	local ignore_hashes = {}
+	if ignore_nodes then
+		for _, ignore_pos in ipairs(ignore_nodes) do
+			ignore_hashes[minetest.hash_node_position(ignore_pos)] = true
+		end
+	end
+	
+	local missing_items = {}
+	local built_nodes = {}
+	local cost = 0
+	
+	for target_hash, builder_data in pairs(retrieve_all_builder_targets(digtron_id)) do
+		local target_pos = minetest.get_position_from_hash(target_hash + root_hash)
+		local target_node = minetest.get_node(target_pos)
+		local target_name = target_node.name
+		local targetdef = minetest.registered_nodes[target_name]
+		--TODO periodicity/offset test
+		if
+			ignore_hashes[target_hash] or
+			(targetdef ~= nil
+				and targetdef.buildable_to
+				and not minetest.is_protected(target_pos, player_name)
+			)
+		then
+			local item = builder_data.item
+			local facing = builder_data.facing
+			
+			local removed_item = predictive_inv:remove_item("main", ItemStack(item))
+			if removed_item:get_count() < 1 then
+				missing_items[item] = (missing_items[item] or 0) + 1
+			end
+			
+			if digtron.config.uses_resources then
+				cost = cost + digtron.config.build_cost
+			end
+			
+			table.insert(built_nodes, {
+				pos = target_pos,
+				node = {name=item, param2=facing },
+				old_node = target_node,
+			})
+		end
+	end
+	
+	return missing_items, built_nodes, cost
+end
+
+local build_nodes = function(built_nodes)
+	for _, build_info in ipairs(built_nodes) do
+		-- TODO: much more complicated than this, see hacked place_item method and stuff
+		minetest.set_node(build_info.pos, build_info.node)
+	end	
+end
+
+local execute_built_callbacks = function(built_nodes)
+	for _, build_info in ipairs(built_nodes) do
+		local new_pos = build_info.pos
+		local new_node = build_info.node
+		local old_node = build_info.old_node
+		for _, callback in ipairs(minetest.registered_on_placenodes) do
+			-- Copy pos and node because callback can modify them
+			local pos_copy = {x=new_pos.x, y=new_pos.y, z=new_pos.z}
+			local oldnode_copy = {name=old_node.name, param1=old_node.param1, param2=old_node.param2}
+			local newnode_copy = {name=new_node.name, param1=new_node.param1, param2=new_node.param2}
+			callback(pos_copy, newnode_copy, digtron.fake_player, oldnode_copy)
+		end
+		
+		local new_def = minetest.registered_nodes[new_node.name]
+		if new_def ~= nil and new_def.after_place_node ~= nil then
+			new_def.after_place_node(new_pos, digtron.fake_player)
+		end
+	end
+end
+
+-------------------------------------------------------------------------------------------------------
+-- Execute cycle
+
 digtron.execute_cycle = function(digtron_id, player_name)
-	local leftovers, nodes_to_dig, cost = predict_dig(digtron_id, player_name)
+	local leftovers, nodes_to_dig, dig_cost = predict_dig(digtron_id, player_name)
 	local old_root_pos = retrieve_pos(digtron_id)
 	local root_node = minetest.get_node(old_root_pos)
 	local new_root_pos = vector.add(old_root_pos, cardinal_dirs[facedir_to_dir_index(root_node.param2)])
+	-- TODO: convert nodes_to_dig into a hash map here and pass that in to reduce duplication?
 	local buildable_to, succeeded, failed = digtron.is_buildable_to(digtron_id, new_root_pos, player_name, nodes_to_dig)
+	local missing_items, built_nodes, build_cost = predict_build(digtron_id, new_root_pos, player_name, nodes_to_dig)
 
-	if buildable_to then
+	if buildable_to and next(missing_items) == nil then
 		digtron.fake_player:update(old_root_pos, player_name)
 		
 		-- Removing old nodes
@@ -726,7 +845,7 @@ digtron.execute_cycle = function(digtron_id, player_name)
 		digtron.build_to_world(digtron_id, new_root_pos, player_name)
 		minetest.sound_play("digtron_construction", {gain = 0.5, pos=new_root_pos})
 		
-		-- TODO add build portion of the cycle
+		build_nodes(built_nodes)
 		
 		-- Don't need to do fancy callback checking for digtron nodes since I made all those
 		-- nodes and I know they don't have anything that needs to be done for them.
@@ -737,6 +856,7 @@ digtron.execute_cycle = function(digtron_id, player_name)
 
 		-- Must be called after digtron.build_to_world because it triggers falling nodes
 		execute_dug_callbacks(nodes_dug)
+		execute_built_callbacks(built_nodes)
 	
 		commit_predictive_inventory(digtron_id)
 	else

@@ -15,8 +15,8 @@ local get_formspec = function(pos)
 	if period < 1 then period = 1 end
 	local offset = meta:get_int("offset")
 	local extrusion = meta:get_int("extrusion")
-	local build_facing = meta:get_int("build_facing")
-	local item_name = meta:get_string("build_item")
+	local facing = meta:get_int("facing")
+	local item_name = meta:get_string("item")
 
 	return "size[8,5.2]" ..
 	"item_image[0,0;1,1;" .. item_name .. "]"..
@@ -30,8 +30,8 @@ local get_formspec = function(pos)
 	"tooltip[offset;" .. S("Offsets the start of periodicity counting by this amount.\nFor example, a builder with period 2 and offset 0 builds\nevery even-numbered block and one with period 2 and\noffset 1 builds every odd-numbered block.") .. "]" ..
 	"button[4.0,0.5;1,0.1;set;" .. S("Save &\nShow") .. "]" ..
 	"tooltip[set;" .. S("Saves settings") .. "]" ..
-	"field[5.3,0.8;1,0.1;build_facing;" .. S("Facing") .. ";" .. build_facing .. "]" ..
-	"tooltip[build_facing;" .. S("Value from 0-23. Not all block types make use of this.\nUse the 'Read & Save' button to copy the facing of the block\ncurrently in the builder output location.") .. "]" ..
+	"field[5.3,0.8;1,0.1;facing;" .. S("Facing") .. ";" .. facing .. "]" ..
+	"tooltip[facing;" .. S("Value from 0-23. Not all block types make use of this.\nUse the 'Read & Save' button to copy the facing of the block\ncurrently in the builder output location.") .. "]" ..
 	"button[6.0,0.5;1,0.1;read;" .. S("Read &\nSave") .. "]" ..
 	"tooltip[read;" .. S("Reads the facing of the block currently in the build location,\nthen saves all settings.") .. "]" ..
 	"list[current_player;main;0,1.3;8,1;]" ..
@@ -78,7 +78,8 @@ local inv = minetest.create_detached_inventory("digtron:builder_item", {
 			return 0
 		end
 		
-		meta:set_string("build_item", item)
+		meta:set_string("item", item)
+		digtron.update_builder_item(pos)
 		minetest.show_formspec(player_name, "digtron:builder", get_formspec(pos))
 
 		return 0
@@ -108,7 +109,7 @@ local builder_on_rightclick = function(pos, node, clicker, itemstack, pointed_th
 	
 	local digtron_id = meta:get_string("digtron_id")
 	if digtron_id ~= "" then
-		minetest.sound_play({name = "digtron_error", gain = 0.1}, {to_player=account.name})
+		minetest.sound_play({name = "digtron_error", gain = 0.1}, {to_player=player_name})
 		minetest.chat_send_player(player_name, "This Digtron is active, interact with it via the controller node.")
 		return
 	end
@@ -135,7 +136,7 @@ minetest.register_on_player_receive_fields(function(sender, formname, fields)
     local meta = minetest.get_meta(pos)
 	local period = tonumber(fields.period)
 	local offset = tonumber(fields.offset)
-	local build_facing = tonumber(fields.build_facing)
+	local facing = tonumber(fields.facing)
 	local extrusion = tonumber(fields.extrusion)
 	
 	if period and period > 0 then
@@ -148,16 +149,16 @@ minetest.register_on_player_receive_fields(function(sender, formname, fields)
 	else
 		offset = meta:get_int("offset")
 	end
-	if build_facing and build_facing >= 0 and build_facing < 24 then
+	if facing and facing >= 0 and facing < 24 then
 		local inv = meta:get_inventory()
 		local target_item = inv:get_stack("main",1)
 		if target_item:get_definition().paramtype2 == "wallmounted" then
-			if build_facing < 6 then
-				meta:set_int("build_facing", math.floor(build_facing))
+			if facing < 6 then
+				meta:set_int("facing", math.floor(facing))
 				-- wallmounted facings only run from 0-5
 			end
 		else
-			meta:set_int("build_facing", math.floor(build_facing))
+			meta:set_int("facing", math.floor(facing))
 		end
 	end
 	if extrusion and extrusion > 0 and extrusion <= digtron.config.maximum_extrusion then
@@ -178,19 +179,19 @@ minetest.register_on_player_receive_fields(function(sender, formname, fields)
 --			local inv = meta:get_inventory()
 --			local target_name = digtron.builder_read_item_substitutions[target_node.name] or target_node.name
 --			inv:set_stack("main", 1, target_name)
---			meta:set_int("build_facing", target_node.param2)
+--			meta:set_int("facing", target_node.param2)
 --		end
 --	end
 	
 	if fields.help then
 		minetest.after(0.5, doc.show_entry, sender:get_player_name(), "nodes", "digtron:builder", true)
 	end
-
+	
 	digtron.update_builder_item(pos)
 end)
 
 
--- Builds objects in the targeted node. This is a complicated beastie.
+-- Builds objects in the targeted node.
 minetest.register_node("digtron:builder", {
 	description = S("Digtron Builder Module"),
 	_doc_items_longdesc = digtron.doc.builder_longdesc,
@@ -235,14 +236,16 @@ minetest.register_node("digtron:builder", {
         local meta = minetest.get_meta(pos)
 		meta:set_int("period", 1) 
 		meta:set_int("offset", 0) 
-		meta:set_int("build_facing", 0)
+		meta:set_int("facing", 0)
 		meta:set_int("extrusion", 1)
     end,
 	
 	on_rightclick = builder_on_rightclick,
 	
 	on_destruct = function(pos)
-		digtron.remove_builder_item(pos)
+		local node = minetest.get_node(pos)
+		local target_pos = vector.add(pos, minetest.facedir_to_dir(node.param2))
+		digtron.remove_builder_item(target_pos)
 	end,
 	
 	after_place_node = function(pos)

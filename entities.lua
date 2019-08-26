@@ -159,12 +159,17 @@ digtron.remove_builder_item = function(pos)
 end
 
 digtron.update_builder_item = function(pos)
-	digtron.remove_builder_item(pos)
+	local node = minetest.get_node(pos)
+	if minetest.get_node_group(node.name, "digtron") ~= 4 then
+		return
+	end	
+	local target_pos = vector.add(pos, minetest.facedir_to_dir(node.param2))
+	digtron.remove_builder_item(target_pos)
 	local meta = minetest.get_meta(pos)
-	local item = meta:get_string("builder_item")
+	local item = meta:get_string("item")
 	if item ~= "" then
 		digtron.create_builder_item = item
-		minetest.add_entity(pos,"digtron:builder_item")
+		minetest.add_entity(target_pos,"digtron:builder_item")
 	end
 end
 
@@ -174,7 +179,7 @@ minetest.register_entity("digtron:builder_item", {
 		hp_max = 1,
 		is_visible = true,
 		visual = "wielditem",
-		visual_size = {x=0.25, y=0.25},
+		visual_size = {x=0.3333, y=0.3333},
 		collisionbox = {0,0,0,0,0,0},
 		physical = false,
 		textures = {""},
@@ -185,12 +190,24 @@ minetest.register_entity("digtron:builder_item", {
 		local props = self.object:get_properties()
 		if staticdata ~= nil and staticdata ~= "" then
 			local pos = self.object:getpos()
-			local node = minetest.get_node(pos)
-			if minetest.get_node_group(node.name, "digtron") ~= 4 then
-				-- We were reactivated without a builder node on our location, self-destruct
+			local adjacent_builder = false
+			for _, dir in ipairs(digtron.cardinal_dirs) do
+				local target_pos = vector.add(pos, dir)
+				local node = minetest.get_node(target_pos)
+				if minetest.get_node_group(node.name, "digtron") == 4 then
+					-- Not checking whether the adjacent builder is aimed right,
+					-- has the right builder_item, etc. This is just a failsafe
+					-- to clean up entities that somehow got left behind when a
+					-- Digtron moved, not that important really
+					adjacent_builder = true
+					break
+				end
+			end
+			if not adjacent_builder then
 				self.object:remove()
 				return
 			end
+			
 			props.textures = {staticdata}
 			self.object:set_properties(props)
 		elseif digtron.create_builder_item ~= nil then
