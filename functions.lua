@@ -9,6 +9,11 @@ local cache = {}
 --	mod_meta:set_string(field, "")
 --end
 
+
+-- TODO
+-- 	return core.is_protected(pos, name) and
+--		not minetest.check_player_privs(name, "protection_bypass")
+
 local modpath = minetest.get_modpath(minetest.get_current_modname())
 
 local inventory_functions = dofile(modpath.."/inventories.lua")
@@ -528,6 +533,12 @@ end
 -- Tests if a Digtron can be built at the designated location
 digtron.is_buildable_to = function(digtron_id, root_pos, player_name, ignore_nodes, return_immediately_on_failure)
 	local layout = retrieve_layout(digtron_id)
+	if layout == nil then
+		minetest.log("error", "[Digtron] digtron.is_buildable_to called by " .. player_name
+			.. " for " .. digtron_id .. " at " .. minetest.pos_to_string(root_pos) .. " but no layout "
+			.. "could be retrieved.")
+		return false, {}, {}
+	end
 	
 	-- If this digtron is already in-world, we're likely testing as part of a movement attempt.
 	-- Record its existing node locations, they will be treated as buildable_to

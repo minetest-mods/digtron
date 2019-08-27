@@ -2,26 +2,16 @@
 local MP = minetest.get_modpath(minetest.get_current_modname())
 local S, NS = dofile(MP.."/intllib.lua")
 
+local listname_to_title =
+{
+	["main"] = "Main Inventory",
+	["fuel"] = "Fuel",
+}
+
 -- This allows us to know which digtron the player has a formspec open for without
 -- sending the digtron_id over the network
 local player_interacting_with_digtron_id = {}
 local player_interacting_with_digtron_pos = {}
-
-local controller_nodebox = {
-	type = "fixed",
-	fixed = {
-		{-0.3125, -0.3125, -0.3125, 0.3125, 0.3125, 0.3125}, -- Core
-		{-0.1875, 0.3125, -0.1875, 0.1875, 0.5, 0.1875}, -- +y_connector
-		{-0.1875, -0.5, -0.1875, 0.1875, -0.3125, 0.1875}, -- -y_Connector
-		{0.3125, -0.1875, -0.1875, 0.5, 0.1875, 0.1875}, -- +x_connector
-		{-0.5, -0.1875, -0.1875, -0.3125, 0.1875, 0.1875}, -- -x_connector
-		{-0.1875, -0.1875, 0.3125, 0.1875, 0.1875, 0.5}, -- +z_connector
-		{-0.5, 0.125, -0.5, -0.125, 0.5, -0.3125}, -- back_connector_3
-		{0.125, 0.125, -0.5, 0.5, 0.5, -0.3125}, -- back_connector_1
-		{0.125, -0.5, -0.5, 0.5, -0.125, -0.3125}, -- back_connector_2
-		{-0.5, -0.5, -0.5, -0.125, -0.125, -0.3125}, -- back_connector_4
-	},
-}
 
 local get_controller_unassembled_formspec = function(pos, player_name)
 	local meta = minetest.get_meta(pos)
@@ -33,24 +23,233 @@ local get_controller_unassembled_formspec = function(pos, player_name)
 		.. "container_end[]"
 end
 
-local get_controller_assembled_formspec = function(pos, digtron_id, player_name)
-	digtron.retrieve_inventory(digtron_id) -- ensures the detatched inventory exists and is populated
-	return "size[9,9]"
-		.. "container[0.5,0]"
+local get_controller_assembled_formspec = function(digtron_id, player_name)
+	local context = player_interacting_with_digtron_id[player_name]
+	if context == nil or context.digtron_id ~= digtron_id then
+		minetest.log("error", "[Digtron] get_controller_assembled_formspec was called for Digtron "
+			..digtron_id .. " by " .. player_name .. " but there was no context recorded or the context was"
+			.." for the wrong digtron. This shouldn't be possible.")
+		return ""
+	end
+	
+	local inv = digtron.retrieve_inventory(digtron_id) -- ensures the detatched inventory exists and is populated
+	
+	-- TODO: will probably want a centralized cache for most of this, right now there's tons of redundancy
+	if context.tabs == nil then
+		context.tabs = {}
+		local lists = inv:get_lists()
+		for listname, contents in pairs(lists) do
+			table.insert(context.tabs, {
+				tab_type = "inventory",
+				listname = listname,
+				size = #contents,
+				current_page = 1})
+		end
+		context.current_tab = 1
+	end
+
+	local tabs = ""
+	if next(context.tabs) ~= nil then
+		tabs = "tabheader[0,0;tab_header;Controls"
+		for _, tab in ipairs(context.tabs) do
+			tabs = tabs .. "," .. listname_to_title[tab.listname] or tab.listname
+		end
+		tabs = tabs .. ";" .. context.current_tab .. "]"
+	end
+	
+	local inv_tab = function(inv_list)
+		return "size[9,9]"
+			.. "position[0.025,0.1]"
+			.. "anchor[0,0]"
+			.. "container[0.5,0]"
+			.. "list[detached:" .. digtron_id .. ";"..inv_list..";0,0;8,4]" -- TODO: paging system for inventory
+			.. "container_end[]"
+			.. "container[0.5,5]list[current_player;main;0,0;8,1;]list[current_player;main;0,1.25;8,3;8]container_end[]"
+			.. "listring[current_player;main]"
+			.. "listring[detached:" .. digtron_id .. ";"..inv_list.."]"
+	end
+	
+	local controls = "size[7,3]"
+		.. "position[0.025,0.1]"
+		.. "anchor[0,0]"
+		.. "container[0,0]"
 		.. "button[0,0;1,1;disassemble;Disassemble]"
-		.. "field[1.2,0.25;2,1;digtron_name;Digtron name;"..digtron.get_name(digtron_id).."]"
+		.. "field[1.2,0.3;2,1;digtron_name;Digtron name;"..digtron.get_name(digtron_id).."]"
 		.. "field_close_on_enter[digtron_name;false]"
-		.. "button[3,0;1,1;move_forward;Move forward]"
-		.. "button[4,0;1,1;test_dig;Test dig]"
+		.. "field[4.2,0.3;1,1;cycles;Cycles;1]" -- TODO persist
+		.. "button[5,0;1,1;test_dig;Execute]"
 		.. "container_end[]"
-		.. "container[0.5,1]"
-		.. "list[detached:" .. digtron_id .. ";main;0,0;8,2]" -- TODO: paging system for inventory, guard against non-existent listname
-		.. "list[detached:" .. digtron_id .. ";fuel;0,2.5;8,2]" -- TODO: paging system for inventory, guard against non-existent listname
+		
+		.. "container[0,1]"
+		.. "box[0,0;4,2;#DDDDDD]"
+		.. "label[1.8,0.825;Move]"
+		.. "button[1.1,0.1;1,1;move_up;Up]"
+		.. "button[1.1,1.1;1,1;move_down;Down]"
+		.. "button[2.1,0.1;1,1;move_forward;Forward]"
+		.. "button[2.1,1.1;1,1;move_back;Back]"
+		.. "button[0.1,0.6;1,1;move_left;Left]"
+		.. "button[3.1,0.6;1,1;move_right;Right]"
 		.. "container_end[]"
-		.. "container[0.5,5]list[current_player;main;0,0;8,1;]list[current_player;main;0,1.25;8,3;8]container_end[]"
-		.. "listring[current_player;main]"
-		.. "listring[detached:" .. digtron_id .. ";main]"
+
+		.. "container[4,1]"
+		.. "box[0,0;3,2;#CCCCCC]"
+		.. "label[1.3,0.825;Rotate]"
+		.. "button[0.1,0.1;1,1;rot_clockwise;Clockwise]"
+		.. "button[2.1,0.1;1,1;rot_counterclockwise;Widdershins]"
+		.. "button[1.1,0.1;1,1;rot_up;Pitch Up]"
+		.. "button[1.1,1.1;1,1;rot_down;Pitch Down]"
+		.. "button[0.1,1.1;1,1;rot_left;Yaw Left]"
+		.. "button[2.1,1.1;1,1;rot_right;Yaw Right]"
+		.. "container_end[]"
+		
+
+	minetest.chat_send_all(dump(context))
+	if context.current_tab == 1 then
+		return controls .. tabs
+	else
+		return inv_tab(context.tabs[context.current_tab - 1].listname) .. tabs
+	end
 end
+
+-- Dealing with an unassembled Digtron controller
+minetest.register_on_player_receive_fields(function(player, formname, fields)
+	if formname ~= "digtron:controller_unassembled" then
+		return
+	end
+	local name = player:get_player_name()
+	local pos = player_interacting_with_digtron_pos[name]
+	
+	if pos == nil then return end
+
+	if fields.assemble then
+		local digtron_id = digtron.assemble(pos, name)
+		if digtron_id then
+			local meta = minetest.get_meta(pos)
+			meta:set_string("digtron_id", digtron_id)
+			meta:mark_as_private("digtron_id")
+			player_interacting_with_digtron_id[name] = {digtron_id = digtron_id}
+			minetest.show_formspec(name,
+				"digtron:controller_assembled",
+				get_controller_assembled_formspec(digtron_id, name))
+		end
+	end
+	
+	--TODO: this isn't recording the field when using ESC to exit the formspec
+	if fields.key_enter_field == "digtron_name" or fields.digtron_name then
+		local meta = minetest.get_meta(pos)
+		meta:set_string("infotext", fields.digtron_name)
+	end
+end)
+
+
+local get_down = function(facedir)
+	local top = {
+		[0]={x=0,y=-1,z=0},
+		{x=0,y=0,z=1},
+		{x=0,y=0,z=-1},
+		{x=1,y=0,y=0},
+		{x=-1,y=0,z=0},
+		{x=0,y=1,z=0},
+	}
+	return top[math.floor(facedir/4)]
+end
+function crossProduct( a, b )
+    local x, y, z
+    x = a.y * (b.z or 0) - (a.z or 0) * b.y
+    y = (a.z or 0) * b.x - a.x * (b.z or 0)
+    z = a.x * b.y - a.y * b.x
+    return { x=x, y=y, z=z }
+end
+local facedir_to_right = {}
+for i = 0, 23 do
+	local dir = minetest.facedir_to_dir(i)
+	local down = get_down(i)
+	facedir_to_right[i] = crossProduct(dir, down)
+end
+
+-- Controlling a fully armed and operational Digtron
+minetest.register_on_player_receive_fields(function(player, formname, fields)
+	if formname ~= "digtron:controller_assembled" then
+		return
+	end
+	local player_name = player:get_player_name()
+	local context = player_interacting_with_digtron_id[player_name]
+	if context == nil then
+		return
+	end
+	local digtron_id = context.digtron_id
+	if digtron_id == nil then
+		return
+	end
+	
+	local refresh = false
+	
+	if fields.tab_header then
+		local new_tab = tonumber(fields.tab_header)
+		if new_tab <= #(context.tabs) + 1 then
+			context.current_tab = new_tab
+			refresh = true
+		else
+			--TODO error message
+		end
+	end
+
+	if fields.disassemble then
+		local pos = digtron.disassemble(digtron_id, player_name)
+		if pos then
+			player_interacting_with_digtron_pos[player_name] = pos
+			minetest.show_formspec(player_name,
+				"digtron:controller_unassembled",
+					get_controller_unassembled_formspec(pos, player_name))
+		end		
+	end
+	
+	local pos = digtron.get_pos(digtron_id)
+	if pos then
+		local node = minetest.get_node(pos)
+		if node.name == "digtron:controller" then
+			local facedir = node.param2
+			if fields.move_forward then
+				digtron.move(digtron_id, vector.add(pos, minetest.facedir_to_dir(facedir)), player_name)
+			elseif fields.move_back then
+				digtron.move(digtron_id, vector.add(pos, vector.multiply(minetest.facedir_to_dir(facedir), -1)), player_name)
+			elseif fields.move_up then
+				digtron.move(digtron_id, vector.add(pos, vector.multiply(get_down(facedir), -1)), player_name)
+			elseif fields.move_down then
+				digtron.move(digtron_id, vector.add(pos, get_down(facedir)), player_name)
+			elseif fields.move_left then
+				digtron.move(digtron_id, vector.add(pos, vector.multiply(facedir_to_right[facedir % 23], -1)), player_name)
+			elseif fields.move_right then
+				digtron.move(digtron_id, vector.add(pos, facedir_to_right[facedir % 23]), player_name)
+			end
+		end
+	end	
+	
+	if fields.test_dig then
+		digtron.execute_cycle(digtron_id, player_name)
+	end
+	
+	--TODO: this isn't recording the field when using ESC to exit the formspec
+	if fields.key_enter_field == "digtron_name" or fields.digtron_name then
+		local pos = digtron.get_pos(digtron_id)
+		if pos then
+			local meta = minetest.get_meta(pos)
+			meta:set_string("infotext", fields.digtron_name)
+			digtron.set_name(digtron_id, fields.digtron_name)
+		end
+	end
+	
+	if refresh then
+		minetest.show_formspec(player_name,
+			"digtron:controller_assembled",
+			get_controller_assembled_formspec(digtron_id, player_name))
+	end
+	
+end)
+
+
+
+
 
 minetest.register_node("digtron:controller", {
 	description = S("Digtron Control Module"),
@@ -72,7 +271,21 @@ minetest.register_node("digtron:controller", {
 		"digtron_plate.png^digtron_control.png",
 	},
 	drawtype = "nodebox",
-	node_box = controller_nodebox,
+		node_box = {
+		type = "fixed",
+		fixed = {
+			{-0.3125, -0.3125, -0.3125, 0.3125, 0.3125, 0.3125}, -- Core
+			{-0.1875, 0.3125, -0.1875, 0.1875, 0.5, 0.1875}, -- +y_connector
+			{-0.1875, -0.5, -0.1875, 0.1875, -0.3125, 0.1875}, -- -y_Connector
+			{0.3125, -0.1875, -0.1875, 0.5, 0.1875, 0.1875}, -- +x_connector
+			{-0.5, -0.1875, -0.1875, -0.3125, 0.1875, 0.1875}, -- -x_connector
+			{-0.1875, -0.1875, 0.3125, 0.1875, 0.1875, 0.5}, -- +z_connector
+			{-0.5, 0.125, -0.5, -0.125, 0.5, -0.3125}, -- back_connector_3
+			{0.125, 0.125, -0.5, 0.5, 0.5, -0.3125}, -- back_connector_1
+			{0.125, -0.5, -0.5, 0.5, -0.125, -0.3125}, -- back_connector_2
+			{-0.5, -0.5, -0.5, -0.125, -0.125, -0.3125}, -- back_connector_4
+		},
+	},
 	sounds = default.node_sound_metal_defaults(),
 	
 --	on_construct = function(pos)
@@ -191,10 +404,10 @@ minetest.register_node("digtron:controller", {
 				get_controller_unassembled_formspec(pos, player_name))
 		else
 			-- initialized
-			player_interacting_with_digtron_id[player_name] = digtron_id
+			player_interacting_with_digtron_id[player_name] = {digtron_id = digtron_id}
 			minetest.show_formspec(player_name,
 				"digtron:controller_assembled",
-				get_controller_assembled_formspec(pos, digtron_id, player_name))
+				get_controller_assembled_formspec(digtron_id, player_name))
 		end
 	end,
 	
@@ -203,80 +416,3 @@ minetest.register_node("digtron:controller", {
 	
 	on_blast = digtron.on_blast,
 })
-
--- Dealing with an unassembled Digtron controller
-minetest.register_on_player_receive_fields(function(player, formname, fields)
-	if formname ~= "digtron:controller_unassembled" then
-		return
-	end
-	local name = player:get_player_name()
-	local pos = player_interacting_with_digtron_pos[name]
-	
-	if pos == nil then return end
-
-	if fields.assemble then
-		local digtron_id = digtron.assemble(pos, name)
-		if digtron_id then
-			local meta = minetest.get_meta(pos)
-			meta:set_string("digtron_id", digtron_id)
-			meta:mark_as_private("digtron_id")
-			player_interacting_with_digtron_id[name] = digtron_id
-			minetest.show_formspec(name,
-				"digtron:controller_assembled",
-				get_controller_assembled_formspec(pos, digtron_id, name))
-		end
-	end
-	
-	--TODO: this isn't recording the field when using ESC to exit the formspec
-	if fields.key_enter_field == "digtron_name" or fields.digtron_name then
-		local meta = minetest.get_meta(pos)
-		meta:set_string("infotext", fields.digtron_name)
-	end
-end)
-
--- Controlling a fully armed and operational Digtron
-minetest.register_on_player_receive_fields(function(player, formname, fields)
-	if formname ~= "digtron:controller_assembled" then
-		return
-	end
-	local player_name = player:get_player_name()
-	local digtron_id = player_interacting_with_digtron_id[player_name]
-	if digtron_id == nil then return end
-	
-	if fields.disassemble then
-		local pos = digtron.disassemble(digtron_id, player_name)
-		if pos then
-			player_interacting_with_digtron_pos[player_name] = pos
-			minetest.show_formspec(player_name,
-				"digtron:controller_unassembled",
-					get_controller_unassembled_formspec(pos, player_name))
-		end		
-	end
-	
-	if fields.move_forward then
-		local pos = digtron.get_pos(digtron_id)
-		if pos then
-			local node = minetest.get_node(pos)
-			if node.name == "digtron:controller" then
-				local dir = minetest.facedir_to_dir(node.param2)
-				local dest_pos = vector.add(dir, pos)
-				digtron.move(digtron_id, dest_pos, player_name)
-			end
-		end		
-	end
-	
-	if fields.test_dig then
-		digtron.execute_cycle(digtron_id, player_name)
-	end
-	
-	--TODO: this isn't recording the field when using ESC to exit the formspec
-	if fields.key_enter_field == "digtron_name" or fields.digtron_name then
-		local pos = digtron.get_pos(digtron_id)
-		if pos then
-			local meta = minetest.get_meta(pos)
-			meta:set_string("infotext", fields.digtron_name)
-			digtron.set_name(digtron_id, fields.digtron_name)
-		end
-	end
-	
-end)
