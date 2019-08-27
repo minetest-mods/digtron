@@ -120,7 +120,7 @@ local builder_on_rightclick = function(pos, node, clicker, itemstack, pointed_th
 	local digtron_id = meta:get_string("digtron_id")
 	if digtron_id ~= "" then
 		minetest.sound_play({name = "digtron_error", gain = 0.1}, {to_player=player_name})
-		minetest.chat_send_player(player_name, "This Digtron is active, interact with it via the controller node.")
+		minetest.chat_send_player(player_name, S("This Digtron is active, interact with it via the controller node."))
 		return
 	end
 	
@@ -149,6 +149,8 @@ minetest.register_on_player_receive_fields(function(sender, formname, fields)
 	local facing = tonumber(fields.facing)
 	local extrusion = tonumber(fields.extrusion)
 	
+	local item = meta:get_string("item")
+	
 	if period and period > 0 then
 		meta:set_int("period", math.floor(period))
 	else
@@ -160,7 +162,7 @@ minetest.register_on_player_receive_fields(function(sender, formname, fields)
 		offset = meta:get_int("offset")
 	end
 	if facing and facing >= 0 and facing < 24 then
-		local target_item = ItemStack(meta:get_string("item"))
+		local target_item = ItemStack(item)
 		if target_item:get_definition().paramtype2 == "wallmounted" then
 			if facing < 6 then
 				meta:set_int("facing", facing)
@@ -198,6 +200,14 @@ minetest.register_on_player_receive_fields(function(sender, formname, fields)
 	if fields.help then
 		minetest.after(0.5, doc.show_entry, sender:get_player_name(), "nodes", "digtron:builder", true)
 	end
+	
+	local item_def = minetest.registered_items[item]
+	local item_desc = "Nothing"
+	if item_def then
+		item_desc = item_def.description
+	end
+	
+	meta:set_string("infotext", S("Builder for @1\nperiod @2, offset @3, extrusion @4", item_desc, period, offset, extrusion))
 	
 	digtron.update_builder_item(pos)
 end)
@@ -246,8 +256,8 @@ minetest.register_node("digtron:builder", {
 	
 	on_construct = function(pos)
         local meta = minetest.get_meta(pos)
-		meta:set_int("period", 1) 
-		meta:set_int("offset", 0) 
+		meta:set_int("period", 1)
+		meta:set_int("offset", 0)
 		meta:set_int("facing", 0)
 		meta:set_int("extrusion", 1)
     end,

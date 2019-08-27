@@ -195,7 +195,7 @@ local refresh_adjacent = function(digtron_id)
 	local layout = retrieve_layout(digtron_id)
 	if layout == nil then return nil end
 	
-	local adjacent = {}
+	local adjacent = {} -- all adjacent nodes. TODO: if implementing traction wheels, won't be needed
 	local adjacent_to_diggers = {}
 	local adjacent_to_builders = {}
 	for hash, data in pairs(layout) do
@@ -207,22 +207,30 @@ local refresh_adjacent = function(digtron_id)
 		end
 		
 		if minetest.get_item_group(data.node.name, "digtron") == 3 then
-			local potential_target = hash + cardinal_dirs_hash[facedir_to_dir_index(data.node.param2)]
-			if layout[potential_target] == nil then
+			local dir_hash = cardinal_dirs_hash[facedir_to_dir_index(data.node.param2)]
+			local potential_target = hash + dir_hash -- pointed at this hash
+			if layout[potential_target] == nil then -- not pointed at another Digtron node
 				local fields = data.meta.fields
-				adjacent_to_diggers[potential_target] = {period = fields.period, offset = fields.offset}
+				adjacent_to_diggers[hash] = {
+					period = fields.period,
+					offset = fields.offset,
+					dir_hash = dir_hash,
+				}
 			end
 		end
 		if minetest.get_item_group(data.node.name, "digtron") == 4 then
-			local potential_target = hash + cardinal_dirs_hash[facedir_to_dir_index(data.node.param2)]
+			local dir_hash = cardinal_dirs_hash[facedir_to_dir_index(data.node.param2)]
+			local potential_target = hash + dir_hash
 			if layout[potential_target] == nil then
 				local fields = data.meta.fields
-				adjacent_to_builders[potential_target] = {
+				-- TODO: trace extrusion and if it intersects Digtron layout cap it there.
+				adjacent_to_builders[hash] = {
 					period = tonumber(fields.period) or 1,
 					offset = tonumber(fields.offset) or 0,
 					item = fields.item,
-					facing = tonumber(fields.facing) or 0,
+					facing = tonumber(fields.facing) or 0, -- facing of built node
 					extrusion = tonumber(fields.extrusion) or 1,
+					dir_hash = dir_hash, -- Record in table form, it'll be more convenient for use later
 				}
 			end
 		end
@@ -267,7 +275,7 @@ table.insert(dispose_callbacks, invalidate_layout_cache)
 digtron.assemble = function(root_pos, player_name)
 	local node = minetest.get_node(root_pos)
 	-- TODO: a more generic test? Not needed with the more generic controller design, as far as I can tell. There's only going to be the one type of controller.
-	if node.name ~= "digtron:controller" then 
+	if node.name ~= "digtron:controller" then
 		-- Called on an incorrect node
 		minetest.log("error", "[Digtron] digtron.assemble called with pos " .. minetest.pos_to_string(root_pos)
 			.. " but the node at this location was " .. node.name)
@@ -313,7 +321,6 @@ digtron.assemble = function(root_pos, player_name)
 			return nil
 		end
 		-- Process inventories specially
-		-- TODO Builder inventory gets turned into an itemname in a special key in the builder's meta
 		-- fuel and main get added to corresponding detached inventory lists
 		for listname, items in pairs(current_meta_table.inventory) do
 			local count = #items
@@ -457,8 +464,6 @@ digtron.disassemble = function(digtron_id, player_name)
 				minetest.swap_node(node_pos, {name=node_def._digtron_disassembled_node, param2=node.param2})
 			end
 			
-			-- TODO: special handling for builder node inventories
-
 			-- Ensure node metadata fields are all set, too
 			for field, value in pairs(data.meta.fields) do
 				node_meta:set_string(field, value)
@@ -625,7 +630,7 @@ local predict_dig = function(digtron_id, player_name)
 	local cost = 0
 	
 	for target_hash, digger_data in pairs(retrieve_all_digger_targets(digtron_id)) do
-		local target_pos = minetest.get_position_from_hash(target_hash + root_hash)
+		local target_pos = minetest.get_position_from_hash(target_hash + root_hash + digger_data.dir_hash)
 		local target_node = minetest.get_node(target_pos)
 		local target_name = target_node.name
 		local targetdef = minetest.registered_nodes[target_name]
@@ -753,37 +758,41 @@ local predict_build = function(digtron_id, new_pos, player_name, ignore_nodes)
 	local cost = 0
 	
 	for target_hash, builder_data in pairs(retrieve_all_builder_targets(digtron_id)) do
-		local target_pos = minetest.get_position_from_hash(target_hash + root_hash)
-		local target_node = minetest.get_node(target_pos)
-		local target_name = target_node.name
-		local targetdef = minetest.registered_nodes[target_name]
-		--TODO periodicity/offset test
-		if
-			ignore_hashes[target_hash] or
-			(targetdef ~= nil
-				and targetdef.buildable_to
-				and not minetest.is_protected(target_pos, player_name)
-			)
-		then
-			local item = builder_data.item
-			local facing = builder_data.facing
-			
-			local removed_item = predictive_inv:remove_item("main", ItemStack(item))
-			if removed_item:get_count() < 1 then
-				missing_items[item] = (missing_items[item] or 0) + 1
+		local absolute_hash = target_hash + root_hash
+		local dir_hash = builder_data.dir_hash
+		for i = 1, builder_data.extrusion do
+			local target_pos = minetest.get_position_from_hash(absolute_hash + i * dir_hash)
+			local target_node = minetest.get_node(target_pos)
+			local target_name = target_node.name
+			local targetdef = minetest.registered_nodes[target_name]
+			--TODO periodicity/offset test
+			if
+				ignore_hashes[target_hash] or
+				(targetdef ~= nil
+					and targetdef.buildable_to
+					and not minetest.is_protected(target_pos, player_name)
+				)
+			then
+				local item = builder_data.item
+				local facing = builder_data.facing
+				
+				local removed_item = predictive_inv:remove_item("main", ItemStack(item))
+				if removed_item:get_count() < 1 then
+					missing_items[item] = (missing_items[item] or 0) + 1
+				end
+				
+				if digtron.config.uses_resources then
+					cost = cost + digtron.config.build_cost
+				end
+	
+				table.insert(built_nodes, {
+					pos = target_pos,
+					node = {name=item, param2=facing },
+					old_node = target_node,
+				})
+			else
+				break -- extrusion reached an obstacle
 			end
-			
-			if digtron.config.uses_resources then
-				cost = cost + digtron.config.build_cost
-			end
-			
-			-- TODO handle extrusion
-			
-			table.insert(built_nodes, {
-				pos = target_pos,
-				node = {name=item, param2=facing },
-				old_node = target_node,
-			})
 		end
 	end
 	

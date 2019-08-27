@@ -32,7 +32,7 @@ local update_infotext = function(meta)
 	if period < 1 then period = 1 end
 	local offset = meta:get_int("offset")
 
-	meta:set_string("infotext", S("Digger period @1 offset @2", period, offset))
+	meta:set_string("infotext", S("Digger\nperiod @1, offset @2", period, offset))
 end
 
 minetest.register_node("digtron:digger", {
@@ -119,6 +119,10 @@ minetest.register_node("digtron:digger_static",{
 	on_blast = digtron.on_blast,
 	
 	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
+		local returnstack, success = digtron.on_rightclick(pos, node, clicker, itemstack, pointed_thing)
+		if returnstack then
+			return returnstack, success
+		end
 		if clicker == nil then return end
 		local player_name = clicker:get_player_name()
 		player_interacting_with_digtron_pos[player_name] = pos

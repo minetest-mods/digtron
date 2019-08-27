@@ -70,7 +70,7 @@ minetest.register_node("digtron:inventory", {
 				get_inventory_formspec(pos, player_name))
 		else
 			minetest.sound_play({name = "digtron_error", gain = 0.1}, {to_player=player_name})
-			minetest.chat_send_player(clicker:get_player_name(), "This Digtron is active, interact with it via the controller node.")
+			minetest.chat_send_player(clicker:get_player_name(), S("This Digtron is active, interact with it via the controller node."))
 		end
 	end,
 
@@ -175,7 +175,7 @@ minetest.register_node("digtron:fuelstore", {
 				get_fuelstore_formspec(pos, player_name))
 		else
 			minetest.sound_play({name = "digtron_error", gain = 0.1}, {to_player=player_name})
-			minetest.chat_send_player(clicker:get_player_name(), "This Digtron is active, interact with it via the controller node.")
+			minetest.chat_send_player(clicker:get_player_name(), S("This Digtron is active, interact with it via the controller node."))
 		end
 	end,
 
@@ -302,7 +302,7 @@ minetest.register_node("digtron:combined_storage", {
 				get_combined_formspec(pos, player_name))
 		else
 			minetest.sound_play({name = "digtron_error", gain = 0.1}, {to_player=player_name})
-			minetest.chat_send_player(clicker:get_player_name(), "This Digtron is active, interact with it via the controller node.")
+			minetest.chat_send_player(clicker:get_player_name(), S("This Digtron is active, interact with it via the controller node."))
 		end
 	end,
 --		
