@@ -212,8 +212,8 @@ local refresh_adjacent = function(digtron_id)
 			if layout[potential_target] == nil then -- not pointed at another Digtron node
 				local fields = data.meta.fields
 				adjacent_to_diggers[hash] = {
-					period = fields.period,
-					offset = fields.offset,
+					period = tonumber(fields.period) or 1,
+					offset = tonumber(fields.offset) or 0,
 					dir_hash = dir_hash,
 				}
 			end
@@ -615,7 +615,7 @@ end
 ------------------------------------------------------------------------------------
 -- Digging
 
-local predict_dig = function(digtron_id, player_name)
+local predict_dig = function(digtron_id, player_name, controlling_coordinate)
 	local predictive_inv = get_predictive_inventory(digtron_id)
 	local root_pos = retrieve_pos(digtron_id)
 	if not (root_pos and predictive_inv) then
@@ -634,8 +634,8 @@ local predict_dig = function(digtron_id, player_name)
 		local target_node = minetest.get_node(target_pos)
 		local target_name = target_node.name
 		local targetdef = minetest.registered_nodes[target_name]
-		--TODO periodicity/offset test
 		if
+			(target_pos[controlling_coordinate] + digger_data.offset) % digger_data.period == 0 and -- test periodicity and offset
 			target_name ~= "air" and -- TODO: generalise this somehow for liquids and other undiggables
 			minetest.get_item_group(target_name, "digtron") == 0 and
 			minetest.get_item_group(target_name, "digtron_protected") == 0 and
@@ -709,6 +709,10 @@ local log_dug_nodes = function(nodes_to_dig, digtron_id, root_pos, player_name)
 	end
 end
 
+-- Execute all the callbacks that would normally be called on a node after it's been dug.
+-- This is a separate step from actually removing the nodes because we don't want to execute
+-- these until after *everything* has been dug - this can trigger sand falling, we don't
+-- want that getting in the way of nodes yet to be built.
 local execute_dug_callbacks = function(nodes_dug)
 	-- Execute various on-dig callbacks for the nodes that Digtron dug
 	for _, dug_data in ipairs(nodes_dug) do
@@ -737,7 +741,7 @@ end
 -- Building
 
 -- need to provide new_pos because Digtron moves before building
-local predict_build = function(digtron_id, new_pos, player_name, ignore_nodes)
+local predict_build = function(digtron_id, new_pos, player_name, ignore_nodes, controlling_coordinate)
 	local predictive_inv = get_predictive_inventory(digtron_id)
 	if not predictive_inv then
 		minetest.log("error", "[Digtron] predict_build failed to retrieve "
@@ -760,12 +764,19 @@ local predict_build = function(digtron_id, new_pos, player_name, ignore_nodes)
 	for target_hash, builder_data in pairs(retrieve_all_builder_targets(digtron_id)) do
 		local absolute_hash = target_hash + root_hash
 		local dir_hash = builder_data.dir_hash
+		local periodicity_permitted = nil
 		for i = 1, builder_data.extrusion do
 			local target_pos = minetest.get_position_from_hash(absolute_hash + i * dir_hash)
+			if periodicity_permitted == nil then
+				-- test periodicity and offset once
+				periodicity_permitted = (target_pos[controlling_coordinate] + builder_data.offset) % builder_data.period == 0
+				if not periodicity_permitted then
+					break -- period/offset doesn't line up with the target
+				end
+			end
 			local target_node = minetest.get_node(target_pos)
 			local target_name = target_node.name
 			local targetdef = minetest.registered_nodes[target_name]
-			--TODO periodicity/offset test
 			if
 				ignore_hashes[target_hash] or
 				(targetdef ~= nil
@@ -799,20 +810,42 @@ local predict_build = function(digtron_id, new_pos, player_name, ignore_nodes)
 	return missing_items, built_nodes, cost
 end
 
+-- Place all items listed in built_nodes in-world, returning any itemstacks that item_place_node returned.
+-- Also returns the number of successes for logging purposes
 local build_nodes = function(built_nodes)
 	local leftovers = {}
+	local success_count = 0
 	for _, build_info in ipairs(built_nodes) do
 		local item_stack = ItemStack(build_info.node.name)
 		local buildpos = build_info.pos
 		local build_facing = build_info.node.param2
 		local returned_stack, success = digtron.item_place_node(item_stack, digtron.fake_player, buildpos, build_facing)
+		if success then
+			success_count = success_count + 1
+		end
 		if returned_stack:get_count() > 0 then
 			table.insert(leftovers, returned_stack)
 		end
 	end
-	return leftovers
+	return leftovers, success_count
 end
 
+local log_built_nodes = function(success_count, digtron_id, root_pos, player_name)
+	if success_count > 0 then
+		local pluralized = "node"
+		if success_count > 1 then
+			pluralized = "nodes"
+		end
+		minetest.log("action", success_count .. " " .. pluralized .. " built by "
+			.. digtron_id .. " near ".. minetest.pos_to_string(root_pos)
+			.. " operated by by " .. player_name)
+	end
+end
+
+-- Execute all the callbacks that would normally be called on a node after it's been built.
+-- This is a separate step from actually placing the nodes because we don't want to execute
+-- these until after *everything* has been built - this can trigger sand falling, we don't
+-- want that getting in the way of nodes yet to be built.
 local execute_built_callbacks = function(built_nodes)
 	for _, build_info in ipairs(built_nodes) do
 		local new_pos = build_info.pos
@@ -836,14 +869,43 @@ end
 -------------------------------------------------------------------------------------------------------
 -- Execute cycle
 
+-- Used to determine which coordinate is being checked for periodicity. eg, if the digtron is moving in the z direction, then periodicity is checked for every n nodes in the z axis.
+local get_controlling_coordinate = function(facedir)
+	-- used for determining builder period and offset
+	local dir = facedir_to_dir_map[facedir]
+	if dir == 1 or dir == 3 then
+		return "z"
+	elseif dir == 2 or dir == 4 then
+		return "x"
+	else
+		return "y"
+	end
+end
+
+local insert_or_eject = function(digtron_id, item_list, pos)
+	local predictive_inv = get_predictive_inventory(digtron_id)
+	if not predictive_inv then
+		minetest.log("error", "[Digtron] predict_build failed to retrieve "
+			.."a predictive inventory for " .. digtron_id)
+		return
+	end
+	for _, item in ipairs(item_list) do
+		local final_leftover = predictive_inv:add_item("main", item)
+		minetest.item_drop(final_leftover, digtron.fake_player, pos)
+	end
+end
+
 digtron.execute_cycle = function(digtron_id, player_name)
-	local dig_leftovers, nodes_to_dig, dig_cost = predict_dig(digtron_id, player_name)
 	local old_root_pos = retrieve_pos(digtron_id)
 	local root_node = minetest.get_node(old_root_pos)
-	local new_root_pos = vector.add(old_root_pos, cardinal_dirs[facedir_to_dir_index(root_node.param2)])
+	local root_facedir = root_node.param2
+	local controlling_coordinate = get_controlling_coordinate(root_facedir)
+
+	local dig_leftovers, nodes_to_dig, dig_cost = predict_dig(digtron_id, player_name, controlling_coordinate)
+	local new_root_pos = vector.add(old_root_pos, cardinal_dirs[facedir_to_dir_index(root_facedir)])
 	-- TODO: convert nodes_to_dig into a hash map here and pass that in to reduce duplication?
 	local buildable_to, succeeded, failed = digtron.is_buildable_to(digtron_id, new_root_pos, player_name, nodes_to_dig)
-	local missing_items, built_nodes, build_cost = predict_build(digtron_id, new_root_pos, player_name, nodes_to_dig)
+	local missing_items, built_nodes, build_cost = predict_build(digtron_id, new_root_pos, player_name, nodes_to_dig, controlling_coordinate)
 
 	if buildable_to and next(missing_items) == nil then
 		digtron.fake_player:update(old_root_pos, player_name)
@@ -857,8 +919,8 @@ digtron.execute_cycle = function(digtron_id, player_name)
 		digtron.build_to_world(digtron_id, new_root_pos, player_name)
 		minetest.sound_play("digtron_construction", {gain = 0.5, pos=new_root_pos})
 		
-		local build_leftovers = build_nodes(built_nodes, player_name)
-		-- There shouldn't normally be build_leftovers, but it's possible.
+		local build_leftovers, success_count = build_nodes(built_nodes, player_name)
+		log_built_nodes(success_count, digtron_id, old_root_pos, player_name)
 		
 		-- Don't need to do fancy callback checking for digtron nodes since I made all those
 		-- nodes and I know they don't have anything that needs to be done for them.
@@ -871,7 +933,9 @@ digtron.execute_cycle = function(digtron_id, player_name)
 		execute_dug_callbacks(nodes_dug)
 		execute_built_callbacks(built_nodes)
 		
-		-- TODO try putting dig_leftovers and build_leftovers into the inventory one last time before ejecting it
+		-- try putting dig_leftovers and build_leftovers into the inventory one last time before ejecting it
+		insert_or_eject(digtron_id, dig_leftovers, old_root_pos)
+		insert_or_eject(digtron_id, build_leftovers, old_root_pos)
 	
 		commit_predictive_inventory(digtron_id)
 	else
