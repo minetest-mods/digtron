@@ -58,13 +58,13 @@ local get_controller_assembled_formspec = function(digtron_id, player_name)
 	end
 	
 	local inv_tab = function(inv_list)
-		return "size[9,9]"
+		return "size[8,9]"
 			.. "position[0.025,0.1]"
 			.. "anchor[0,0]"
-			.. "container[0.5,0]"
+			.. "container[0,0]"
 			.. "list[detached:" .. digtron_id .. ";"..inv_list..";0,0;8,4]" -- TODO: paging system for inventory
 			.. "container_end[]"
-			.. "container[0.5,5]list[current_player;main;0,0;8,1;]list[current_player;main;0,1.25;8,3;8]container_end[]"
+			.. "container[0,5]list[current_player;main;0,0;8,1;]list[current_player;main;0,1.25;8,3;8]container_end[]"
 			.. "listring[current_player;main]"
 			.. "listring[detached:" .. digtron_id .. ";"..inv_list.."]"
 	end
@@ -94,16 +94,14 @@ local get_controller_assembled_formspec = function(digtron_id, player_name)
 		.. "container[4,1]"
 		.. "box[0,0;3,2;#CCCCCC]"
 		.. "label[1.3,0.825;Rotate]"
-		.. "button[0.1,0.1;1,1;rot_clockwise;Clockwise]"
-		.. "button[2.1,0.1;1,1;rot_counterclockwise;Widdershins]"
+		.. "button[0.1,0.1;1,1;rot_counterclockwise;Widdershins]"
+		.. "button[2.1,0.1;1,1;rot_clockwise;Clockwise]"
 		.. "button[1.1,0.1;1,1;rot_up;Pitch Up]"
 		.. "button[1.1,1.1;1,1;rot_down;Pitch Down]"
 		.. "button[0.1,1.1;1,1;rot_left;Yaw Left]"
 		.. "button[2.1,1.1;1,1;rot_right;Yaw Right]"
 		.. "container_end[]"
 		
-
-	minetest.chat_send_all(dump(context))
 	if context.current_tab == 1 then
 		return controls .. tabs
 	else
@@ -141,32 +139,6 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 	end
 end)
 
-
-local get_down = function(facedir)
-	local top = {
-		[0]={x=0,y=-1,z=0},
-		{x=0,y=0,z=1},
-		{x=0,y=0,z=-1},
-		{x=1,y=0,y=0},
-		{x=-1,y=0,z=0},
-		{x=0,y=1,z=0},
-	}
-	return top[math.floor(facedir/4)]
-end
-function crossProduct( a, b )
-    local x, y, z
-    x = a.y * (b.z or 0) - (a.z or 0) * b.y
-    y = (a.z or 0) * b.x - a.x * (b.z or 0)
-    z = a.x * b.y - a.y * b.x
-    return { x=x, y=y, z=z }
-end
-local facedir_to_right = {}
-for i = 0, 23 do
-	local dir = minetest.facedir_to_dir(i)
-	local down = get_down(i)
-	facedir_to_right[i] = crossProduct(dir, down)
-end
-
 -- Controlling a fully armed and operational Digtron
 minetest.register_on_player_receive_fields(function(player, formname, fields)
 	if formname ~= "digtron:controller_assembled" then
@@ -175,15 +147,29 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 	local player_name = player:get_player_name()
 	local context = player_interacting_with_digtron_id[player_name]
 	if context == nil then
+		minetest.chat_send_all("no context")
 		return
 	end
 	local digtron_id = context.digtron_id
 	if digtron_id == nil then
+		minetest.chat_send_all("no id")
 		return
 	end
 	
+	local pos = digtron.get_pos(digtron_id)
+	if pos == nil then
+		minetest.chat_send_all("no pos")
+		return
+	end
+	local node = minetest.get_node(pos)
+	if node.name ~= "digtron:controller" then
+		minetest.chat_send_all("not controller " .. node.name .. " " .. minetest.pos_to_string(pos))
+		-- this happened somehow in testing, Digtron needs to be able to recover from this situation.
+		-- TODO catch this on_rightclick and try remapping the layout to the new position.
+		return
+	end
+
 	local refresh = false
-	
 	if fields.tab_header then
 		local new_tab = tonumber(fields.tab_header)
 		if new_tab <= #(context.tabs) + 1 then
@@ -204,27 +190,35 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 		end		
 	end
 	
-	local pos = digtron.get_pos(digtron_id)
-	if pos then
-		local node = minetest.get_node(pos)
-		if node.name == "digtron:controller" then
-			local facedir = node.param2
-			if fields.move_forward then
-				digtron.move(digtron_id, vector.add(pos, minetest.facedir_to_dir(facedir)), player_name)
-			elseif fields.move_back then
-				digtron.move(digtron_id, vector.add(pos, vector.multiply(minetest.facedir_to_dir(facedir), -1)), player_name)
-			elseif fields.move_up then
-				digtron.move(digtron_id, vector.add(pos, vector.multiply(get_down(facedir), -1)), player_name)
-			elseif fields.move_down then
-				digtron.move(digtron_id, vector.add(pos, get_down(facedir)), player_name)
-			elseif fields.move_left then
-				digtron.move(digtron_id, vector.add(pos, vector.multiply(facedir_to_right[facedir % 23], -1)), player_name)
-			elseif fields.move_right then
-				digtron.move(digtron_id, vector.add(pos, facedir_to_right[facedir % 23]), player_name)
-			end
-		end
-	end	
-	
+	local facedir = node.param2
+	-- Translation
+	if fields.move_forward then
+		digtron.move(digtron_id, vector.add(pos, digtron.facedir_to_dir(facedir)), player_name)
+	elseif fields.move_back then
+		digtron.move(digtron_id, vector.add(pos, vector.multiply(digtron.facedir_to_dir(facedir), -1)), player_name)
+	elseif fields.move_up then
+		digtron.move(digtron_id, vector.add(pos, digtron.facedir_to_up(facedir)), player_name)
+	elseif fields.move_down then
+		digtron.move(digtron_id, vector.add(pos, vector.multiply(digtron.facedir_to_up(facedir), -1)), player_name)
+	elseif fields.move_left then
+		digtron.move(digtron_id, vector.add(pos, vector.multiply(digtron.facedir_to_right(facedir), -1)), player_name)
+	elseif fields.move_right then
+		digtron.move(digtron_id, vector.add(pos, digtron.facedir_to_right(facedir)), player_name)
+	-- Rotation	
+	elseif fields.rot_counterclockwise then
+		digtron.rotate(digtron_id, vector.multiply(digtron.facedir_to_dir(facedir), -1), player_name)
+	elseif fields.rot_clockwise then
+		digtron.rotate(digtron_id, digtron.facedir_to_dir(facedir), player_name)
+	elseif fields.rot_up then
+		digtron.rotate(digtron_id, digtron.facedir_to_right(facedir), player_name)
+	elseif fields.rot_down then
+		digtron.rotate(digtron_id, vector.multiply(digtron.facedir_to_right(facedir), -1), player_name)
+	elseif fields.rot_left then
+		digtron.rotate(digtron_id, vector.multiply(digtron.facedir_to_up(facedir), -1), player_name)
+	elseif fields.rot_right then
+		digtron.rotate(digtron_id, digtron.facedir_to_up(facedir), player_name)
+	end
+
 	if fields.test_dig then
 		digtron.execute_cycle(digtron_id, player_name)
 	end
@@ -243,8 +237,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 		minetest.show_formspec(player_name,
 			"digtron:controller_assembled",
 			get_controller_assembled_formspec(digtron_id, player_name))
-	end
-	
+	end	
 end)
 
 

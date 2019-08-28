@@ -28,6 +28,7 @@ dofile(modpath.."/class_fakeplayer.lua")
 digtron.fake_player = DigtronFakePlayer.create({x=0,y=0,z=0}, "fake_player") -- since we only need one fake player at a time and it doesn't retain useful state, create a global one and just update it as needed.
 dofile(modpath.."/util_item_place_node.lua")
 
+dofile(modpath.."/geometry.lua")
 dofile(modpath.."/entities.lua")
 dofile(modpath.."/functions.lua")
 dofile(modpath.."/controller.lua")

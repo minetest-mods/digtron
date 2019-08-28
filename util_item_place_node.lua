@@ -18,16 +18,6 @@
 --See the GNU Lesser General Public License for more details:
 --https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
 
--- Mapping from facedir value to index in facedir_to_dir.
-digtron.facedir_to_dir_map = {
-	[0]=1, 2, 3, 4,
-	5, 2, 6, 4,
-	6, 2, 5, 4,
-	1, 5, 3, 6,
-	1, 6, 3, 5,
-	1, 4, 3, 2,
-}
-
 local function has_prefix(str, prefix)
 	return str:sub(1, string.len(prefix)) == prefix
 end
