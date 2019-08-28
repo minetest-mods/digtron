@@ -504,21 +504,18 @@ digtron.remove_from_world = function(digtron_id, player_name)
 end
 
 -- Tests if a Digtron can be built at the designated location
-digtron.is_buildable_to = function(digtron_id, root_pos, player_name, ignore_nodes, return_immediately_on_failure)
-	local layout = retrieve_layout(digtron_id)
-	if layout == nil then
-		minetest.log("error", "[Digtron] digtron.is_buildable_to called by " .. player_name
-			.. " for " .. digtron_id .. " at " .. minetest.pos_to_string(root_pos) .. " but no layout "
-			.. "could be retrieved.")
-		return false, {}, {}
-	end
-	
+digtron.is_buildable_to = function(digtron_id, layout, root_pos, player_name, ignore_nodes, return_immediately_on_failure)
 	-- If this digtron is already in-world, we're likely testing as part of a movement attempt.
 	-- Record its existing node locations, they will be treated as buildable_to
 	local old_root_pos = retrieve_pos(digtron_id)
+	local old_layout = retrieve_layout(digtron_id)
+	if layout == nil then
+		layout = old_layout
+	end
+	
 	local ignore_hashes = {}
 	if old_root_pos then
-		for hash, _ in pairs(layout) do
+		for hash, _ in pairs(old_layout) do
 			local old_hash = minetest.hash_node_position(vector.add(minetest.get_position_from_hash(hash), old_root_pos))		
 			ignore_hashes[old_hash] = true
 		end
@@ -560,9 +557,10 @@ digtron.is_buildable_to = function(digtron_id, root_pos, player_name, ignore_nod
 end
 
 -- Places the Digtron into the world.
-digtron.build_to_world = function(digtron_id, root_pos, player_name)
-	local layout = retrieve_layout(digtron_id)
-		
+digtron.build_to_world = function(digtron_id, layout, root_pos, player_name)
+	if layout == nil then
+		layout = retrieve_layout(digtron_id)
+	end
 	for hash, data in pairs(layout) do
 		-- Don't use get_valid_data, the Digtron isn't in-world yet
 		local node_pos = vector.add(minetest.get_position_from_hash(hash), root_pos)
@@ -580,10 +578,11 @@ digtron.build_to_world = function(digtron_id, root_pos, player_name)
 end
 
 digtron.move = function(digtron_id, dest_pos, player_name)
-	local permitted, succeeded, failed = digtron.is_buildable_to(digtron_id, dest_pos, player_name)
+	local layout = retrieve_layout(digtron_id)
+	local permitted, succeeded, failed = digtron.is_buildable_to(digtron_id, layout, dest_pos, player_name)
 	if permitted then
 		local removed = digtron.remove_from_world(digtron_id, player_name)
-		digtron.build_to_world(digtron_id, dest_pos, player_name)
+		digtron.build_to_world(digtron_id, layout, dest_pos, player_name)
 		minetest.sound_play("digtron_truck", {gain = 0.5, pos=dest_pos})
 		for _, removed_pos in ipairs(removed) do
 			minetest.check_for_falling(removed_pos)
@@ -599,28 +598,41 @@ end
 ------------------------------------------------------------------------
 -- Rotation
 
+local function deep_copy(table_in)
+	local table_out = {}
+	for index, value in pairs(table_in) do
+		if type(value) == "table" then
+			table_out[index] = deep_copy(value)
+		else
+			table_out[index] = value
+		end
+	end
+	return table_out
+end
+
 local rotate_layout = function(digtron_id, axis)
 	local layout = retrieve_layout(digtron_id)
 	local axis_hash = minetest.hash_node_position(axis)
 	local rotated_layout = {}
 	for hash, data in pairs(layout) do
+		local duplicate_data = deep_copy(data)
 		-- Facings
-		local node_name = data.node.name
+		local node_name = duplicate_data.node.name
 		local node_def = minetest.registered_nodes[node_name]
 		if node_def.paramtype2 == "wallmounted" then
-			data.node.param2 = digtron.rotate_wallmounted(axis_hash, data.node.param2)
+			duplicate_data.node.param2 = digtron.rotate_wallmounted(axis_hash, duplicate_data.node.param2)
 		elseif node_def.paramtype2 == "facedir" then
-			data.node.param2 = digtron.rotate_facedir(axis_hash, data.node.param2)
+			duplicate_data.node.param2 = digtron.rotate_facedir(axis_hash, duplicate_data.node.param2)
 		end
 		
 		-- Rotate builder item facings
 		if minetest.get_item_group(node_name, "digtron") == 4 then
-			local build_item = data.meta.fields.item
+			local build_item = duplicate_data.meta.fields.item
 			local build_item_def = minetest.registered_items[build_item]
 			if build_item_def.paramtype2 == "wallmounted" then
-				data.meta.fields.facing = digtron.rotate_wallmounted(axis_hash, tonumber(data.meta.fields.facing))
+				duplicate_data.meta.fields.facing = digtron.rotate_wallmounted(axis_hash, tonumber(duplicate_data.meta.fields.facing))
 			elseif build_item_def.paramtype2 == "facedir" then
-				data.meta.fields.facing = digtron.rotate_facedir(axis_hash, tonumber(data.meta.fields.facing))
+				duplicate_data.meta.fields.facing = digtron.rotate_facedir(axis_hash, tonumber(duplicate_data.meta.fields.facing))
 			end
 		end
 		
@@ -628,25 +640,30 @@ local rotate_layout = function(digtron_id, axis)
 		local pos = minetest.get_position_from_hash(hash)
 		pos = digtron.rotate_pos(axis_hash, pos)
 		local new_hash = minetest.hash_node_position(pos)
-		rotated_layout[new_hash] = data
+		rotated_layout[new_hash] = duplicate_data
 	end
 	
-	invalidate_layout_cache(digtron_id)
-	persist_layout(digtron_id, rotated_layout)
+	return rotated_layout
 end
 
 digtron.rotate = function(digtron_id, axis, player_name)
-	-- TODO: rotation version of is_buildable_to
+	local rotated_layout = rotate_layout(digtron_id, axis)
 	local root_pos = retrieve_pos(digtron_id)
-	local removed = digtron.remove_from_world(digtron_id, player_name)
-	rotate_layout(digtron_id, axis)
-	digtron.build_to_world(digtron_id, root_pos, player_name)
-	-- Don't need to do fancy callback checking for digtron nodes since I made all those
-	-- nodes and I know they don't have anything that needs to be done for them.
-	-- Just check for falling nodes.
-	for _, removed_pos in ipairs(removed) do
-		minetest.check_for_falling(removed_pos)
-	end
+	local permitted, succeeded, failed = digtron.is_buildable_to(digtron_id, rotated_layout, root_pos, player_name)
+	if permitted then
+		local removed = digtron.remove_from_world(digtron_id, player_name)
+		digtron.build_to_world(digtron_id, rotated_layout, root_pos, player_name)
+		persist_layout(digtron_id, rotated_layout)
+		-- Don't need to do fancy callback checking for digtron nodes since I made all those
+		-- nodes and I know they don't have anything that needs to be done for them.
+		-- Just check for falling nodes.
+		for _, removed_pos in ipairs(removed) do
+			minetest.check_for_falling(removed_pos)
+		end
+	else
+		digtron.show_buildable_nodes({}, failed)
+		minetest.sound_play("digtron_squeal", {gain = 0.5, pos=root_pos})
+	end	
 end
 
 ------------------------------------------------------------------------------------
@@ -937,8 +954,9 @@ digtron.execute_cycle = function(digtron_id, player_name)
 
 	local dig_leftovers, nodes_to_dig, dig_cost = predict_dig(digtron_id, player_name, controlling_coordinate)
 	local new_root_pos = vector.add(old_root_pos, digtron.facedir_to_dir(root_facedir))
+	local layout = retrieve_layout(digtron_id)
 	-- TODO: convert nodes_to_dig into a hash map here and pass that in to reduce duplication?
-	local buildable_to, succeeded, failed = digtron.is_buildable_to(digtron_id, new_root_pos, player_name, nodes_to_dig)
+	local buildable_to, succeeded, failed = digtron.is_buildable_to(digtron_id, layout, new_root_pos, player_name, nodes_to_dig)
 	local missing_items, built_nodes, build_cost = predict_build(digtron_id, new_root_pos, player_name, nodes_to_dig, controlling_coordinate)
 
 	if buildable_to and next(missing_items) == nil then
@@ -950,7 +968,7 @@ digtron.execute_cycle = function(digtron_id, player_name)
 		log_dug_nodes(nodes_to_dig, digtron_id, old_root_pos, player_name)
 		
 		-- Building new Digtron
-		digtron.build_to_world(digtron_id, new_root_pos, player_name)
+		digtron.build_to_world(digtron_id, layout, new_root_pos, player_name)
 		minetest.sound_play("digtron_construction", {gain = 0.5, pos=new_root_pos})
 		
 		local build_leftovers, success_count = build_nodes(built_nodes, player_name)
