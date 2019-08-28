@@ -11,17 +11,6 @@ local listname_to_title =
 -- This allows us to know which digtron the player has a formspec open for without
 -- sending the digtron_id over the network
 local player_interacting_with_digtron_id = {}
-local player_interacting_with_digtron_pos = {}
-
-local get_controller_unassembled_formspec = function(pos, player_name)
-	local meta = minetest.get_meta(pos)
-	return "size[9,9]"
-		.. "container[0.5,0]"
-		.. "button[0,0;1,1;assemble;Assemble]"
-		.. "field[1.2,0.25;2,1;digtron_name;Digtron name;"..meta:get_string("infotext").."]"
-		.. "field_close_on_enter[digtron_name;false]"
-		.. "container_end[]"
-end
 
 local get_controller_assembled_formspec = function(digtron_id, player_name)
 	local context = player_interacting_with_digtron_id[player_name]
@@ -69,15 +58,16 @@ local get_controller_assembled_formspec = function(digtron_id, player_name)
 			.. "listring[detached:" .. digtron_id .. ";"..inv_list.."]"
 	end
 	
-	local controls = "size[7,3]"
+	local controls = "size[4.2,5]"
 		.. "position[0.025,0.1]"
 		.. "anchor[0,0]"
 		.. "container[0,0]"
 		.. "button[0,0;1,1;disassemble;Disassemble]"
-		.. "field[1.2,0.3;2,1;digtron_name;Digtron name;"..digtron.get_name(digtron_id).."]"
+		.. "field[1.2,0.3;1.75,1;digtron_name;Digtron name;"
+		..minetest.formspec_escape(digtron.get_name(digtron_id)).."]"
 		.. "field_close_on_enter[digtron_name;false]"
-		.. "field[4.2,0.3;1,1;cycles;Cycles;1]" -- TODO persist
-		.. "button[5,0;1,1;test_dig;Execute]"
+		.. "field[2.9,0.3;0.7,1;cycles;Cycles;1]" -- TODO persist, actually use
+		.. "button[3.2,0;1,1;test_dig;Execute]"
 		.. "container_end[]"
 		
 		.. "container[0,1]"
@@ -91,7 +81,7 @@ local get_controller_assembled_formspec = function(digtron_id, player_name)
 		.. "button[3.1,0.6;1,1;move_right;Right]"
 		.. "container_end[]"
 
-		.. "container[4,1]"
+		.. "container[0.5,3.2]"
 		.. "box[0,0;3,2;#CCCCCC]"
 		.. "label[1.3,0.825;Rotate]"
 		.. "button[0.1,0.1;1,1;rot_counterclockwise;Widdershins]"
@@ -108,36 +98,6 @@ local get_controller_assembled_formspec = function(digtron_id, player_name)
 		return inv_tab(context.tabs[context.current_tab - 1].listname) .. tabs
 	end
 end
-
--- Dealing with an unassembled Digtron controller
-minetest.register_on_player_receive_fields(function(player, formname, fields)
-	if formname ~= "digtron:controller_unassembled" then
-		return
-	end
-	local name = player:get_player_name()
-	local pos = player_interacting_with_digtron_pos[name]
-	
-	if pos == nil then return end
-
-	if fields.assemble then
-		local digtron_id = digtron.assemble(pos, name)
-		if digtron_id then
-			local meta = minetest.get_meta(pos)
-			meta:set_string("digtron_id", digtron_id)
-			meta:mark_as_private("digtron_id")
-			player_interacting_with_digtron_id[name] = {digtron_id = digtron_id}
-			minetest.show_formspec(name,
-				"digtron:controller_assembled",
-				get_controller_assembled_formspec(digtron_id, name))
-		end
-	end
-	
-	--TODO: this isn't recording the field when using ESC to exit the formspec
-	if fields.key_enter_field == "digtron_name" or fields.digtron_name then
-		local meta = minetest.get_meta(pos)
-		meta:set_string("infotext", fields.digtron_name)
-	end
-end)
 
 -- Controlling a fully armed and operational Digtron
 minetest.register_on_player_receive_fields(function(player, formname, fields)
@@ -182,12 +142,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 
 	if fields.disassemble then
 		local pos = digtron.disassemble(digtron_id, player_name)
-		if pos then
-			player_interacting_with_digtron_pos[player_name] = pos
-			minetest.show_formspec(player_name,
-				"digtron:controller_unassembled",
-					get_controller_unassembled_formspec(pos, player_name))
-		end		
+		minetest.close_formspec(player_name, formname)
 	end
 	
 	local facedir = node.param2
@@ -240,10 +195,6 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 	end	
 end)
 
-
-
-
-
 minetest.register_node("digtron:controller", {
 	description = S("Digtron Control Module"),
 	_doc_items_longdesc = nil,
@@ -280,9 +231,6 @@ minetest.register_node("digtron:controller", {
 		},
 	},
 	sounds = default.node_sound_metal_defaults(),
-	
---	on_construct = function(pos)
---	end,
 	
 	on_dig = function(pos, node, digger)
 		local player_name
@@ -391,10 +339,15 @@ minetest.register_node("digtron:controller", {
 		local player_name = clicker:get_player_name()
 		
 		if digtron_id == "" then
-			player_interacting_with_digtron_pos[player_name] = pos
-			minetest.show_formspec(player_name,
-				"digtron:controller_unassembled",
-				get_controller_unassembled_formspec(pos, player_name))
+			local digtron_id = digtron.assemble(pos, player_name)
+			if digtron_id then
+				meta:set_string("digtron_id", digtron_id)
+				meta:mark_as_private("digtron_id")
+				player_interacting_with_digtron_id[player_name] = {digtron_id = digtron_id}
+				minetest.show_formspec(player_name,
+					"digtron:controller_assembled",
+					get_controller_assembled_formspec(digtron_id, player_name))
+			end
 		else
 			-- initialized
 			player_interacting_with_digtron_id[player_name] = {digtron_id = digtron_id}
