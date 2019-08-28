@@ -653,6 +653,7 @@ digtron.rotate = function(digtron_id, axis, player_name)
 	if permitted then
 		local removed = digtron.remove_from_world(digtron_id, player_name)
 		digtron.build_to_world(digtron_id, rotated_layout, root_pos, player_name)
+		minetest.sound_play("digtron_hydraulic", {gain = 0.5, pos=dest_pos})
 		persist_layout(digtron_id, rotated_layout)
 		-- Don't need to do fancy callback checking for digtron nodes since I made all those
 		-- nodes and I know they don't have anything that needs to be done for them.
