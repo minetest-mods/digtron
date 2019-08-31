@@ -24,8 +24,6 @@ local get_predictive_inventory = inventory_functions.get_predictive_inventory
 local commit_predictive_inventory = inventory_functions.commit_predictive_inventory
 local clear_predictive_inventory = inventory_functions.clear_predictive_inventory
 
-digtron.retrieve_inventory = retrieve_inventory -- used by formspecs
-
 --------------------------------------------------------------------------------------
 
 local create_new_id = function()
@@ -58,11 +56,11 @@ end
 -- Name
 
 -- Not bothering with a dynamic table store for names, they're just strings with no need for serialization or deserialization
-digtron.get_name = function(digtron_id)
+local get_name = function(digtron_id)
 	return mod_meta:get_string(digtron_id..":name")
 end
 
-digtron.set_name = function(digtron_id, digtron_name)
+local set_name = function(digtron_id, digtron_name)
 	-- Don't allow a name to be set for a non-existent Digtron
 	if mod_meta:get(digtron_id..":layout") then
 		mod_meta:set_string(digtron_id..":name", digtron_name)
@@ -108,8 +106,6 @@ end
 
 local persist_layout, retrieve_layout = get_table_functions("layout")
 local persist_pos, retrieve_pos, dispose_pos = get_table_functions("pos")
-
-digtron.get_pos = retrieve_pos
 
 -------------------------------------------------------------------------------------------------------
 -- Layout creation helpers
@@ -253,15 +249,9 @@ table.insert(dispose_callbacks, invalidate_layout_cache)
 -- assemble and disassemble
 
 -- Returns the id of the new Digtron record, or nil on failure
-digtron.assemble = function(root_pos, player_name)
-	local node = minetest.get_node(root_pos)
-	-- TODO: a more generic test? Not needed with the more generic controller design, as far as I can tell. There's only going to be the one type of controller.
-	if node.name ~= "digtron:controller" then
-		-- Called on an incorrect node
-		minetest.log("error", "[Digtron] digtron.assemble called with pos " .. minetest.pos_to_string(root_pos)
-			.. " but the node at this location was " .. node.name)
-		return nil
-	end
+local assemble = function(root_pos, player_name)
+	local root_node = minetest.get_node(root_pos)
+		
 	local root_meta = minetest.get_meta(root_pos)
 	if root_meta:contains("digtron_id") then
 		-- Already assembled. TODO: validate that the digtron_id actually exists as well
@@ -269,8 +259,18 @@ digtron.assemble = function(root_pos, player_name)
 			.. " but the controller at this location was already part of a assembled Digtron.")
 		return nil
 	end
+	local digtron_name = root_meta:get_string("infotext")
+	
+	-- This should be called on an unassembled node.
+	if root_node.name ~= "digtron:controller_unassembled" then
+		-- Called on an incorrect node
+		minetest.log("error", "[Digtron] digtron.assemble called with pos " .. minetest.pos_to_string(root_pos)
+			.. " but the node at this location was " .. root_node.name)
+		return nil
+	end
+	
 	local root_hash = minetest.hash_node_position(root_pos)
-	local digtron_nodes = {[root_hash] = node} -- Nodes that are part of Digtron.
+	local digtron_nodes = {[root_hash] = root_node} -- Nodes that are part of Digtron.
 		-- Initialize with the controller, it won't be added by get_all_adjacent_digtron_nodes
 	local digtron_adjacent = {} -- Nodes that are adjacent to Digtron but not a part of it.
 	-- There's a slight inefficiency in throwing away digtron_adjacent when retrieve_all_adjacent_pos could
@@ -326,9 +326,9 @@ digtron.assemble = function(root_pos, player_name)
 		layout[relative_hash] = {meta = current_meta_table, node = node}
 	end
 	
-	digtron.set_name(digtron_id, root_meta:get_string("infotext"))
 	persist_inventory(digtron_id)
 	persist_layout(digtron_id, layout)
+	set_name(digtron_id, digtron_name)
 	invalidate_layout_cache(digtron_id)
 	persist_pos(digtron_id, root_pos)
 	
@@ -394,8 +394,7 @@ local get_valid_data = function(digtron_id, root_pos, hash, data, function_name)
 end
 
 -- Turns the Digtron back into pieces
-digtron.disassemble = function(digtron_id, player_name)
-	local bbox = retrieve_bounding_box(digtron_id)
+local disassemble = function(digtron_id, player_name)
 	local root_pos = retrieve_pos(digtron_id)
 	if not root_pos then
 		minetest.log("error", "[Digtron] digtron.disassemble was unable to find a position for " .. digtron_id
@@ -403,11 +402,8 @@ digtron.disassemble = function(digtron_id, player_name)
 		return
 	end
 
-	local root_meta = minetest.get_meta(root_pos)
-	root_meta:set_string("infotext", digtron.get_name(digtron_id))
-	
 	local layout = retrieve_layout(digtron_id)
-	local inv = digtron.retrieve_inventory(digtron_id)
+	local inv = retrieve_inventory(digtron_id)
 	
 	if not (layout and inv) then
 		minetest.log("error", "[Digtron] digtron.disassemble was unable to find either layout or inventory record for " .. digtron_id
@@ -451,7 +447,16 @@ digtron.disassemble = function(digtron_id, player_name)
 			-- Clear digtron_id, this node is no longer part of an active digtron
 			node_meta:set_string("digtron_id", "")
 		end
-	end	
+	end
+	
+	-- replace the controller node with the disassembled version
+	local root_node = minetest.get_node(root_pos)
+	if root_node.name == "digtron:controller" then
+		root_node.name = "digtron:controller_disassembled"
+		minetest.set_node(root_pos, root_node)
+	end
+	local root_meta = minetest.get_meta(root_pos)
+	root_meta:set_string("infotext", get_name(digtron_id))
 
 	minetest.log("action", "Digtron " .. digtron_id .. " disassembled at " .. minetest.pos_to_string(root_pos)
 		.. " by " .. player_name)
@@ -468,7 +473,7 @@ end
 -- Removes the in-world nodes of a digtron
 -- Does not destroy its layout info
 -- returns a table of vectors of all the nodes that were removed
-digtron.remove_from_world = function(digtron_id, player_name)
+local remove_from_world = function(digtron_id, player_name)
 	local layout = retrieve_layout(digtron_id)
 	local root_pos = retrieve_pos(digtron_id)
 	
@@ -504,7 +509,7 @@ digtron.remove_from_world = function(digtron_id, player_name)
 end
 
 -- Tests if a Digtron can be built at the designated location
-digtron.is_buildable_to = function(digtron_id, layout, root_pos, player_name, ignore_nodes, return_immediately_on_failure)
+local is_buildable_to = function(digtron_id, layout, root_pos, player_name, ignore_nodes, return_immediately_on_failure)
 	-- If this digtron is already in-world, we're likely testing as part of a movement attempt.
 	-- Record its existing node locations, they will be treated as buildable_to
 	local old_root_pos = retrieve_pos(digtron_id)
@@ -557,10 +562,11 @@ digtron.is_buildable_to = function(digtron_id, layout, root_pos, player_name, ig
 end
 
 -- Places the Digtron into the world.
-digtron.build_to_world = function(digtron_id, layout, root_pos, player_name)
+local build_to_world = function(digtron_id, layout, root_pos, player_name)
 	if layout == nil then
 		layout = retrieve_layout(digtron_id)
 	end
+	local built_positions = {}
 	for hash, data in pairs(layout) do
 		-- Don't use get_valid_data, the Digtron isn't in-world yet
 		local node_pos = vector.add(minetest.get_position_from_hash(hash), root_pos)
@@ -571,18 +577,19 @@ digtron.build_to_world = function(digtron_id, layout, root_pos, player_name)
 		end
 		meta:set_string("digtron_id", digtron_id)
 		meta:mark_as_private("digtron_id")
+		table.insert(built_positions, node_pos)
 	end
 	persist_pos(digtron_id, root_pos)
 	
-	return true
+	return built_positions
 end
 
-digtron.move = function(digtron_id, dest_pos, player_name)
+local move = function(digtron_id, dest_pos, player_name)
 	local layout = retrieve_layout(digtron_id)
-	local permitted, succeeded, failed = digtron.is_buildable_to(digtron_id, layout, dest_pos, player_name)
+	local permitted, succeeded, failed = is_buildable_to(digtron_id, layout, dest_pos, player_name)
 	if permitted then
-		local removed = digtron.remove_from_world(digtron_id, player_name)
-		digtron.build_to_world(digtron_id, layout, dest_pos, player_name)
+		local removed = remove_from_world(digtron_id, player_name)
+		build_to_world(digtron_id, layout, dest_pos, player_name)
 		minetest.sound_play("digtron_truck", {gain = 0.5, pos=dest_pos})
 		for _, removed_pos in ipairs(removed) do
 			minetest.check_for_falling(removed_pos)
@@ -646,13 +653,13 @@ local rotate_layout = function(digtron_id, axis)
 	return rotated_layout
 end
 
-digtron.rotate = function(digtron_id, axis, player_name)
+local rotate = function(digtron_id, axis, player_name)
 	local rotated_layout = rotate_layout(digtron_id, axis)
 	local root_pos = retrieve_pos(digtron_id)
-	local permitted, succeeded, failed = digtron.is_buildable_to(digtron_id, rotated_layout, root_pos, player_name)
+	local permitted, succeeded, failed = is_buildable_to(digtron_id, rotated_layout, root_pos, player_name)
 	if permitted then
-		local removed = digtron.remove_from_world(digtron_id, player_name)
-		digtron.build_to_world(digtron_id, rotated_layout, root_pos, player_name)
+		local removed = remove_from_world(digtron_id, player_name)
+		build_to_world(digtron_id, rotated_layout, root_pos, player_name)
 		minetest.sound_play("digtron_hydraulic", {gain = 0.5, pos=dest_pos})
 		persist_layout(digtron_id, rotated_layout)
 		-- Don't need to do fancy callback checking for digtron nodes since I made all those
@@ -947,7 +954,7 @@ local insert_or_eject = function(digtron_id, item_list, pos)
 	end
 end
 
-digtron.execute_cycle = function(digtron_id, player_name)
+local execute_cycle = function(digtron_id, player_name)
 	local old_root_pos = retrieve_pos(digtron_id)
 	local root_node = minetest.get_node(old_root_pos)
 	local root_facedir = root_node.param2
@@ -1005,7 +1012,7 @@ end
 -- If the digtron node has an assigned ID and a layout for that ID exists and
 -- a matching node exists in the layout then don't let it be dug.
 -- TODO: add protection check?
-digtron.can_dig = function(pos, digger)
+local can_dig = function(pos, digger)
 	local meta = minetest.get_meta(pos)
 	local digtron_id = meta:get_string("digtron_id")
 	if digtron_id == "" then
@@ -1025,7 +1032,7 @@ digtron.can_dig = function(pos, digger)
 		minetest.log("error", "[Digtron] can_dig was called on a " .. node.name .. " at location "
 			.. minetest.pos_to_string(pos) .. " that claimed to belong to " .. digtron_id
 			.. ". However, layout and/or location data are missing: " .. missing)
-		-- May be better to do this to prevent node duplication. But we're already in bug land here so tread gently.
+		-- TODO May be better to do this to prevent node duplication. But we're already in bug land here so tread gently.
 		--minetest.remove_node(pos)
 		--return false
 		return true
@@ -1053,7 +1060,7 @@ end
 
 -- put this on all Digtron nodes. If other inventory types are added (eg, batteries)
 -- update this.
-digtron.on_blast = function(pos, intensity)
+local on_blast = function(pos, intensity)
 	if intensity < 1.0 then return end -- The Almighty Digtron ignores weak-ass explosions
 
 	local meta = minetest.get_meta(pos)
@@ -1079,7 +1086,7 @@ end
 -- Use this inside other on_rightclicks for configuring Digtron nodes, this
 -- overrides if you're right-clicking with another Digtron node and assumes
 -- that you're trying to build it.
-digtron.on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
+local on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
 	local item_def = itemstack:get_definition()
 	if item_def.type == "node" and minetest.get_item_group(itemstack:get_name(), "digtron") > 0 then
 		local returnstack, success = minetest.item_place_node(itemstack, clicker, pointed_thing)
@@ -1115,3 +1122,29 @@ if minetest.get_modpath("creative") then
 		end
 	end
 end
+
+
+
+---------------------------------------------------------------------------------------------------------------------------
+-- External API
+
+-- node definition methods
+digtron.can_dig = can_dig
+digtron.on_blast = on_blast
+digtron.on_rightclick = on_rightclick
+
+digtron.get_name = get_name
+digtron.set_name = set_name
+digtron.get_pos = retrieve_pos
+digtron.get_bounding_box = retrieve_bounding_box
+
+digtron.retrieve_inventory = retrieve_inventory -- used by formspecs
+
+digtron.assemble = assemble
+digtron.disassemble = disassemble
+digtron.remove_from_world = remove_from_world
+digtron.is_buildable_to = is_buildable_to
+digtron.build_to_world = build_to_world
+digtron.move = move
+digtron.rotate = rotate
+digtron.execute_cycle = execute_cycle

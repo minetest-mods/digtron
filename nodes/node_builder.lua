@@ -23,17 +23,21 @@ local get_formspec = function(pos)
 	"listcolors[#00000069;#5A5A5A00;#141318;#30434C;#FFF]" ..
 	"list[detached:digtron:builder_item;main;0,0;1,1;]" ..
 	"field[1.3,0.8;1,0.1;extrusion;" .. S("Extrusion") .. ";" ..extrusion .. "]" ..
+	"field_close_on_enter[extrusion;false]" ..
 	"tooltip[extrusion;" .. S("Builder will extrude this many blocks in the direction it is facing.\nCan be set from 1 to @1.\nNote that Digtron won't build into unloaded map regions.", digtron.config.maximum_extrusion) .. "]" ..
 	"field[2.3,0.8;1,0.1;period;" .. S("Periodicity") .. ";".. period .. "]" ..
+	"field_close_on_enter[period;false]" ..
 	"tooltip[period;" .. S("Builder will build once every n steps.\nThese steps are globally aligned, so all builders with the\nsame period and offset will build on the same location.") .. "]" ..
 	"field[3.3,0.8;1,0.1;offset;" .. S("Offset") .. ";" .. offset .. "]" ..
+	"field_close_on_enter[offset;false]" ..
 	"tooltip[offset;" .. S("Offsets the start of periodicity counting by this amount.\nFor example, a builder with period 2 and offset 0 builds\nevery even-numbered block and one with period 2 and\noffset 1 builds every odd-numbered block.") .. "]" ..
 	"button[4.0,0.5;1,0.1;set;" .. S("Save &\nShow") .. "]" ..
-	"tooltip[set;" .. S("Saves settings") .. "]" ..
+	"tooltip[set;" .. S("Saves settings, closes interface, and shows the locations this builder will build to in-world.") .. "]" ..
 	"field[5.3,0.8;1,0.1;facing;" .. S("Facing") .. ";" .. facing .. "]" ..
+	"field_close_on_enter[facing;false]" ..
 	"tooltip[facing;" .. S("Value from 0-23. Not all block types make use of this.\nUse the 'Read & Save' button to copy the facing of the block\ncurrently in the builder output location.") .. "]" ..
-	"button[6.0,0.5;1,0.1;read;" .. S("Read &\nSave") .. "]" ..
-	"tooltip[read;" .. S("Reads the facing of the block currently in the build location,\nthen saves all settings.") .. "]" ..
+	"button[6.0,0.5;1,0.1;read;" .. S("Read") .. "]" ..
+	"tooltip[read;" .. S("Reads the facing of the block currently in the build location.") .. "]" ..
 	"list[current_player;main;0,1.3;8,1;]" ..
 	default.get_hotbar_bg(0,1.3) ..
 	"list[current_player;main;0,2.5;8,3;8]" ..
@@ -44,6 +48,19 @@ end
 ----------------------------------------------------------------------
 -- Detached inventory for setting the builder item
 
+local is_item_allowed = function(item)
+	-- Ignore unknown items
+	if minetest.registered_items[item] == nil then return false end
+
+	local stack_def = minetest.registered_nodes[item]
+	if not stack_def and not digtron.whitelisted_on_place(item) then
+		return false -- don't allow craft items unless their on_place is whitelisted.
+	end
+	
+	return true
+end
+
+
 local inv = minetest.create_detached_inventory("digtron:builder_item", {
 	allow_move = function(inv, from_list, from_index, to_list, to_index, count, player)
 		return 0
@@ -52,9 +69,10 @@ local inv = minetest.create_detached_inventory("digtron:builder_item", {
 		-- Always disallow put, but use this to read what the player *tried* adding and set the builder appropriately
 		local item = stack:get_name()
 		
-		-- Ignore unknown items
-		if minetest.registered_items[item] == nil then return 0 end
-		
+		if not is_item_allowed(item) then
+			return 0
+		end
+
 		local player_name = player:get_player_name()
 		local pos = player_interacting_with_builder_pos[player_name]
 		if pos == nil then
@@ -78,11 +96,6 @@ local inv = minetest.create_detached_inventory("digtron:builder_item", {
 			return 0
 		end
 		
-		local stack_def = minetest.registered_nodes[item]
-		if not stack_def and not digtron.whitelisted_on_place(item) then
-			return 0 -- don't allow craft items unless their on_place is whitelisted.
-		end
-		
 		-- If we're adding a wallmounted item and the build facing is greater than 5, reset it to 0
 		if stack_def ~= nil and stack_def.paramtype2 == "wallmounted" and tonumber(meta:get_int("facing")) > 5 then
 			meta:set_int("facing", 0)
@@ -97,12 +110,6 @@ local inv = minetest.create_detached_inventory("digtron:builder_item", {
 	allow_take = function(inv, listname, index, stack, player)
 		return 0
 	end,
---	on_move = function(inv, from_list, from_index, to_list, to_index, count, player)
---	end,
---	on_take = function(inv, listname, index, stack, player)
---	end,
---	on_put = function(inv, listname, index, stack, player)
---	end
 })
 inv:set_size("main", 1)
 
@@ -142,30 +149,31 @@ minetest.register_on_player_receive_fields(function(sender, formname, fields)
 			.. " no position was recorded.")
 		return
 	end
-
+	
     local meta = minetest.get_meta(pos)
-	local period = tonumber(fields.period)
-	local offset = tonumber(fields.offset)
-	local facing = tonumber(fields.facing)
-	local extrusion = tonumber(fields.extrusion)
 	
 	local item = meta:get_string("item")
 	
+	local period = tonumber(fields.period)
 	if period and period > 0 then
 		meta:set_int("period", math.floor(period))
 	else
 		period = meta:get_int("period")
 	end
+	
+	local offset = tonumber(fields.offset)
 	if offset then
 		meta:set_int("offset", math.floor(offset))
 	else
 		offset = meta:get_int("offset")
 	end
+	
+	local facing = tonumber(fields.facing)
 	if facing and facing >= 0 and facing < 24 then
 		local target_item = ItemStack(item)
 		if target_item:get_definition().paramtype2 == "wallmounted" then
 			if facing < 6 then
-				meta:set_int("facing", facing)
+				meta:set_int("facing", math.floor(facing))
 				-- wallmounted facings only run from 0-5
 			end
 		else
@@ -175,27 +183,32 @@ minetest.register_on_player_receive_fields(function(sender, formname, fields)
 		facing = meta:get_int("facing")
 	end
 	
+	local extrusion = tonumber(fields.extrusion)
 	if extrusion and extrusion > 0 and extrusion <= digtron.config.maximum_extrusion then
 		meta:set_int("extrusion", math.floor(extrusion))
 	else
 		extrusion = meta:get_int("extrusion")
 	end
 	
---	if fields.set then
---		digtron.show_offset_markers(pos, offset, period)
---
---	elseif fields.read then
---		local facing = minetest.get_node(pos).param2
---		local buildpos = digtron.find_new_pos(pos, facing)
---		local target_node = minetest.get_node(buildpos)
---		if target_node.name ~= "air" and minetest.get_item_group(target_node.name, "digtron") == 0 then
---			local meta = minetest.get_meta(pos)
---			local inv = meta:get_inventory()
---			local target_name = digtron.builder_read_item_substitutions[target_node.name] or target_node.name
---			inv:set_stack("main", 1, target_name)
---			meta:set_int("facing", target_node.param2)
---		end
---	end
+	if fields.set then
+		--digtron.show_offset_markers(pos, offset, period)
+	end
+
+	if fields.read then
+		local builder_facing = minetest.get_node(pos).param2
+		local buildpos = vector.add(minetest.facedir_to_dir(builder_facing), pos)
+		local target_node = minetest.get_node(buildpos)
+		local target_name = target_node.name
+		if digtron.builder_read_item_substitutions[target_name] then
+			target_name = digtron.builder_read_item_substitutions[target_name]
+		end
+		if target_name ~= "air" and is_item_allowed(target_name) then
+			local meta = minetest.get_meta(pos)
+			item = target_name
+			meta:set_string("item", item)
+			meta:set_int("facing", target_node.param2)
+		end
+	end
 	
 	if fields.help then
 		minetest.after(0.5, doc.show_entry, sender:get_player_name(), "nodes", "digtron:builder", true)
@@ -208,8 +221,9 @@ minetest.register_on_player_receive_fields(function(sender, formname, fields)
 	end
 	
 	meta:set_string("infotext", S("Builder for @1\nperiod @2, offset @3, extrusion @4", item_desc, period, offset, extrusion))
-	
 	digtron.update_builder_item(pos)
+	minetest.show_formspec(player_name, "digtron:builder", get_formspec(pos))
+
 end)
 
 

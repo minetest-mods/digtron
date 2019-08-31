@@ -1,6 +1,21 @@
 digtron = {}
 digtron.doc = {} -- TODO: move to doc file
 
+-- A global dictionary is used here so that other substitutions can be added easily by other mods, if necessary
+digtron.builder_read_item_substitutions = {
+	["default:torch_ceiling"] = "default:torch",
+	["default:torch_wall"] = "default:torch",
+	["default:dirt_with_grass"] = "default:dirt",
+	["default:dirt_with_grass_footsteps"] = "default:dirt",
+	["default:dirt_with_dry_grass"] = "default:dirt",
+	["default:dirt_with_rainforest_litter"] = "default:dirt",
+	["default:dirt_with_snow"] = "default:dirt",
+	["default:furnace_active"] = "default:furnace",
+	["farming:soil"] = "default:dirt",
+	["farming:soil_wet"] = "default:dirt",
+	["farming:desert_sand_soil"] = "default:desert_sand",
+	["farming:desert_sand_soil_wet"] = "default:desert_sand",
+}
 
 -- Sometimes we want builder heads to call an item's "on_place" method, other times we
 -- don't want them to. There's no way to tell which situation is best programmatically
