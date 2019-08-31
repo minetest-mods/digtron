@@ -9,11 +9,6 @@ local cache = {}
 --	mod_meta:set_string(field, "")
 --end
 
-
--- TODO
--- 	return core.is_protected(pos, name) and
---		not minetest.check_player_privs(name, "protection_bypass")
-
 local modpath = minetest.get_modpath(minetest.get_current_modname())
 
 local inventory_functions = dofile(modpath.."/inventories.lua")
@@ -23,6 +18,14 @@ local persist_inventory = inventory_functions.persist_inventory
 local get_predictive_inventory = inventory_functions.get_predictive_inventory
 local commit_predictive_inventory = inventory_functions.commit_predictive_inventory
 local clear_predictive_inventory = inventory_functions.clear_predictive_inventory
+
+local protection_check = function(pos, player_name)
+	if minetest.is_protected(pos, player_name) and
+		not minetest.check_player_privs(player_name, "protection_bypass") then
+		return true
+	end
+	return false
+end
 
 --------------------------------------------------------------------------------------
 
@@ -476,7 +479,7 @@ end
 
 -- Removes the in-world nodes of a digtron
 -- Does not destroy its layout info
--- returns a table of vectors of all the nodes that were removed
+-- returns a table of vectors of all the nodes that were removed, or nil on failure
 local remove_from_world = function(digtron_id, player_name)
 	local layout = retrieve_layout(digtron_id)
 	local root_pos = retrieve_pos(digtron_id)
@@ -489,13 +492,13 @@ local remove_from_world = function(digtron_id, player_name)
 			meta:set_string("digtron_id", "")
 		end
 		dispose_id(digtron_id)
-		return {}
+		return nil
 	end
 	
 	if not root_pos then
 		minetest.log("error", "[Digtron] digtron.remove_from_world Unable to find position for " .. digtron_id
 			.. ", it may have already been removed from the world.")
-		return {}
+		return nil
 	end
 	
 	local nodes_to_destroy = {}
@@ -506,7 +509,6 @@ local remove_from_world = function(digtron_id, player_name)
 		end
 	end
 	
-	-- TODO: voxelmanip might be better here?
 	minetest.bulk_set_node(nodes_to_destroy, {name="air"})
 	dispose_pos(digtron_id)
 	return nodes_to_destroy
@@ -545,11 +547,10 @@ local is_buildable_to = function(digtron_id, layout, root_pos, player_name, igno
 		local node_hash = minetest.hash_node_position(node_pos)
 		local node = minetest.get_node(node_pos)
 		local node_def = minetest.registered_nodes[node.name]
-		-- TODO: lots of testing needed here
 		if not (
 			(node_def and node_def.buildable_to)
 			or ignore_hashes[node_hash]) or
-			minetest.is_protected(node_pos, player_name)
+			protection_check(node_pos, player_name)
 		then
 			if return_immediately_on_failure then
 				return false -- no need to test further, don't return node positions
@@ -593,10 +594,12 @@ local move = function(digtron_id, dest_pos, player_name)
 	local permitted, succeeded, failed = is_buildable_to(digtron_id, layout, dest_pos, player_name)
 	if permitted then
 		local removed = remove_from_world(digtron_id, player_name)
-		build_to_world(digtron_id, layout, dest_pos, player_name)
-		minetest.sound_play("digtron_truck", {gain = 0.5, pos=dest_pos})
-		for _, removed_pos in ipairs(removed) do
-			minetest.check_for_falling(removed_pos)
+		if removed then
+			build_to_world(digtron_id, layout, dest_pos, player_name)
+			minetest.sound_play("digtron_truck", {gain = 0.5, pos=dest_pos})
+			for _, removed_pos in ipairs(removed) do
+				minetest.check_for_falling(removed_pos)
+			end
 		end
 	else
 		digtron.show_buildable_nodes({}, failed)
@@ -663,14 +666,16 @@ local rotate = function(digtron_id, axis, player_name)
 	local permitted, succeeded, failed = is_buildable_to(digtron_id, rotated_layout, root_pos, player_name)
 	if permitted then
 		local removed = remove_from_world(digtron_id, player_name)
-		build_to_world(digtron_id, rotated_layout, root_pos, player_name)
-		minetest.sound_play("digtron_hydraulic", {gain = 0.5, pos=dest_pos})
-		persist_layout(digtron_id, rotated_layout)
-		-- Don't need to do fancy callback checking for digtron nodes since I made all those
-		-- nodes and I know they don't have anything that needs to be done for them.
-		-- Just check for falling nodes.
-		for _, removed_pos in ipairs(removed) do
-			minetest.check_for_falling(removed_pos)
+		if removed then
+			build_to_world(digtron_id, rotated_layout, root_pos, player_name)
+			minetest.sound_play("digtron_hydraulic", {gain = 0.5, pos=dest_pos})
+			persist_layout(digtron_id, rotated_layout)
+			-- Don't need to do fancy callback checking for digtron nodes since I made all those
+			-- nodes and I know they don't have anything that needs to be done for them.
+			-- Just check for falling nodes.
+			for _, removed_pos in ipairs(removed) do
+				minetest.check_for_falling(removed_pos)
+			end
 		end
 	else
 		digtron.show_buildable_nodes({}, failed)
@@ -710,7 +715,7 @@ local predict_dig = function(digtron_id, player_name, controlling_coordinate)
 				targetdef.can_dig == nil or
 				targetdef.can_dig(target_pos, minetest.get_player_by_name(player_name))
 			) and
-			not minetest.is_protected(target_pos, player_name)
+			not protection_check(target_pos, player_name)
 		then
 			local material_cost = 0
 			if digtron.config.uses_resources then
@@ -844,7 +849,7 @@ local predict_build = function(digtron_id, root_pos, player_name, ignore_nodes, 
 				ignore_hashes[target_hash] or
 				(targetdef ~= nil
 					and targetdef.buildable_to
-					and not minetest.is_protected(target_pos, player_name)
+					and not protection_check(target_pos, player_name)
 				)
 			then
 				local item = builder_data.item
@@ -976,32 +981,34 @@ local execute_cycle = function(digtron_id, player_name)
 		
 		-- Removing old nodes
 		local removed = digtron.remove_from_world(digtron_id, player_name)
-		local nodes_dug = get_and_remove_nodes(nodes_to_dig, player_name)
-		log_dug_nodes(nodes_to_dig, digtron_id, old_root_pos, player_name)
-		
-		-- Building new Digtron
-		digtron.build_to_world(digtron_id, layout, new_root_pos, player_name)
-		minetest.sound_play("digtron_construction", {gain = 0.5, pos=new_root_pos})
-		
-		local build_leftovers, success_count = build_nodes(built_nodes, player_name)
-		log_built_nodes(success_count, digtron_id, old_root_pos, player_name)
-		
-		-- Don't need to do fancy callback checking for digtron nodes since I made all those
-		-- nodes and I know they don't have anything that needs to be done for them.
-		-- Just check for falling nodes.
-		for _, removed_pos in ipairs(removed) do
-			minetest.check_for_falling(removed_pos)
-		end
-
-		-- Must be called after digtron.build_to_world because it triggers falling nodes
-		execute_dug_callbacks(nodes_dug)
-		execute_built_callbacks(built_nodes)
-		
-		-- try putting dig_leftovers and build_leftovers into the inventory one last time before ejecting it
-		insert_or_eject(digtron_id, dig_leftovers, old_root_pos)
-		insert_or_eject(digtron_id, build_leftovers, old_root_pos)
+		if removed then
+			local nodes_dug = get_and_remove_nodes(nodes_to_dig, player_name)
+			log_dug_nodes(nodes_to_dig, digtron_id, old_root_pos, player_name)
+			
+			-- Building new Digtron
+			digtron.build_to_world(digtron_id, layout, new_root_pos, player_name)
+			minetest.sound_play("digtron_construction", {gain = 0.5, pos=new_root_pos})
+			
+			local build_leftovers, success_count = build_nodes(built_nodes, player_name)
+			log_built_nodes(success_count, digtron_id, old_root_pos, player_name)
+			
+			-- Don't need to do fancy callback checking for digtron nodes since I made all those
+			-- nodes and I know they don't have anything that needs to be done for them.
+			-- Just check for falling nodes.
+			for _, removed_pos in ipairs(removed) do
+				minetest.check_for_falling(removed_pos)
+			end
 	
-		commit_predictive_inventory(digtron_id)
+			-- Must be called after digtron.build_to_world because it triggers falling nodes
+			execute_dug_callbacks(nodes_dug)
+			execute_built_callbacks(built_nodes)
+			
+			-- try putting dig_leftovers and build_leftovers into the inventory one last time before ejecting it
+			insert_or_eject(digtron_id, dig_leftovers, old_root_pos)
+			insert_or_eject(digtron_id, build_leftovers, old_root_pos)
+		
+			commit_predictive_inventory(digtron_id)
+		end
 	else
 		clear_predictive_inventory(digtron_id)
 		digtron.show_buildable_nodes({}, failed)
@@ -1009,14 +1016,19 @@ local execute_cycle = function(digtron_id, player_name)
 	end
 end
 
-
 ---------------------------------------------------------------------------------
 -- Node callbacks
 
 -- If the digtron node has an assigned ID and a layout for that ID exists and
 -- a matching node exists in the layout then don't let it be dug.
--- TODO: add protection check?
 local can_dig = function(pos, digger)
+	if digger then
+		local player_name = digger:get_player_name()
+		if protection_check(pos, player_name) then
+			return false
+		end
+	end
+
 	local meta = minetest.get_meta(pos)
 	local digtron_id = meta:get_string("digtron_id")
 	if digtron_id == "" then

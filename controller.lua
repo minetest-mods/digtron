@@ -289,7 +289,8 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 			context.current_tab = new_tab
 			refresh = true
 		else
-			--TODO error message
+			minetest.log("error", "[Digtron] digtron:controller_assembled formspec returned the out-of-range tab index "
+				.. new_tab)
 		end
 	end
 
@@ -464,8 +465,12 @@ minetest.register_node("digtron:controller", combine_defs(base_def, {
 		-- TODO call on_dignodes callback
 		if digtron_id ~= "" then
 			local removed = digtron.remove_from_world(digtron_id, player_name)
-			for _, removed_pos in ipairs(removed) do
-				minetest.check_for_falling(removed_pos)
+			if removed then
+				for _, removed_pos in ipairs(removed) do
+					minetest.check_for_falling(removed_pos)
+				end
+			else
+				minetest.remove_node(pos)
 			end
 		else
 			minetest.remove_node(pos)
@@ -505,26 +510,33 @@ minetest.register_node("digtron:controller", combine_defs(base_def, {
 			-- move up so that the lowest y-coordinate on the Digtron is
 			-- at the y-coordinate of the place clicked on and test again.
 			local bbox = digtron.get_bounding_box(digtron_id)
-			target_pos.y = target_pos.y + math.abs(bbox.minp.y)
-
-			if target_pos then
-				local success, succeeded, failed = digtron.is_buildable_to(digtron_id, nil, target_pos, player_name)
-				if success then
-					local built_positions = digtron.build_to_world(digtron_id, nil, target_pos, player_name)
-					for _, built_pos in ipairs(built_positions) do
-						minetest.check_for_falling(built_pos)
+			if bbox then			
+				target_pos.y = target_pos.y + math.abs(bbox.minp.y)
+	
+				if target_pos then
+					local success, succeeded, failed = digtron.is_buildable_to(digtron_id, nil, target_pos, player_name)
+					if success then
+						local built_positions = digtron.build_to_world(digtron_id, nil, target_pos, player_name)
+						for _, built_pos in ipairs(built_positions) do
+							minetest.check_for_falling(built_pos)
+						end
+	
+						minetest.sound_play("digtron_machine_assemble", {gain = 0.5, pos=target_pos})
+						-- Note: DO NOT RESPECT CREATIVE MODE here.
+						-- If we allow multiple copies of a Digtron running around with the same digtron_id,
+						-- human sacrifice, dogs and cats living together, mass hysteria
+						return ItemStack("")
+					else
+						-- if that fails, show ghost of Digtron and fail to place.
+						digtron.show_buildable_nodes(succeeded, failed)
+						minetest.sound_play("digtron_buzzer", {gain = 0.5, pos=target_pos})
 					end
-
-					minetest.sound_play("digtron_machine_assemble", {gain = 0.5, pos=target_pos})
-					-- Note: DO NOT RESPECT CREATIVE MODE here.
-					-- If we allow multiple copies of a Digtron running around with the same digtron_id,
-					-- human sacrifice, dogs and cats living together, mass hysteria
-					return ItemStack("")
-				else
-					-- if that fails, show ghost of Digtron and fail to place.
-					digtron.show_buildable_nodes(succeeded, failed)
-					minetest.sound_play("digtron_buzzer", {gain = 0.5, pos=target_pos})
 				end
+			else
+				minetest.log("error", "[Digtron] digtron:controller on_place failed to find data for " .. digtron_id
+					.. ", placing an unassembled controller.")
+				itemstack:set_name("digtron:controller_unassembled")
+				return minetest.item_place(itemstack, placer, pointed_thing)
 			end
 			return itemstack
 		else
@@ -557,10 +569,14 @@ minetest.register_node("digtron:controller", combine_defs(base_def, {
 		local meta = minetest.get_meta(pos)
 		local digtron_id = meta:get_string("digtron_id")
 		
+		local player_name = clicker:get_player_name()
 		if digtron_id == "" then
-			-- TODO: error message, fix digtron
+			minetest.log("error", "[Digtron] The digtron:controller node at " .. minetest.pos_to_string(pos)
+				.. " had no digtron id associated with it when " .. player_name
+				.. "right-clicked on it. Converting it into a digtron:controller_unassembled.")
+			node.name = "digtron:controller_unassembled"
+			minetest.set_node(pos, node)
 		else
-			local player_name = clicker:get_player_name()
 			player_interacting_with_digtron_id[player_name] = {digtron_id = digtron_id}
 			minetest.show_formspec(player_name,
 				"digtron:controller_assembled",
