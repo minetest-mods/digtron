@@ -4,9 +4,149 @@ local S, NS = dofile(MP.."/intllib.lua")
 
 local listname_to_title =
 {
-	["main"] = "Main Inventory",
-	["fuel"] = "Fuel",
+	["main"] = S("Main Inventory"),
+	["fuel"] = S("Fuel"),
 }
+
+local sequencer_commands = 
+{
+	S("Sequence"),
+	S("Dig Move Build"),
+	S("Move Up"),
+	S("Move Down"),
+	S("Move Left"),
+	S("Move Right"),
+	S("Move Forward"),
+	S("Move Back"),
+	S("Yaw Left"),
+	S("Yaw Right"),
+	S("Pitch Up"),
+	S("Pitch Down"),
+	S("Roll Clockwise"),
+	S("Roll Widdershins"),
+}
+
+local sequencer_dropdown_list = table.concat(sequencer_commands, ",")
+
+local sequencer_commands_reverse = {}
+for i, command in ipairs(sequencer_commands) do
+	sequencer_commands_reverse[command] = i
+end
+
+local create_sequence_list
+create_sequence_list = function(sequence_in, list_out, root_index, x, y)
+	root_index = root_index or ""
+	x = x or 0
+	y = y or 0
+	
+	for i, val in ipairs(sequence_in) do
+		local index = root_index .. ":" .. i
+		local line = "dropdown[".. x ..","..y..";1.5;sequencer_com"..index..";"..sequencer_dropdown_list..";"..val[1]..
+			"]field[".. x+1.75 ..",".. y+0.25 ..";1,1;sequencer_cnt"..index..";;"..val[2].."]"..
+			"field_close_on_enter[sequencer_cnt_"..i..";false]"..
+			"button[".. x+ 2.375 .. ","..y-0.0625 ..";1,1;sequencer_del"..index..";Delete]"
+		if val[1] == 1 then
+			line = line .. "button[".. x+3.25 ..","..y-0.0625 ..";1,1;sequencer_ins"..index..";Insert]"
+			table.insert(list_out, line)
+			y = y + 0.8
+			y = create_sequence_list(val[3], list_out, index, x+0.5, y)
+		else
+			table.insert(list_out, line)
+			y = y + 0.8
+		end
+	end
+
+	return y
+end
+
+-- all field prefixes in the above create_sequence_list should be of this length
+local sequencer_field_length = string.len("sequencer_com:")
+
+local find_item = function(field, sequence)
+	local index_list = field:sub(sequencer_field_length+1):split(":")
+	local target = {[3] = sequence}
+	for i = 1, #index_list do
+		target = target[3][tonumber(index_list[i])]
+		if target == nil then
+			minetest.log("error", "[Digtron] find_item failed to find a sequence item.")
+			return nil
+		end
+	end
+	return target
+end
+
+local delete_item = function(field, sequence)
+	local index_list = field:sub(sequencer_field_length+1):split(":")
+	local target = {[3] = sequence}
+	for i = 1, #index_list-1 do
+		target = target[3][tonumber(index_list[i])]
+		if target == nil then
+			minetest.log("error", "[Digtron] delete_item failed to find a sequence item.")
+			return nil
+		end
+	end	
+	table.remove(target[3], tonumber(index_list[#index_list]))
+end
+
+-- recurses through sequences ensuring there are tables for them
+local clean_subsequences
+clean_subsequences = function(sequence)
+	for i, val in ipairs(sequence) do
+		if val[1] == 1 then
+			if val[3] == nil then
+				val[3] = {}
+			else
+				clean_subsequences(val[3])
+			end
+		else
+			val[3] = nil		
+		end
+	end
+end
+
+local update_sequence = function(digtron_id, fields)
+	local sequence = digtron.get_sequence(digtron_id)
+	local delete_index = {}
+	local insert_index = {}
+	for field, value in pairs(fields) do
+		local command_type = field:sub(1,sequencer_field_length)
+		if command_type == "sequencer_com:" then
+			local seq_item = find_item(field, sequence)
+			seq_item[1] = sequencer_commands_reverse[value]
+		elseif command_type == "sequencer_cnt:" then
+			local val_int = tonumber(value)
+			if val_int then
+				val_int = math.floor(val_int)
+				local seq_item = find_item(field, sequence)
+				seq_item[2] = val_int
+			end
+				
+		--Save these to do last so as to not invalidate indices
+		elseif command_type == "sequencer_del:" then
+			table.insert(delete_index, field)
+		elseif command_type == "sequencer_ins:" then
+			table.insert(insert_index, field)
+		end
+	end
+	
+	for _, insert in ipairs(insert_index) do
+		local item = find_item(insert, sequence)
+		table.insert(item[3], {2,1})
+	end
+	for _, delete in ipairs(delete_index) do
+		delete_item(delete, sequence)
+	end
+	
+	if fields.sequencer_insert_end then
+		table.insert(sequence, {2,1})
+	end
+	
+	clean_subsequences(sequence)
+	digtron.set_sequence(digtron_id, sequence)
+end
+
+
+
 
 -- This allows us to know which digtron the player has a formspec open for without
 -- sending the digtron_id over the network
@@ -21,7 +161,7 @@ local get_controller_assembled_formspec = function(digtron_id, player_name)
 		return ""
 	end
 	
-	local inv = digtron.retrieve_inventory(digtron_id) -- ensures the detatched inventory exists and is populated
+	local inv = digtron.get_inventory(digtron_id) -- ensures the detatched inventory exists and is populated
 	
 	-- TODO: will probably want a centralized cache for most of this, right now there's tons of redundancy
 	if context.tabs == nil then
@@ -37,19 +177,17 @@ local get_controller_assembled_formspec = function(digtron_id, player_name)
 		context.current_tab = 1
 	end
 
-	local tabs = ""
-	if next(context.tabs) ~= nil then
-		tabs = "tabheader[0,0;tab_header;Controls"
-		for _, tab in ipairs(context.tabs) do
-			tabs = tabs .. "," .. listname_to_title[tab.listname] or tab.listname
-		end
-		tabs = tabs .. ";" .. context.current_tab .. "]"
+	local position_and_anchor = "position[0.025,0.1]anchor[0,0]"
+
+	local tabs = "tabheader[0,0;tab_header;Controls,Sequence"
+	for _, tab in ipairs(context.tabs) do
+		tabs = tabs .. "," .. listname_to_title[tab.listname] or tab.listname
 	end
+	tabs = tabs .. ";" .. context.current_tab .. "]"
 	
 	local inv_tab = function(inv_list)
 		return "size[8,9]"
-			.. "position[0.025,0.1]"
-			.. "anchor[0,0]"
+			.. position_and_anchor
 			.. "container[0,0]"
 			.. "list[detached:" .. digtron_id .. ";"..inv_list..";0,0;8,5]" -- TODO: paging system for inventory
 			.. "container_end[]"
@@ -58,9 +196,20 @@ local get_controller_assembled_formspec = function(digtron_id, player_name)
 			.. "listring[detached:" .. digtron_id .. ";"..inv_list.."]"
 	end
 	
+	local sequence_tab = function()
+		local sequence = digtron.get_sequence(digtron_id)
+		local list_out = {}
+		local y = create_sequence_list(sequence, list_out)
+		return "size[4.2,5]"
+			.. position_and_anchor
+			.. "container[0,0]"
+			.. table.concat(list_out)		
+			.. "button[0,"..y-0.0625 ..";1,1;sequencer_insert_end;Insert]"
+			.. "container_end[]"	
+	end
+	
 	local controls = "size[4.2,5]"
-		.. "position[0.025,0.1]"
-		.. "anchor[0,0]"
+		.. position_and_anchor
 		.. "container[0,0]"
 		.. "button[0,0;1,1;disassemble;Disassemble]"
 		.. "field[1.2,0.3;1.75,1;digtron_name;Digtron name;"
@@ -84,8 +233,8 @@ local get_controller_assembled_formspec = function(digtron_id, player_name)
 		.. "container[0.5,3.2]"
 		.. "box[0,0;3,2;#DDDDDD]"
 		.. "label[1.3,0.825;Rotate]"
-		.. "button[0.1,0.1;1,1;rot_counterclockwise;Widdershins]"
-		.. "button[2.1,0.1;1,1;rot_clockwise;Clockwise]"
+		.. "button[0.1,0.1;1,1;rot_counterclockwise;Roll\nWiddershins]"
+		.. "button[2.1,0.1;1,1;rot_clockwise;Roll\nClockwise]"
 		.. "button[1.1,0.1;1,1;rot_up;Pitch Up]"
 		.. "button[1.1,1.1;1,1;rot_down;Pitch Down]"
 		.. "button[0.1,1.1;1,1;rot_left;Yaw Left]"
@@ -94,8 +243,10 @@ local get_controller_assembled_formspec = function(digtron_id, player_name)
 		
 	if context.current_tab == 1 then
 		return controls .. tabs
+	elseif context.current_tab == 2 then
+		return sequence_tab() .. tabs
 	else
-		return inv_tab(context.tabs[context.current_tab - 1].listname) .. tabs
+		return inv_tab(context.tabs[context.current_tab - 2].listname) .. tabs
 	end
 end
 
@@ -105,34 +256,36 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 		return
 	end
 	local player_name = player:get_player_name()
+	
+	-- Get and validate various values
 	local context = player_interacting_with_digtron_id[player_name]
 	if context == nil then
-		minetest.chat_send_all("no context")
+		minetest.log("error", "[Digtron] player_interacting_with_digtron_id context not found for " .. player_name)
 		return
 	end
 	local digtron_id = context.digtron_id
 	if digtron_id == nil then
-		minetest.chat_send_all("no id")
+		minetest.log("error", "[Digtron] player_interacting_with_digtron_id context had no digtron id for " .. player_name)
 		return
 	end
-	
 	local pos = digtron.get_pos(digtron_id)
 	if pos == nil then
-		minetest.chat_send_all("no pos")
+		minetest.log("error", "[Digtron] controller was unable to look up a position for digtron id for " .. digtron_id)
 		return
 	end
 	local node = minetest.get_node(pos)
 	if node.name ~= "digtron:controller" then
-		minetest.chat_send_all("not controller " .. node.name .. " " .. minetest.pos_to_string(pos))
-		-- this happened somehow in testing, Digtron needs to be able to recover from this situation.
-		-- TODO catch this on_rightclick and try remapping the layout to the new position.
+		minetest.log("error", "[Digtron] player " .. player_name .. " interacted with the controller for "
+			.. digtron_id .. " but the node at " .. minetest.pos_to_string(pos) .. " was a " ..node.name
+			.. " rather than a digtron:controller")
 		return
 	end
 
+	local current_tab = context.current_tab
 	local refresh = false
 	if fields.tab_header then
 		local new_tab = tonumber(fields.tab_header)
-		if new_tab <= #(context.tabs) + 1 then
+		if new_tab <= #(context.tabs) + 2 then
 			context.current_tab = new_tab
 			refresh = true
 		else
@@ -140,52 +293,59 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 		end
 	end
 
-	if fields.disassemble then
-		local pos = digtron.disassemble(digtron_id, player_name)
-		minetest.close_formspec(player_name, formname)
-	end
-	
-	local facedir = node.param2
-	-- Translation
-	if fields.move_forward then
-		digtron.move(digtron_id, vector.add(pos, digtron.facedir_to_dir(facedir)), player_name)
-	elseif fields.move_back then
-		digtron.move(digtron_id, vector.add(pos, vector.multiply(digtron.facedir_to_dir(facedir), -1)), player_name)
-	elseif fields.move_up then
-		digtron.move(digtron_id, vector.add(pos, digtron.facedir_to_up(facedir)), player_name)
-	elseif fields.move_down then
-		digtron.move(digtron_id, vector.add(pos, vector.multiply(digtron.facedir_to_up(facedir), -1)), player_name)
-	elseif fields.move_left then
-		digtron.move(digtron_id, vector.add(pos, vector.multiply(digtron.facedir_to_right(facedir), -1)), player_name)
-	elseif fields.move_right then
-		digtron.move(digtron_id, vector.add(pos, digtron.facedir_to_right(facedir)), player_name)
-	-- Rotation	
-	elseif fields.rot_counterclockwise then
-		digtron.rotate(digtron_id, vector.multiply(digtron.facedir_to_dir(facedir), -1), player_name)
-	elseif fields.rot_clockwise then
-		digtron.rotate(digtron_id, digtron.facedir_to_dir(facedir), player_name)
-	elseif fields.rot_up then
-		digtron.rotate(digtron_id, digtron.facedir_to_right(facedir), player_name)
-	elseif fields.rot_down then
-		digtron.rotate(digtron_id, vector.multiply(digtron.facedir_to_right(facedir), -1), player_name)
-	elseif fields.rot_left then
-		digtron.rotate(digtron_id, vector.multiply(digtron.facedir_to_up(facedir), -1), player_name)
-	elseif fields.rot_right then
-		digtron.rotate(digtron_id, digtron.facedir_to_up(facedir), player_name)
-	end
-
-	if fields.execute then
-		digtron.execute_cycle(digtron_id, player_name)
-	end
-	
-	--TODO: this isn't recording the field when using ESC to exit the formspec
-	if fields.key_enter_field == "digtron_name" or fields.digtron_name then
-		local pos = digtron.get_pos(digtron_id)
-		if pos then
-			local meta = minetest.get_meta(pos)
-			meta:set_string("infotext", fields.digtron_name)
-			digtron.set_name(digtron_id, fields.digtron_name)
+	if current_tab == 1 then
+		-- Controls
+		if fields.disassemble then
+			local pos = digtron.disassemble(digtron_id, player_name)
+			minetest.close_formspec(player_name, formname)
 		end
+		
+		local facedir = node.param2
+		-- Translation
+		if fields.move_forward then
+			digtron.move(digtron_id, vector.add(pos, digtron.facedir_to_dir(facedir)), player_name)
+		elseif fields.move_back then
+			digtron.move(digtron_id, vector.add(pos, vector.multiply(digtron.facedir_to_dir(facedir), -1)), player_name)
+		elseif fields.move_up then
+			digtron.move(digtron_id, vector.add(pos, digtron.facedir_to_up(facedir)), player_name)
+		elseif fields.move_down then
+			digtron.move(digtron_id, vector.add(pos, vector.multiply(digtron.facedir_to_up(facedir), -1)), player_name)
+		elseif fields.move_left then
+			digtron.move(digtron_id, vector.add(pos, vector.multiply(digtron.facedir_to_right(facedir), -1)), player_name)
+		elseif fields.move_right then
+			digtron.move(digtron_id, vector.add(pos, digtron.facedir_to_right(facedir)), player_name)
+		-- Rotation	
+		elseif fields.rot_counterclockwise then
+			digtron.rotate(digtron_id, vector.multiply(digtron.facedir_to_dir(facedir), -1), player_name)
+		elseif fields.rot_clockwise then
+			digtron.rotate(digtron_id, digtron.facedir_to_dir(facedir), player_name)
+		elseif fields.rot_up then
+			digtron.rotate(digtron_id, digtron.facedir_to_right(facedir), player_name)
+		elseif fields.rot_down then
+			digtron.rotate(digtron_id, vector.multiply(digtron.facedir_to_right(facedir), -1), player_name)
+		elseif fields.rot_left then
+			digtron.rotate(digtron_id, vector.multiply(digtron.facedir_to_up(facedir), -1), player_name)
+		elseif fields.rot_right then
+			digtron.rotate(digtron_id, digtron.facedir_to_up(facedir), player_name)
+		end
+	
+		if fields.execute then
+			digtron.execute_cycle(digtron_id, player_name)
+		end
+		
+		if fields.key_enter_field == "digtron_name" or fields.digtron_name then
+			local pos = digtron.get_pos(digtron_id)
+			if pos then
+				local meta = minetest.get_meta(pos)
+				meta:set_string("infotext", fields.digtron_name)
+				digtron.set_name(digtron_id, fields.digtron_name)
+			end
+		end
+		
+	elseif current_tab == 2 then
+		--Sequencer
+		update_sequence(digtron_id, fields)
+		refresh = true
 	end
 	
 	if refresh then

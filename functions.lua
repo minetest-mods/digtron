@@ -32,7 +32,7 @@ local create_new_id = function()
 	-- wrong with the random number source
 	while mod_meta:get_string(digtron_id..":layout") ~= "" do
 		digtron_id = "digtron" .. tostring(math.random(1, 2^21))
-	end	
+	end
 	return digtron_id
 end
 
@@ -91,6 +91,7 @@ local get_table_functions = function(identifier)
 			end
 			return current
 		end
+		return nil
 	end
 	
 	local dispose_func = function(digtron_id)
@@ -106,6 +107,8 @@ end
 
 local persist_layout, retrieve_layout = get_table_functions("layout")
 local persist_pos, retrieve_pos, dispose_pos = get_table_functions("pos")
+local persist_sequence, retrieve_sequence = get_table_functions("sequence")
+local persist_step, retrieve_step = get_table_functions("step") -- actually just an integer, but table_functions works for that too
 
 -------------------------------------------------------------------------------------------------------
 -- Layout creation helpers
@@ -331,6 +334,7 @@ local assemble = function(root_pos, player_name)
 	set_name(digtron_id, digtron_name)
 	invalidate_layout_cache(digtron_id)
 	persist_pos(digtron_id, root_pos)
+	persist_sequence(digtron_id, {{2,1}}) -- TODO find a better place to set a default like this
 	
 	-- Wipe out the inventories of all in-world nodes, it's stored in the mod_meta now.
 	-- Wait until now to do it in case the above loop fails partway through.
@@ -1138,7 +1142,13 @@ digtron.set_name = set_name
 digtron.get_pos = retrieve_pos
 digtron.get_bounding_box = retrieve_bounding_box
 
-digtron.retrieve_inventory = retrieve_inventory -- used by formspecs
+-- used by formspecs
+digtron.get_inventory = retrieve_inventory
+digtron.set_sequence = persist_sequence
+digtron.get_sequence = retrieve_sequence
+digtron.set_step = persist_step
+digtron.get_step = retrieve_step
+
 
 digtron.assemble = assemble
 digtron.disassemble = disassemble
