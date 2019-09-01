@@ -433,7 +433,6 @@ minetest.register_node("digtron:controller_unassembled", combine_defs(base_def, 
 }))
 
 minetest.register_node("digtron:controller", combine_defs(base_def, {
-
 	tiles = {
 		"digtron_plate.png^[transformR90",
 		"digtron_plate.png^[transformR270",

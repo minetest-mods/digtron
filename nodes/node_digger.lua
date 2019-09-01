@@ -35,6 +35,27 @@ local update_infotext = function(meta)
 	meta:set_string("infotext", S("Digger\nperiod @1, offset @2", period, offset))
 end
 
+local single_drill_nodebox = {
+	type = "fixed",
+	fixed = {
+		{-0.25, -0.25, 0.5, 0.25, 0.25, 0.8125}, -- Drill
+		{-0.5, -0.5, 0, 0.5, 0.5, 0.5}, -- Block
+		{-0.25, -0.25, -0.5, 0.25, 0.25, 0}, -- Drive
+	},
+}
+
+local dual_drill_nodebox = {
+	type = "fixed",
+	fixed = {
+		{-0.25, -0.25, 0.5, 0.25, 0.25, 0.8125}, -- Drill
+		{-0.25, -0.5, -0.25, 0.25, -0.8125, 0.25}, -- Drill Down
+		{-0.5, -0.5, 0, 0.5, 0.5, 0.5}, -- Block
+		{-0.5, -0.5, -0.5, 0.5, 0, 0}, -- Block Down
+		{-0.25, 0, -0.5, 0.25, 0.25, 0}, -- Drive
+		{-0.25, 0.25, -0.25, 0.25, 0.5, 0}, -- Drive Up
+	},
+}
+
 minetest.register_node("digtron:digger", {
 	description = S("Digtron Digger"),
 	_doc_items_longdesc = nil,
@@ -56,22 +77,8 @@ minetest.register_node("digtron:digger", {
 		},
 		{ name = "digtron_plate.png^digtron_motor.png", backface_culling = true },
 	},
-	collision_box = {
-		type = "fixed",
-		fixed = {
-			{-0.25, -0.25, 0.5, 0.25, 0.25, 0.8125}, -- Drill
-			{-0.5, -0.5, 0, 0.5, 0.5, 0.5}, -- Block
-			{-0.25, -0.25, -0.5, 0.25, 0.25, 0}, -- Drive
-		},
-	},
-	selection_box = {
-		type = "fixed",
-		fixed = {
-			{-0.25, -0.25, 0.5, 0.25, 0.25, 0.8125}, -- Drill
-			{-0.5, -0.5, 0, 0.5, 0.5, 0.5}, -- Block
-			{-0.25, -0.25, -0.5, 0.25, 0.25, 0}, -- Drive
-		},
-	},
+	collision_box = single_drill_nodebox,
+	selection_box = single_drill_nodebox,
 	paramtype2 = "facedir",
 	paramtype = "light",
 	groups = {cracky = 3, oddly_breakable_by_hand = 3, digtron = 3},
@@ -94,22 +101,75 @@ minetest.register_node("digtron:digger_static",{
 		{ name = "digtron_drill_head_animated.png", backface_culling = true },
 		{ name = "digtron_plate.png^digtron_motor.png", backface_culling = true },
 	},
-	collision_box = {
-		type = "fixed",
-		fixed = {
-			{-0.25, -0.25, 0.5, 0.25, 0.25, 0.8125}, -- Drill
-			{-0.5, -0.5, 0, 0.5, 0.5, 0.5}, -- Block
-			{-0.25, -0.25, -0.5, 0.25, 0.25, 0}, -- Drive
+	collision_box = single_drill_nodebox,
+	selection_box = single_drill_nodebox,
+	paramtype2 = "facedir",
+	paramtype = "light",
+	groups = {cracky = 3, oddly_breakable_by_hand = 3, digtron = 3},
+	is_ground_content = false,
+	sounds = default.node_sound_metal_defaults(),
+	can_dig = digtron.can_dig,
+	on_blast = digtron.on_blast,
+	
+	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
+		local returnstack, success = digtron.on_rightclick(pos, node, clicker, itemstack, pointed_thing)
+		if returnstack then
+			return returnstack, success
+		end
+		if clicker == nil then return end
+		local player_name = clicker:get_player_name()
+		player_interacting_with_digtron_pos[player_name] = pos
+		minetest.show_formspec(player_name, "digtron:digger", get_formspec(pos, player_name))
+	end,
+})
+
+minetest.register_node("digtron:dual_digger", {
+	description = S("Digtron Dual Digger"),
+	_doc_items_longdesc = nil,
+	_doc_items_usagehelp = nil,
+	_digtron_disassembled_node = "digtron:digger_static",
+	drops = "digtron:dual_digger_static",
+	drawtype = "mesh",
+	mesh = "digtron_dual_digger.obj",
+	tiles = {
+		{ name = "digtron_plate.png^digtron_digger_yb_frame.png", backface_culling = true }, 
+		{ name = "digtron_plate.png^digtron_motor.png", backface_culling = true },
+		{ name = "digtron_drill_head_animated.png", backface_culling = true, animation =
+			{
+			        type = "vertical_frames",
+					aspect_w = 48,
+					aspect_h = 12,
+					length = 1.0,
+			}
 		},
+		{ name = "digtron_plate.png", backface_culling = true },
 	},
-	selection_box = {
-		type = "fixed",
-		fixed = {
-			{-0.25, -0.25, 0.5, 0.25, 0.25, 0.8125}, -- Drill
-			{-0.5, -0.5, 0, 0.5, 0.5, 0.5}, -- Block
-			{-0.25, -0.25, -0.5, 0.25, 0.25, 0}, -- Drive
-		},
+	collision_box = dual_drill_nodebox,
+	selection_box = dual_drill_nodebox,
+	paramtype2 = "facedir",
+	paramtype = "light",
+	groups = {cracky = 3, oddly_breakable_by_hand = 3, digtron = 3},
+	is_ground_content = false,
+	sounds = default.node_sound_metal_defaults(),
+	can_dig = digtron.can_dig,
+	on_blast = digtron.on_blast,
+})
+
+minetest.register_node("digtron:dual_digger_static",{
+	description = S("Digtron Dual Digger"),
+	_doc_items_longdesc = nil,
+	_doc_items_usagehelp = nil,
+	_digtron_assembled_node = "digtron:dual_digger",
+	drawtype = "mesh",
+	mesh = "digtron_dual_digger_static.obj",
+	tiles = {
+		{ name = "digtron_plate.png^digtron_digger_yb_frame.png", backface_culling = true }, 
+		{ name = "digtron_plate.png^digtron_motor.png", backface_culling = true },
+		{ name = "digtron_drill_head_animated.png", backface_culling = true },
+		{ name = "digtron_plate.png", backface_culling = true },
 	},
+	collision_box = dual_drill_nodebox,
+	selection_box = dual_drill_nodebox,
 	paramtype2 = "facedir",
 	paramtype = "light",
 	groups = {cracky = 3, oddly_breakable_by_hand = 3, digtron = 3},
