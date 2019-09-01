@@ -394,6 +394,8 @@ local get_valid_data = function(digtron_id, root_pos, hash, data, function_name)
 				.. " but the node at that location had no digtron_id in its metadata. "
 				.. "Since the node type matched the layout, however, it was included anyway. It's possible "
 				.. "its metadata was not written correctly by a previous Digtron activity.")
+			node_meta:set_string("digtron_id", digtron_id)
+			node_meta:mark_as_private("digtron_id")
 			return node_pos, node, node_meta
 		end
 	end
@@ -421,7 +423,7 @@ local disassemble = function(digtron_id, player_name)
 	
 	-- Write metadata and inventory to in-world node at this location
 	for hash, data in pairs(layout) do
-		local node_pos, node, node_meta = get_valid_data(digtron_id, root_pos, hash, data, "digtron.disassemble")
+		local node_pos, node, node_meta = get_valid_data(digtron_id, root_pos, hash, data, "disassemble")
 	
 		if node_pos then
 			local node_inv = node_meta:get_inventory()
@@ -503,7 +505,7 @@ local remove_from_world = function(digtron_id, player_name)
 	
 	local nodes_to_destroy = {}
 	for hash, data in pairs(layout) do
-		local node_pos = get_valid_data(digtron_id, root_pos, hash, data, "digtron.remove_from_world")
+		local node_pos = get_valid_data(digtron_id, root_pos, hash, data, "remove_from_world")
 		if node_pos then
 			table.insert(nodes_to_destroy, node_pos)
 		end
@@ -1139,7 +1141,30 @@ if minetest.get_modpath("creative") then
 	end
 end
 
+--------------------------------------------------------------------------------------
+-- Fallback method for recovering missing metadata
+-- If this gets called frequently then something's wrong.
 
+local recover_digtron_id = function(root_pos)
+	for field, value in pairs(mod_meta:to_table().fields) do
+		local fields = field:split(":")
+		if #fields == 2 and fields[2] == "pos" and vector.equals(root_pos, minetest.deserialize(value)) then
+			local digtron_id = fields[1]
+			minetest.log("warning", "[Digtron] had to use recover_digtron_id to restore "
+				..digtron_id .. " to the controller at " .. minetest.pos_to_string(root_pos)
+				..". If this happens frequently please file an issue with Digtron's developers. "
+				.."recover_digtron_id will now attempt to restore the digtron_id metadata key to all "
+				.."nodes in this Digtron's layout.")
+			local layout = retrieve_layout(digtron_id)
+			for hash, data in pairs(layout) do
+				-- get_valid_data will attempt to repair node metadata that's missing digtron_id
+				local node_pos, node, node_meta = get_valid_data(digtron_id, root_pos, hash, data, "recover_digtron_id")
+			end		
+			return true
+		end
+	end
+	return false
+end
 
 ---------------------------------------------------------------------------------------------------------------------------
 -- External API
@@ -1170,3 +1195,5 @@ digtron.build_to_world = build_to_world
 digtron.move = move
 digtron.rotate = rotate
 digtron.execute_cycle = execute_cycle
+
+digtron.recover_digtron_id = recover_digtron_id

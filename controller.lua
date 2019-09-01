@@ -570,17 +570,40 @@ minetest.register_node("digtron:controller", combine_defs(base_def, {
 		local digtron_id = meta:get_string("digtron_id")
 		
 		local player_name = clicker:get_player_name()
-		if digtron_id == "" then
-			minetest.log("error", "[Digtron] The digtron:controller node at " .. minetest.pos_to_string(pos)
-				.. " had no digtron id associated with it when " .. player_name
-				.. "right-clicked on it. Converting it into a digtron:controller_unassembled.")
-			node.name = "digtron:controller_unassembled"
-			minetest.set_node(pos, node)
-		else
-			player_interacting_with_digtron_id[player_name] = {digtron_id = digtron_id}
-			minetest.show_formspec(player_name,
-				"digtron:controller_assembled",
-				get_controller_assembled_formspec(digtron_id, player_name))
+		
+		if digtron_id == "" then		
+			if not digtron.recover_digtron_id(pos) then
+				minetest.log("error", "[Digtron] The digtron:controller node at " .. minetest.pos_to_string(pos)
+					.. " had no digtron id associated with it when " .. player_name
+					.. "right-clicked on it. Converting it into a digtron:controller_unassembled.")
+				node.name = "digtron:controller_unassembled"
+				minetest.set_node(pos, node)
+				return
+			end
 		end
+		
+		player_interacting_with_digtron_id[player_name] = {digtron_id = digtron_id}
+		minetest.show_formspec(player_name,
+			"digtron:controller_assembled",
+			get_controller_assembled_formspec(digtron_id, player_name))
 	end,
 }))
+
+minetest.register_lbm({
+	label = "Validate and repair Digtron controller metadata",
+	name = "digtron:validate_controller_metadata",
+	nodenames = {"digtron:controller"},
+	run_at_every_load = true,
+	action = function(pos, node)
+		local meta = minetest.get_meta(pos)
+		local digtron_id = meta:get_string("digtron_id")
+		if digtron_id == "" then		
+			if not digtron.recover_digtron_id(pos) then
+				minetest.log("error", "[Digtron] The digtron:controller node at " .. minetest.pos_to_string(pos)
+					.. " had no digtron id associated with it. Converting it into a digtron:controller_unassembled.")
+				node.name = "digtron:controller_unassembled"
+				minetest.set_node(pos, node)
+			end
+		end		
+	end,
+})
