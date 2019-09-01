@@ -52,3 +52,16 @@ dofile(modpath.."/nodes/node_storage.lua")
 dofile(modpath.."/nodes/node_digger.lua")
 dofile(modpath.."/nodes/node_builder.lua")
 dofile(modpath.."/nodes/recipes.lua")
+
+
+-- digtron group numbers:
+-- 1 - generic digtron node, nothing special is done with these. They're just dragged along.
+-- 2 - inventory-holding digtron, has a "main" inventory that the digtron can add to and take from.
+-- 3 - digger head
+-- 4 - builder head
+-- 5 - fuel-holding digtron, has a "fuel" invetory that the control node can draw fuel items from. Separate from general inventory, nothing gets put here automatically.
+-- 6 - holds both fuel and main inventories
+-- 7 - holds batteries (RE Battery from technic) to provide clean renewable power
+-- 8 - connects to adjacent HV technic cable
+-- 9 - connects to pipeworks
+-- 10 - dual-headed digger

@@ -31,6 +31,15 @@ local facedir_to_up_map = {
 	5, 5, 5, 5,
 }
 
+local facedir_to_down_map = {
+	[0] = 5, 5, 5, 5,
+	1, 1, 1, 1,
+	3, 3, 3, 3,
+	2, 2, 2, 2,
+	4, 4, 4, 4,
+	6, 6, 6, 6,
+}
+
 local facedir_to_right_map = {
 	[0] = 2, 3, 4, 1,
 	2, 6, 4, 6,
@@ -51,6 +60,12 @@ local facedir_to_up = function(facedir)
 end
 local facedir_to_up_hash = function(facedir)
 	return cardinal_dirs_hash[facedir_to_up_map[facedir % 32]]
+end
+local facedir_to_down = function(facedir)
+	return cardinal_dirs[facedir_to_down_map[facedir % 32]]
+end
+local facedir_to_down_hash = function(facedir)
+	return cardinal_dirs_hash[facedir_to_down_map[facedir % 32]]
 end
 local facedir_to_right = function(facedir)
 	return cardinal_dirs[facedir_to_right_map[facedir % 32]]
@@ -138,6 +153,8 @@ digtron.facedir_to_dir = facedir_to_dir
 digtron.facedir_to_dir_hash = facedir_to_dir_hash
 digtron.facedir_to_up = facedir_to_up
 digtron.facedir_to_up_hash = facedir_to_up_hash
+digtron.facedir_to_down = facedir_to_down
+digtron.facedir_to_down_hash = facedir_to_down_hash
 digtron.facedir_to_right = facedir_to_right
 digtron.facedir_to_right_hash = facedir_to_right_hash
 

@@ -189,19 +189,34 @@ local refresh_adjacent = function(digtron_id)
 			end
 		end
 		
-		if minetest.get_item_group(data.node.name, "digtron") == 3 then
+		local digtron_group = minetest.get_item_group(data.node.name, "digtron")
+		
+		if digtron_group == 3 or digtron_group == 10 then
+			local dir_hashes = {}
 			local dir_hash = digtron.facedir_to_dir_hash(data.node.param2)
 			local potential_target = hash + dir_hash -- pointed at this hash
 			if layout[potential_target] == nil then -- not pointed at another Digtron node
+				table.insert(dir_hashes, dir_hash)
+			end
+			
+			if digtron_group == 10 then
+				dir_hash = digtron.facedir_to_down_hash(data.node.param2)
+				potential_target = hash + dir_hash -- pointed at this hash
+				if layout[potential_target] == nil then -- not pointed at another Digtron node
+					table.insert(dir_hashes, dir_hash)
+				end
+			end
+			
+			if #dir_hashes > 0 then
 				local fields = data.meta.fields
 				adjacent_to_diggers[hash] = {
 					period = tonumber(fields.period) or 1,
 					offset = tonumber(fields.offset) or 0,
-					dir_hash = dir_hash,
+					dir_hashes = dir_hashes,
 				}
-			end
+			end			
 		end
-		if minetest.get_item_group(data.node.name, "digtron") == 4 then
+		if digtron_group == 4 then
 			local dir_hash = digtron.facedir_to_dir_hash(data.node.param2)
 			local potential_target = hash + dir_hash
 			if layout[potential_target] == nil then
@@ -700,54 +715,61 @@ local predict_dig = function(digtron_id, player_name, controlling_coordinate)
 	local leftovers = {}
 	local dug_positions = {}
 	local cost = 0
+	local dug_hashes = {} -- to ensure the same node isn't dug twice
 	
-	for target_hash, digger_data in pairs(retrieve_all_digger_targets(digtron_id)) do
-		local target_pos = vector.add(minetest.get_position_from_hash(target_hash + digger_data.dir_hash), root_pos)
-		local target_node = minetest.get_node(target_pos)
-		local target_name = target_node.name
-		local targetdef = minetest.registered_nodes[target_name]
-		if
-			(target_pos[controlling_coordinate] + digger_data.offset) % digger_data.period == 0 and -- test periodicity and offset
-			target_name ~= "air" and -- TODO: generalise this somehow for liquids and other undiggables
-			minetest.get_item_group(target_name, "digtron") == 0 and
-			minetest.get_item_group(target_name, "digtron_protected") == 0 and
-			minetest.get_item_group(target_name, "immortal") == 0 and
-			(
-				targetdef == nil or -- can dig undefined nodes, why not
-				targetdef.can_dig == nil or
-				targetdef.can_dig(target_pos, minetest.get_player_by_name(player_name))
-			) and
-			not protection_check(target_pos, player_name)
-		then
-			local material_cost = 0
-			if digtron.config.uses_resources then
-				local in_known_group = false
-				if minetest.get_item_group(target_name, "cracky") ~= 0 then
-					in_known_group = true
-					material_cost = math.max(material_cost, digtron.config.dig_cost_cracky)
-				end
-				if minetest.get_item_group(target_name, "crumbly") ~= 0 then
-					in_known_group = true
-					material_cost = math.max(material_cost, digtron.config.dig_cost_crumbly)
-				end
-				if minetest.get_item_group(target_name, "choppy") ~= 0 then
-					in_known_group = true
-					material_cost = math.max(material_cost, digtron.config.dig_cost_choppy)
-				end
-				if not in_known_group then
-					material_cost = digtron.config.dig_cost_default
+	for digger_hash, digger_data in pairs(retrieve_all_digger_targets(digtron_id)) do
+		for _, dir_hash in ipairs(digger_data.dir_hashes) do
+			local target_hash = digger_hash + dir_hash
+			if not dug_hashes[target_hash] then
+				local target_pos = vector.add(minetest.get_position_from_hash(target_hash), root_pos)
+				local target_node = minetest.get_node(target_pos)
+				local target_name = target_node.name
+				local targetdef = minetest.registered_nodes[target_name]
+				if
+					(target_pos[controlling_coordinate] + digger_data.offset) % digger_data.period == 0 and -- test periodicity and offset
+					target_name ~= "air" and -- TODO: generalise this somehow for liquids and other undiggables
+					minetest.get_item_group(target_name, "digtron") == 0 and
+					minetest.get_item_group(target_name, "digtron_protected") == 0 and
+					minetest.get_item_group(target_name, "immortal") == 0 and
+					(
+						targetdef == nil or -- can dig undefined nodes, why not
+						targetdef.can_dig == nil or
+						targetdef.can_dig(target_pos, minetest.get_player_by_name(player_name))
+					) and
+					not protection_check(target_pos, player_name)
+				then
+					local material_cost = 0
+					if digtron.config.uses_resources then
+						local in_known_group = false
+						if minetest.get_item_group(target_name, "cracky") ~= 0 then
+							in_known_group = true
+							material_cost = math.max(material_cost, digtron.config.dig_cost_cracky)
+						end
+						if minetest.get_item_group(target_name, "crumbly") ~= 0 then
+							in_known_group = true
+							material_cost = math.max(material_cost, digtron.config.dig_cost_crumbly)
+						end
+						if minetest.get_item_group(target_name, "choppy") ~= 0 then
+							in_known_group = true
+							material_cost = math.max(material_cost, digtron.config.dig_cost_choppy)
+						end
+						if not in_known_group then
+							material_cost = digtron.config.dig_cost_default
+						end
+					end
+					cost = cost + material_cost
+			
+					local drops = minetest.get_node_drops(target_name, "")
+					for _, drop in ipairs(drops) do
+						local leftover = predictive_inv:add_item("main", ItemStack(drop))
+						if leftover:get_count() > 0 then
+							table.insert(leftovers, leftover)
+						end
+					end
+					table.insert(dug_positions, target_pos)
+					dug_hashes[target_hash] = true
 				end
 			end
-			cost = cost + material_cost
-	
-			local drops = minetest.get_node_drops(target_name, "")
-			for _, drop in ipairs(drops) do
-				local leftover = predictive_inv:add_item("main", ItemStack(drop))
-				if leftover:get_count() > 0 then
-					table.insert(leftovers, leftover)
-				end
-			end
-			table.insert(dug_positions, target_pos)
 		end
 	end
 
