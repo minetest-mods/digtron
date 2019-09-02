@@ -2,6 +2,11 @@ local mod_meta = digtron.mod_meta
 
 local cache = {}
 
+-- internationalization boilerplate
+local MP = minetest.get_modpath(minetest.get_current_modname())
+local S, NS = dofile(MP.."/intllib.lua")
+
+
 --minetest.debug(dump(mod_meta:to_table()))
 
 -- Wipes mod_meta
@@ -60,7 +65,12 @@ end
 
 -- Not bothering with a dynamic table store for names, they're just strings with no need for serialization or deserialization
 local get_name = function(digtron_id)
-	return mod_meta:get_string(digtron_id..":name")
+	local digtron_name = mod_meta:get_string(digtron_id..":name")
+	if digtron_name == "" then
+		return S("Unnamed Digtron")
+	else
+		return digtron_name
+	end
 end
 
 local set_name = function(digtron_id, digtron_name)
@@ -974,6 +984,8 @@ local get_controlling_coordinate = function(facedir)
 	end
 end
 
+-- Attempts to insert the item list into the digtron inventory, and whatever doesn't fit
+-- gets placed as an item at pos
 local insert_or_eject = function(digtron_id, item_list, pos)
 	local predictive_inv = get_predictive_inventory(digtron_id)
 	if not predictive_inv then
@@ -987,20 +999,55 @@ local insert_or_eject = function(digtron_id, item_list, pos)
 	end
 end
 
-local execute_cycle = function(digtron_id, player_name)
+-- TODO: the dig_down parameter is a bit hacky, see if I can come up with a better way to arrange this code
+local execute_dig_move_build_cycle = function(digtron_id, player_name, dig_down)
 	local old_root_pos = retrieve_pos(digtron_id)
 	local root_node = minetest.get_node(old_root_pos)
 	local root_facedir = root_node.param2
 	local controlling_coordinate = get_controlling_coordinate(root_facedir)
 
 	local dig_leftovers, nodes_to_dig, dig_cost = predict_dig(digtron_id, player_name, controlling_coordinate)
-	local new_root_pos = vector.add(old_root_pos, digtron.facedir_to_dir(root_facedir))
+	local new_root_pos
+	
+	if dig_down then
+		new_root_pos = vector.add(old_root_pos, digtron.facedir_to_down(root_facedir))
+	else
+		new_root_pos = vector.add(old_root_pos, digtron.facedir_to_dir(root_facedir))
+	end
+	
 	local layout = retrieve_layout(digtron_id)
-	-- TODO: convert nodes_to_dig into a hash map here and pass that in to reduce duplication?
 	local buildable_to, succeeded, failed = digtron.is_buildable_to(digtron_id, layout, new_root_pos, player_name, nodes_to_dig)
-	local missing_items, built_nodes, build_cost = predict_build(digtron_id, new_root_pos, player_name, nodes_to_dig, controlling_coordinate)
+	local missing_items, built_nodes, build_cost
 
-	if buildable_to and next(missing_items) == nil then
+	if dig_down then
+		missing_items = {}
+		built_nodes = {}
+		build_cost = 0
+	else
+		missing_items, built_nodes, build_cost = predict_build(digtron_id, new_root_pos, player_name, nodes_to_dig, controlling_coordinate)
+	end
+
+	if not buildable_to then
+		clear_predictive_inventory(digtron_id)
+		digtron.show_buildable_nodes({}, failed)
+		minetest.sound_play("digtron_squeal", {gain = 0.5, pos=old_root_pos})	
+		minetest.chat_send_player(player_name, S("@1 at @2 has encountered an obstacle.",
+			get_name(digtron_id), minetest.pos_to_string(old_root_pos)))
+	elseif next(missing_items) ~= nil then
+		clear_predictive_inventory(digtron_id)
+		local items = {}
+		for item, count in ipairs(missing_items) do
+			local item_def = minetest.registered_items[item]
+			if item_def == nil then -- Shouldn't be a problem, but don't crash if it does happen somehow
+				table.insert(items, count .. " " .. item)
+			else
+				table.insert(items, count .. " " .. item_def.description)
+			end
+		end
+		minetest.chat_send_player(player_name, S("@1 at @2 requires @3 to execute its next build cycle.",
+			get_name(digtron_id), minetest.pos_to_string(old_root_pos), table.concat(items, ", ")))
+		minetest.sound_play("digtron_dingding", {gain = 0.5, pos=old_root_pos})
+	else
 		digtron.fake_player:update(old_root_pos, player_name)
 		
 		-- Removing old nodes
@@ -1033,10 +1080,6 @@ local execute_cycle = function(digtron_id, player_name)
 		
 			commit_predictive_inventory(digtron_id)
 		end
-	else
-		clear_predictive_inventory(digtron_id)
-		digtron.show_buildable_nodes({}, failed)
-		minetest.sound_play("digtron_squeal", {gain = 0.5, pos=new_root_pos})
 	end
 end
 
@@ -1216,6 +1259,6 @@ digtron.is_buildable_to = is_buildable_to
 digtron.build_to_world = build_to_world
 digtron.move = move
 digtron.rotate = rotate
-digtron.execute_cycle = execute_cycle
+digtron.execute_dig_move_build_cycle = execute_dig_move_build_cycle
 
 digtron.recover_digtron_id = recover_digtron_id

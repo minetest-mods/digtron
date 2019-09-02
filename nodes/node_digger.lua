@@ -2,7 +2,7 @@
 local MP = minetest.get_modpath(minetest.get_current_modname())
 local S, NS = dofile(MP.."/intllib.lua")
 
--- TODO: make global
+-- TODO: make global, is used by builders too
 local player_interacting_with_digtron_pos = {}
 
 local get_formspec = function(pos, player_name)
@@ -56,6 +56,24 @@ local dual_drill_nodebox = {
 	},
 }
 
+local digger_on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
+	local returnstack, success = digtron.on_rightclick(pos, node, clicker, itemstack, pointed_thing)
+	if returnstack then
+		return returnstack, success
+	end
+	if clicker == nil then return end
+	local player_name = clicker:get_player_name()
+	player_interacting_with_digtron_pos[player_name] = pos
+	minetest.show_formspec(player_name, "digtron:digger", get_formspec(pos, player_name))
+end
+
+local assembled_digger_on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
+	if clicker == nil then return end
+	local player_name = clicker:get_player_name()
+	minetest.sound_play({name = "digtron_error", gain = 0.1}, {to_player=player_name})
+	minetest.chat_send_player(clicker:get_player_name(), S("This Digtron is active, interact with it via the controller node."))
+end
+
 minetest.register_node("digtron:digger", {
 	description = S("Digtron Digger"),
 	_doc_items_longdesc = nil,
@@ -86,6 +104,7 @@ minetest.register_node("digtron:digger", {
 	sounds = default.node_sound_metal_defaults(),
 	can_dig = digtron.can_dig,
 	on_blast = digtron.on_blast,
+	on_rightclick = assembled_digger_on_rightclick,
 })
 
 minetest.register_node("digtron:digger_static",{
@@ -110,17 +129,7 @@ minetest.register_node("digtron:digger_static",{
 	sounds = default.node_sound_metal_defaults(),
 	can_dig = digtron.can_dig,
 	on_blast = digtron.on_blast,
-	
-	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
-		local returnstack, success = digtron.on_rightclick(pos, node, clicker, itemstack, pointed_thing)
-		if returnstack then
-			return returnstack, success
-		end
-		if clicker == nil then return end
-		local player_name = clicker:get_player_name()
-		player_interacting_with_digtron_pos[player_name] = pos
-		minetest.show_formspec(player_name, "digtron:digger", get_formspec(pos, player_name))
-	end,
+	on_rightclick = digger_on_rightclick,
 })
 
 minetest.register_node("digtron:dual_digger", {
@@ -153,6 +162,7 @@ minetest.register_node("digtron:dual_digger", {
 	sounds = default.node_sound_metal_defaults(),
 	can_dig = digtron.can_dig,
 	on_blast = digtron.on_blast,
+	on_rightclick = assembled_digger_on_rightclick,
 })
 
 minetest.register_node("digtron:dual_digger_static",{
@@ -177,17 +187,7 @@ minetest.register_node("digtron:dual_digger_static",{
 	sounds = default.node_sound_metal_defaults(),
 	can_dig = digtron.can_dig,
 	on_blast = digtron.on_blast,
-	
-	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
-		local returnstack, success = digtron.on_rightclick(pos, node, clicker, itemstack, pointed_thing)
-		if returnstack then
-			return returnstack, success
-		end
-		if clicker == nil then return end
-		local player_name = clicker:get_player_name()
-		player_interacting_with_digtron_pos[player_name] = pos
-		minetest.show_formspec(player_name, "digtron:digger", get_formspec(pos, player_name))
-	end,
+	on_rightclick = digger_on_rightclick,
 })
 
 minetest.register_on_player_receive_fields(function(player, formname, fields)

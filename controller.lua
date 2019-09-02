@@ -12,6 +12,7 @@ local sequencer_commands =
 {
 	S("Sequence"),
 	S("Dig Move Build"),
+	S("Dig Move Down"),
 	S("Move Up"),
 	S("Move Down"),
 	S("Move Left"),
@@ -217,6 +218,7 @@ local get_controller_assembled_formspec = function(digtron_id, player_name)
 		.. "field_close_on_enter[digtron_name;false]"
 		.. "field[2.9,0.3;0.7,1;cycles;Cycles;1]" -- TODO persist, actually use
 		.. "button[3.2,0;1,1;execute;Execute]"
+		.. "button[3.7,0;1,1;execute_down;Dig Down]"
 		.. "container_end[]"
 		
 		.. "container[0,1]"
@@ -331,7 +333,11 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 		end
 	
 		if fields.execute then
-			digtron.execute_cycle(digtron_id, player_name)
+			digtron.execute_dig_move_build_cycle(digtron_id, player_name)
+		end
+		
+		if fields.execute_down then
+			digtron.execute_dig_move_build_cycle(digtron_id, player_name, true)
 		end
 		
 		if fields.key_enter_field == "digtron_name" or fields.digtron_name then
@@ -369,7 +375,6 @@ local combine_defs = function(base_def, override_content)
 end
 
 local base_def = {
-	description = S("Digtron Control Module"),
 	_doc_items_longdesc = nil,
     _doc_items_usagehelp = nil,
 	-- Note: this is not in the "digtron" group because we do not want it to be incorporated
@@ -378,15 +383,6 @@ local base_def = {
 	paramtype = "light",
 	paramtype2= "facedir",
 	is_ground_content = false,
-	-- Aims in the +Z direction by default
-	tiles = {
-		"digtron_plate.png^[transformR90",
-		"digtron_plate.png^[transformR270",
-		"digtron_plate.png",
-		"digtron_plate.png^[transformR180",
-		"digtron_plate.png",
-		"digtron_plate.png^digtron_control.png",
-	},
 	drawtype = "nodebox",
 		node_box = {
 		type = "fixed",
@@ -408,7 +404,16 @@ local base_def = {
 }
 
 minetest.register_node("digtron:controller_unassembled", combine_defs(base_def, {
+	description = S("Digtron Control Module"),
 	_digtron_assembled_node = "digtron:controller",
+	tiles = {
+		"digtron_plate.png^[transformR90",
+		"digtron_plate.png^[transformR270",
+		"digtron_plate.png",
+		"digtron_plate.png^[transformR180",
+		"digtron_plate.png",
+		"digtron_plate.png^digtron_control.png",
+	},
 
 	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
 		local returnstack, success = digtron.on_rightclick(pos, node, clicker, itemstack, pointed_thing)
@@ -433,6 +438,7 @@ minetest.register_node("digtron:controller_unassembled", combine_defs(base_def, 
 }))
 
 minetest.register_node("digtron:controller", combine_defs(base_def, {
+	description = S("Digtron Assembly"),
 	tiles = {
 		"digtron_plate.png^[transformR90",
 		"digtron_plate.png^[transformR270",

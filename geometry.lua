@@ -147,7 +147,7 @@ end
 
 digtron.cardinal_dirs = cardinal_dirs -- used by builder entities as well
 digtron.cardinal_dirs_hash = cardinal_dirs_hash
-digtron.facedir_to_dir_map = facedir_to_dir_map
+digtron.facedir_to_dir_map = facedir_to_dir_map -- used by get_controlling_coordinate
 
 digtron.facedir_to_dir = facedir_to_dir
 digtron.facedir_to_dir_hash = facedir_to_dir_hash

@@ -1,0 +1,276 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2019-09-01 18:19-0600\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: digtron\controller.lua:7
+msgid "Main Inventory"
+msgstr ""
+
+#: digtron\controller.lua:8
+msgid "Fuel"
+msgstr ""
+
+#: digtron\controller.lua:13
+msgid "Sequence"
+msgstr ""
+
+#: digtron\controller.lua:14
+msgid "Dig Move Build"
+msgstr ""
+
+#: digtron\controller.lua:15
+msgid "Dig Move Down"
+msgstr ""
+
+#: digtron\controller.lua:16
+msgid "Move Up"
+msgstr ""
+
+#: digtron\controller.lua:17
+msgid "Move Down"
+msgstr ""
+
+#: digtron\controller.lua:18
+msgid "Move Left"
+msgstr ""
+
+#: digtron\controller.lua:19
+msgid "Move Right"
+msgstr ""
+
+#: digtron\controller.lua:20
+msgid "Move Forward"
+msgstr ""
+
+#: digtron\controller.lua:21
+msgid "Move Back"
+msgstr ""
+
+#: digtron\controller.lua:22
+msgid "Yaw Left"
+msgstr ""
+
+#: digtron\controller.lua:23
+msgid "Yaw Right"
+msgstr ""
+
+#: digtron\controller.lua:24
+msgid "Pitch Up"
+msgstr ""
+
+#: digtron\controller.lua:25
+msgid "Pitch Down"
+msgstr ""
+
+#: digtron\controller.lua:26
+msgid "Roll Clockwise"
+msgstr ""
+
+#: digtron\controller.lua:27
+msgid "Roll Widdershins"
+msgstr ""
+
+#: digtron\controller.lua:402
+msgid "Digtron Control Module"
+msgstr ""
+
+#: digtron\controller.lua:436
+msgid "Digtron Assembly"
+msgstr ""
+
+#: digtron\functions.lua:65
+msgid "Unnamed Digtron"
+msgstr ""
+
+#: digtron\functions.lua:1012
+msgid "@1 at @2 has encountered an obstacle."
+msgstr ""
+
+#: digtron\functions.lua:1023
+msgid "@1 at @2 requires @3 to execute its next build cycle."
+msgstr ""
+
+#: digtron\nodes\node_builder.lua:25
+msgid "Extrusion"
+msgstr ""
+
+#: digtron\nodes\node_builder.lua:27
+msgid ""
+"Builder will extrude this many blocks in the direction it is facing.\n"
+"Can be set from 1 to @1.\n"
+"Note that Digtron won't build into unloaded map regions."
+msgstr ""
+
+#: digtron\nodes\node_builder.lua:28
+#: digtron\nodes\node_digger.lua:20
+msgid "Periodicity"
+msgstr ""
+
+#: digtron\nodes\node_builder.lua:30
+msgid ""
+"Builder will build once every n steps.\n"
+"These steps are globally aligned, so all builders with the\n"
+"same period and offset will build on the same location."
+msgstr ""
+
+#: digtron\nodes\node_builder.lua:31
+#: digtron\nodes\node_digger.lua:23
+msgid "Offset"
+msgstr ""
+
+#: digtron\nodes\node_builder.lua:33
+msgid ""
+"Offsets the start of periodicity counting by this amount.\n"
+"For example, a builder with period 2 and offset 0 builds\n"
+"every even-numbered block and one with period 2 and\n"
+"offset 1 builds every odd-numbered block."
+msgstr ""
+
+#: digtron\nodes\node_builder.lua:34
+#: digtron\nodes\node_digger.lua:26
+msgid ""
+"Save &\n"
+"Show"
+msgstr ""
+
+#: digtron\nodes\node_builder.lua:35
+msgid ""
+"Saves settings, closes interface, and shows the locations this builder will "
+"build to in-world."
+msgstr ""
+
+#: digtron\nodes\node_builder.lua:36
+msgid "Facing"
+msgstr ""
+
+#: digtron\nodes\node_builder.lua:38
+msgid ""
+"Value from 0-23. Not all block types make use of this.\n"
+"Use the 'Read & Save' button to copy the facing of the block\n"
+"currently in the builder output location."
+msgstr ""
+
+#: digtron\nodes\node_builder.lua:39
+msgid "Read"
+msgstr ""
+
+#: digtron\nodes\node_builder.lua:40
+msgid "Reads the facing of the block currently in the build location."
+msgstr ""
+
+#: digtron\nodes\node_builder.lua:130
+#: digtron\nodes\node_storage.lua:73
+#: digtron\nodes\node_storage.lua:178
+#: digtron\nodes\node_storage.lua:305
+msgid "This Digtron is active, interact with it via the controller node."
+msgstr ""
+
+#: digtron\nodes\node_builder.lua:223
+msgid ""
+"Builder for @1\n"
+"period @2, offset @3, extrusion @4"
+msgstr ""
+
+#: digtron\nodes\node_builder.lua:232
+msgid "Digtron Builder Module"
+msgstr ""
+
+#: digtron\nodes\node_digger.lua:22
+msgid ""
+"Digger will dig once every n steps.\n"
+"These steps are globally aligned, all diggers with\n"
+"the same period and offset will dig on the same location."
+msgstr ""
+
+#: digtron\nodes\node_digger.lua:25
+msgid ""
+"Offsets the start of periodicity counting by this amount.\n"
+"For example, a digger with period 2 and offset 0 digs\n"
+"every even-numbered block and one with period 2 and\n"
+"offset 1 digs every odd-numbered block."
+msgstr ""
+
+#: digtron\nodes\node_digger.lua:27
+msgid "Saves settings"
+msgstr ""
+
+#: digtron\nodes\node_digger.lua:35
+msgid ""
+"Digger\n"
+"period @1, offset @2"
+msgstr ""
+
+#: digtron\nodes\node_digger.lua:71
+#: digtron\nodes\node_digger.lua:103
+msgid "Digtron Digger"
+msgstr ""
+
+#: digtron\nodes\node_digger.lua:128
+#: digtron\nodes\node_digger.lua:160
+msgid "Digtron Dual Digger"
+msgstr ""
+
+#: digtron\nodes\node_misc.lua:7
+msgid "Digtron Structure"
+msgstr ""
+
+#: digtron\nodes\node_misc.lua:41
+msgid "Digtron Light"
+msgstr ""
+
+#: digtron\nodes\node_misc.lua:64
+msgid "Digtron Panel"
+msgstr ""
+
+#: digtron\nodes\node_misc.lua:88
+msgid "Digtron Edge Panel"
+msgstr ""
+
+#: digtron\nodes\node_misc.lua:117
+msgid "Digtron Corner Panel"
+msgstr ""
+
+#: digtron\nodes\node_pipeworks_interface.lua:85
+msgid "Digtron Inventory Interface"
+msgstr ""
+
+#: digtron\nodes\node_storage.lua:9
+#: digtron\nodes\node_storage.lua:213
+msgid "Inventory items"
+msgstr ""
+
+#: digtron\nodes\node_storage.lua:20
+msgid "Digtron Inventory Storage"
+msgstr ""
+
+#: digtron\nodes\node_storage.lua:102
+#: digtron\nodes\node_storage.lua:215
+msgid "Fuel items"
+msgstr ""
+
+#: digtron\nodes\node_storage.lua:113
+msgid "Digtron Fuel Storage"
+msgstr ""
+
+#: digtron\nodes\node_storage.lua:226
+msgid "Digtron Combined Storage"
+msgstr ""
+
+#: digtron\nodes\recipes.lua:6
+msgid "Digtron Core"
+msgstr ""
