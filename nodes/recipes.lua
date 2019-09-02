@@ -54,14 +54,14 @@ minetest.register_craft({
 			}
 })
 
---minetest.register_craft({
---	output = "digtron:soft_digger_static",
---	recipe = {
---			{"","default:steel_ingot",""},
---			{"default:steel_ingot","digtron:digtron_core","default:steel_ingot"},
---			{"","default:steel_ingot",""}
---			}
---})
+minetest.register_craft({
+	output = "digtron:soft_digger_static",
+	recipe = {
+			{"","default:steel_ingot",""},
+			{"default:steel_ingot","digtron:digtron_core","default:steel_ingot"},
+			{"","default:steel_ingot",""}
+			}
+})
 
 minetest.register_craft({
 	output = "digtron:inventory",
@@ -169,22 +169,22 @@ minetest.register_craft({
 
 -- For swapping digger types
 
---minetest.register_craft({
---	output = "digtron:dual_soft_digger",
---	type = "shapeless",
---	recipe = {"digtron:soft_digger", "digtron:soft_digger"},
---})
+minetest.register_craft({
+	output = "digtron:dual_soft_digger_static",
+	type = "shapeless",
+	recipe = {"digtron:soft_digger_static", "digtron:soft_digger_static"},
+})
 minetest.register_craft({
 	output = "digtron:dual_digger_static",
 	type = "shapeless",
 	recipe = {"digtron:digger_static", "digtron:digger_static"},
 })
---minetest.register_craft({
---	output = "digtron:soft_digger 2",
---	recipe = {
---			{"digtron:dual_soft_digger"},
---			}
---})
+minetest.register_craft({
+	output = "digtron:soft_digger_static 2",
+	recipe = {
+			{"digtron:dual_soft_digger_static"},
+			}
+})
 minetest.register_craft({
 	output = "digtron:digger_static 2",
 	recipe = {

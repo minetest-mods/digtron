@@ -201,7 +201,9 @@ local refresh_adjacent = function(digtron_id)
 		
 		local digtron_group = minetest.get_item_group(data.node.name, "digtron")
 		
-		if digtron_group == 3 or digtron_group == 10 then
+		-- Diggers
+		if digtron_group >= 10 and digtron_group <= 13 then
+			-- All diggers target the node directly in front of them
 			local dir_hashes = {}
 			local dir_hash = digtron.facedir_to_dir_hash(data.node.param2)
 			local potential_target = hash + dir_hash -- pointed at this hash
@@ -209,12 +211,19 @@ local refresh_adjacent = function(digtron_id)
 				table.insert(dir_hashes, dir_hash)
 			end
 			
-			if digtron_group == 10 then
+			-- If it's a dual digger, add a second dir
+			if digtron_group == 11 or digtron_group == 13 then
 				dir_hash = digtron.facedir_to_down_hash(data.node.param2)
 				potential_target = hash + dir_hash -- pointed at this hash
 				if layout[potential_target] == nil then -- not pointed at another Digtron node
 					table.insert(dir_hashes, dir_hash)
 				end
+			end
+			
+			local soft = nil
+			-- if it's a soft digger note that fact.
+			if digtron_group == 12 or digtron_group == 13 then
+				soft = true
 			end
 			
 			if #dir_hashes > 0 then
@@ -223,9 +232,12 @@ local refresh_adjacent = function(digtron_id)
 					period = tonumber(fields.period) or 1,
 					offset = tonumber(fields.offset) or 0,
 					dir_hashes = dir_hashes,
+					soft = soft,
 				}
 			end			
 		end
+		
+		-- Builders
 		if digtron_group == 4 then
 			local dir_hash = digtron.facedir_to_dir_hash(data.node.param2)
 			local potential_target = hash + dir_hash
@@ -713,6 +725,38 @@ end
 ------------------------------------------------------------------------------------
 -- Digging
 
+local is_soft_material = function(target_name)
+	if  minetest.get_item_group(target_name, "crumbly") ~= 0 or
+		minetest.get_item_group(target_name, "choppy") ~= 0 or
+		minetest.get_item_group(target_name, "snappy") ~= 0 or
+		minetest.get_item_group(target_name, "oddly_breakable_by_hand") ~= 0 or
+		minetest.get_item_group(target_name, "fleshy") ~= 0 then
+		return true
+	end
+	return false
+end
+
+local get_material_cost = function(target_name)
+	local material_cost = 0
+	local in_known_group = false
+	if minetest.get_item_group(target_name, "cracky") ~= 0 then
+		in_known_group = true
+		material_cost = math.max(material_cost, digtron.config.dig_cost_cracky)
+	end
+	if minetest.get_item_group(target_name, "crumbly") ~= 0 then
+		in_known_group = true
+		material_cost = math.max(material_cost, digtron.config.dig_cost_crumbly)
+	end
+	if minetest.get_item_group(target_name, "choppy") ~= 0 then
+		in_known_group = true
+		material_cost = math.max(material_cost, digtron.config.dig_cost_choppy)
+	end
+	if not in_known_group then
+		material_cost = digtron.config.dig_cost_default
+	end
+	return material_cost
+end
+
 local predict_dig = function(digtron_id, player_name, controlling_coordinate)
 	local predictive_inv = get_predictive_inventory(digtron_id)
 	local root_pos = retrieve_pos(digtron_id)
@@ -747,28 +791,11 @@ local predict_dig = function(digtron_id, player_name, controlling_coordinate)
 						targetdef.can_dig(target_pos, minetest.get_player_by_name(player_name))
 					) and
 					not protection_check(target_pos, player_name)
+					and (not digger_data.soft or is_soft_material(target_name))
 				then
-					local material_cost = 0
 					if digtron.config.uses_resources then
-						local in_known_group = false
-						if minetest.get_item_group(target_name, "cracky") ~= 0 then
-							in_known_group = true
-							material_cost = math.max(material_cost, digtron.config.dig_cost_cracky)
-						end
-						if minetest.get_item_group(target_name, "crumbly") ~= 0 then
-							in_known_group = true
-							material_cost = math.max(material_cost, digtron.config.dig_cost_crumbly)
-						end
-						if minetest.get_item_group(target_name, "choppy") ~= 0 then
-							in_known_group = true
-							material_cost = math.max(material_cost, digtron.config.dig_cost_choppy)
-						end
-						if not in_known_group then
-							material_cost = digtron.config.dig_cost_default
-						end
+						cost = cost + get_material_cost(target_name)
 					end
-					cost = cost + material_cost
-			
 					local drops = minetest.get_node_drops(target_name, "")
 					for _, drop in ipairs(drops) do
 						local leftover = predictive_inv:add_item("main", ItemStack(drop))
