@@ -51,6 +51,7 @@ dofile(modpath.."/nodes/node_misc.lua")
 dofile(modpath.."/nodes/node_storage.lua")
 dofile(modpath.."/nodes/node_digger.lua")
 dofile(modpath.."/nodes/node_builder.lua")
+dofile(modpath.."/nodes/node_duplicator.lua")
 dofile(modpath.."/nodes/recipes.lua")
 
 

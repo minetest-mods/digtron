@@ -32,6 +32,18 @@ local protection_check = function(pos, player_name)
 	return false
 end
 
+local function deep_copy(table_in)
+	local table_out = {}
+	for index, value in pairs(table_in) do
+		if type(value) == "table" then
+			table_out[index] = deep_copy(value)
+		else
+			table_out[index] = value
+		end
+	end
+	return table_out
+end
+
 --------------------------------------------------------------------------------------
 
 local create_new_id = function()
@@ -125,6 +137,33 @@ local persist_step, retrieve_step = get_table_functions("step") -- actually just
 
 -------------------------------------------------------------------------------------------------------
 -- Layout creation helpers
+
+digtron.duplicate = function(digtron_id)
+	local layout = retrieve_layout(digtron_id)
+	if layout == nil then
+		minetest.log("error", "[Digtron] digtron.duplicate called with non-existent id " .. digtron_id)
+		return
+	end
+	local new_layout = deep_copy(layout) -- make a copy because persist_layout caches its parameter as-is
+	local new_id = create_new_id()
+	local new_name = S("Copy of @1", get_name(digtron_id))
+	persist_layout(new_id, new_layout)
+	set_name(new_id, new_name)
+	
+	local old_inv = retrieve_inventory(digtron_id)
+	local new_inv = retrieve_inventory(new_id)
+	for inv_name, item_list in pairs(old_inv:get_lists()) do
+		-- Don't copy inventory contents, just copy sizes
+		new_inv:set_size(inv_name, #item_list)
+	end
+	persist_inventory(new_id)
+	
+	local new_controller = ItemStack("digtron:controller")
+	local meta = new_controller:get_meta()
+	meta:set_string("digtron_id", new_id)
+	meta:set_string("description", new_name)
+	return new_controller
+end
 
 -- recursive function searches out all connected unassigned digtron nodes
 local get_all_digtron_nodes
@@ -346,7 +385,6 @@ local assemble = function(root_pos, player_name)
 			return nil
 		end
 		-- Process inventories specially
-		-- fuel and main get added to corresponding detached inventory lists
 		for listname, items in pairs(current_meta_table.inventory) do
 			local count = #items
 			-- increase the corresponding detached inventory size
@@ -650,18 +688,6 @@ end
 
 ------------------------------------------------------------------------
 -- Rotation
-
-local function deep_copy(table_in)
-	local table_out = {}
-	for index, value in pairs(table_in) do
-		if type(value) == "table" then
-			table_out[index] = deep_copy(value)
-		else
-			table_out[index] = value
-		end
-	end
-	return table_out
-end
 
 local rotate_layout = function(digtron_id, axis)
 	local layout = retrieve_layout(digtron_id)
@@ -1278,6 +1304,8 @@ digtron.get_sequence = retrieve_sequence
 digtron.set_step = persist_step
 digtron.get_step = retrieve_step
 
+-- Used by duplicator
+digtron.get_layout = retrieve_layout
 
 digtron.assemble = assemble
 digtron.disassemble = disassemble

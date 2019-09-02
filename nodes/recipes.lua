@@ -111,14 +111,14 @@ minetest.register_craft({
 			}
 })
 
---minetest.register_craft({
---	output = "digtron:duplicator",
---	recipe = {
---			{"default:mese_crystal","default:mese_crystal","default:mese_crystal"},
---			{"default:chest","digtron:digtron_core","default:chest"},
---			{"default:mese_crystal","default:mese_crystal","default:mese_crystal"}
---			}
---})
+minetest.register_craft({
+	output = "digtron:duplicator",
+	recipe = {
+			{"default:mese_crystal","default:mese_crystal","default:mese_crystal"},
+			{"default:chest","digtron:digtron_core","default:chest"},
+			{"default:mese_crystal","default:mese_crystal","default:mese_crystal"}
+			}
+})
 
 --minetest.register_craft({
 --	output = "digtron:inventory_ejector",
@@ -174,17 +174,20 @@ minetest.register_craft({
 	type = "shapeless",
 	recipe = {"digtron:soft_digger_static", "digtron:soft_digger_static"},
 })
+
 minetest.register_craft({
 	output = "digtron:dual_digger_static",
 	type = "shapeless",
 	recipe = {"digtron:digger_static", "digtron:digger_static"},
 })
+
 minetest.register_craft({
 	output = "digtron:soft_digger_static 2",
 	recipe = {
 			{"digtron:dual_soft_digger_static"},
 			}
 })
+
 minetest.register_craft({
 	output = "digtron:digger_static 2",
 	recipe = {
@@ -200,18 +203,21 @@ minetest.register_craft({
 			{"digtron:structure"},
 			}
 })
+
 minetest.register_craft({
 	output = "digtron:digtron_core",
 	recipe = {
 			{"digtron:panel"},
 			}
 })
+
 minetest.register_craft({
 	output = "digtron:digtron_core",
 	recipe = {
 			{"digtron:corner_panel"},
 			}
 })
+
 minetest.register_craft({
 	output = "digtron:digtron_core",
 	recipe = {
