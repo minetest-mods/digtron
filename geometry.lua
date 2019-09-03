@@ -8,8 +8,9 @@ local cardinal_dirs = {
 }
 -- Turn the cardinal directions into a set of integers you can add to a hash to step in that direction.
 local cardinal_dirs_hash = {}
+local origin_hash = minetest.hash_node_position({x = 0, y = 0, z = 0})
 for i, dir in ipairs(cardinal_dirs) do
-	cardinal_dirs_hash[i] = minetest.hash_node_position(dir) - minetest.hash_node_position({x = 0, y = 0, z = 0})
+	cardinal_dirs_hash[i] = minetest.hash_node_position(dir) - origin_hash
 end
 
 -- Mapping from facedir value to index in cardinal_dirs.

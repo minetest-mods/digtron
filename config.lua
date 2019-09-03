@@ -25,11 +25,7 @@ end
 
 setting("bool", "uses_resources", true, "Digtron uses resources when active")
 setting("bool", "lava_impassible", true, "Lava counts as a protected node")
-setting("bool", "damage_creatures", true, "Diggers damage creatures") -- TODO: legacy setting, remove eventually
 setting("int", "damage_hp", 8, "Damage diggers do")
-setting("int", "size_limit", 1000, "Digtron size limit in nodes per moving digtron")
-
-if digtron.config.damage_creatures == false then digtron.config.damage_hp = 0 end -- TODO: remove when damage_creatures is removed
 
 -- Enables the spray of particles out the back of a digger head and puffs of smoke from the controller
 local particle_effects = minetest.settings:get_bool("enable_particles")

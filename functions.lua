@@ -14,8 +14,63 @@ local S, NS = dofile(MP.."/intllib.lua")
 --	mod_meta:set_string(field, "")
 --end
 
-local modpath = minetest.get_modpath(minetest.get_current_modname())
+local damage_hp = digtron.config.damage_hp
+-- see predict_dig for how punch_data gets calculated
+local damage_creatures = function(root_pos, punch_data, items_dropped)
+	local target_pos = punch_data[2]
+	local objects = minetest.env:get_objects_inside_radius(target_pos, 1.0)
+	if objects ~= nil then
+		local source_pos = vector.add(minetest.get_position_from_hash(punch_data[1]), root_pos)
+		for _, obj in ipairs(objects) do
+			local dir = vector.normalize(vector.subtract(obj:get_pos(), source_pos))
+			local armour_multiplier = 1
+			local fleshy_armour = obj:get_armor_groups().fleshy
+			if fleshy_armour then
+				armour_multiplier = fleshy_armour/100
+			end
+			if obj:is_player() then
+				if obj.add_player_velocity then -- added pretty recently, see https://github.com/minetest/minetest/commit/291e7730cf24ba5081f10b5ddbf2494951333827
+					obj:add_player_velocity(dir)
+				else
+					obj:set_pos(vector.add(obj:get_pos(), vector.multiply(dir,1)))
+				end
+				obj:set_hp(math.max(obj:get_hp() - damage_hp*armour_multiplier, 0))
+			else
+				local lua_entity = obj:get_luaentity()
+				if lua_entity ~= nil then
+					-- suck up items in Digtron's path
+					if lua_entity.name == "__builtin:item" then
+						table.insert(items_dropped, ItemStack(lua_entity.itemstring))
+						lua_entity.itemstring = ""
+						obj:remove()
+					else
+						lua_entity:add_velocity(dir)
+						obj:set_hp(math.max(obj:get_hp() - damage_hp*armour_multiplier, 0))
+					end
+				end
+			end
+		end
+	end
+	-- If we killed any mobs they might have dropped some stuff, vacuum that up now too.
+	objects = minetest.env:get_objects_inside_radius(target_pos, 1.0)
+	if objects ~= nil then
+		for _, obj in ipairs(objects) do
+			if not obj:is_player() then
+				local lua_entity = obj:get_luaentity()
+				if lua_entity ~= nil and lua_entity.name == "__builtin:item" then
+					table.insert(items_dropped, ItemStack(lua_entity.itemstring))
+					lua_entity.itemstring = ""
+					obj:remove()
+				end
+			end
+		end		
+	end
+end
 
+-----------------------------------------------------------------------
+-- Inventory
+
+local modpath = minetest.get_modpath(minetest.get_current_modname())
 local inventory_functions = dofile(modpath.."/inventories.lua")
 
 local retrieve_inventory = inventory_functions.retrieve_inventory
@@ -23,6 +78,9 @@ local persist_inventory = inventory_functions.persist_inventory
 local get_predictive_inventory = inventory_functions.get_predictive_inventory
 local commit_predictive_inventory = inventory_functions.commit_predictive_inventory
 local clear_predictive_inventory = inventory_functions.clear_predictive_inventory
+
+----------------------------------------------------------------------------
+-- Common utility functions
 
 local protection_check = function(pos, player_name)
 	if minetest.is_protected(pos, player_name) and
@@ -796,6 +854,10 @@ local predict_dig = function(digtron_id, player_name, controlling_coordinate)
 	local dug_positions = {}
 	local cost = 0
 	local dug_hashes = {} -- to ensure the same node isn't dug twice
+	local punches_thrown
+	if damage_hp ~= 0 then
+		punches_thrown = {}
+	end
 	
 	for digger_hash, digger_data in pairs(retrieve_all_digger_targets(digtron_id)) do
 		for _, dir_hash in ipairs(digger_data.dir_hashes) do
@@ -807,7 +869,6 @@ local predict_dig = function(digtron_id, player_name, controlling_coordinate)
 				local targetdef = minetest.registered_nodes[target_name]
 				if
 					(target_pos[controlling_coordinate] + digger_data.offset) % digger_data.period == 0 and -- test periodicity and offset
-					target_name ~= "air" and -- TODO: generalise this somehow for liquids and other undiggables
 					minetest.get_item_group(target_name, "digtron") == 0 and
 					minetest.get_item_group(target_name, "digtron_protected") == 0 and
 					minetest.get_item_group(target_name, "immortal") == 0 and
@@ -819,24 +880,32 @@ local predict_dig = function(digtron_id, player_name, controlling_coordinate)
 					not protection_check(target_pos, player_name)
 					and (not digger_data.soft or is_soft_material(target_name))
 				then
-					if digtron.config.uses_resources then
-						cost = cost + get_material_cost(target_name)
-					end
-					local drops = minetest.get_node_drops(target_name, "")
-					for _, drop in ipairs(drops) do
-						local leftover = predictive_inv:add_item("main", ItemStack(drop))
-						if leftover:get_count() > 0 then
-							table.insert(leftovers, leftover)
+					if punches_thrown then
+						-- storing digger_hash rather than converting it into a vector because
+						-- in most cases there won't be something to punch and that calculation can be skipped
+						-- convert to digger_pos by adding root_pos
+						table.insert(punches_thrown, {digger_hash, target_pos})
+					end				
+					if target_name ~= "air" then -- TODO: generalise this somehow for liquids and other undiggables
+						if digtron.config.uses_resources then
+							cost = cost + get_material_cost(target_name)
 						end
+						local drops = minetest.get_node_drops(target_name, "")
+						for _, drop in ipairs(drops) do
+							local leftover = predictive_inv:add_item("main", ItemStack(drop))
+							if leftover:get_count() > 0 then
+								table.insert(leftovers, leftover)
+							end
+						end
+						table.insert(dug_positions, target_pos)
+						dug_hashes[target_hash] = true
 					end
-					table.insert(dug_positions, target_pos)
-					dug_hashes[target_hash] = true
 				end
 			end
 		end
 	end
 
-	return leftovers, dug_positions, cost
+	return leftovers, dug_positions, cost, punches_thrown
 end
 
 -- Removes nodes and records node info so execute_dug_callbacks can be called later
@@ -1059,7 +1128,7 @@ local execute_dig_move_build_cycle = function(digtron_id, player_name, dig_down)
 	local root_facedir = root_node.param2
 	local controlling_coordinate = get_controlling_coordinate(root_facedir)
 
-	local dig_leftovers, nodes_to_dig, dig_cost = predict_dig(digtron_id, player_name, controlling_coordinate)
+	local dig_leftovers, nodes_to_dig, dig_cost, punches_thrown = predict_dig(digtron_id, player_name, controlling_coordinate)
 	local new_root_pos
 	
 	if dig_down then
@@ -1109,6 +1178,13 @@ local execute_dig_move_build_cycle = function(digtron_id, player_name, dig_down)
 			local nodes_dug = get_and_remove_nodes(nodes_to_dig, player_name)
 			log_dug_nodes(nodes_to_dig, digtron_id, old_root_pos, player_name)
 			
+			local items_dropped = {}
+			if punches_thrown then
+				for _, punch_data in ipairs(punches_thrown) do
+					damage_creatures(old_root_pos, punch_data, items_dropped)
+				end
+			end
+			
 			-- Building new Digtron
 			digtron.build_to_world(digtron_id, layout, new_root_pos, player_name)
 			minetest.sound_play("digtron_construction", {gain = 0.5, pos=new_root_pos})
@@ -1130,6 +1206,7 @@ local execute_dig_move_build_cycle = function(digtron_id, player_name, dig_down)
 			-- try putting dig_leftovers and build_leftovers into the inventory one last time before ejecting it
 			insert_or_eject(digtron_id, dig_leftovers, old_root_pos)
 			insert_or_eject(digtron_id, build_leftovers, old_root_pos)
+			insert_or_eject(digtron_id, items_dropped, old_root_pos)
 		
 			commit_predictive_inventory(digtron_id)
 		end
