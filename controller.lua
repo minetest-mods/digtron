@@ -173,6 +173,7 @@ local get_controller_assembled_formspec = function(digtron_id, player_name)
 				tab_type = "inventory",
 				listname = listname,
 				size = #contents,
+				pages = math.floor(#contents/(8*4)) + 1,
 				current_page = 1})
 		end
 		context.current_tab = 1
@@ -186,12 +187,24 @@ local get_controller_assembled_formspec = function(digtron_id, player_name)
 	end
 	tabs = tabs .. ";" .. context.current_tab .. "]"
 	
-	local inv_tab = function(inv_list)
+	local inv_tab = function(inv_tab_context)
+		local inv_list = inv_tab_context.listname
+		local pages = inv_tab_context.pages
+		local current_page = inv_tab_context.current_page
+		local starting_index = (current_page - 1) * 8 * 4
+		local paging_controls = ""
+		if pages > 1 then
+			paging_controls = "button[0,0;1,1;page_back;<<]"
+			.. "label[1.125,0.25;Page " .. current_page .. "/" .. pages .. "]"
+			.. "button[2,0;1,1;page_forward;>>]"
+		end
+		
 		return "size[8,9]"
 			.. position_and_anchor
 			.. "container[0,0]"
-			.. "list[detached:" .. digtron_id .. ";"..inv_list..";0,0;8,5]" -- TODO: paging system for inventory
+			.. "list[detached:" .. digtron_id .. ";"..inv_list..";0,0;8,4;"..starting_index.."]"
 			.. "container_end[]"
+			.. "container[2.5,4]" .. paging_controls .. "container_end[]"
 			.. "container[0,5]list[current_player;main;0,0;8,1;]list[current_player;main;0,1.25;8,3;8]container_end[]"
 			.. "listring[current_player;main]"
 			.. "listring[detached:" .. digtron_id .. ";"..inv_list.."]"
@@ -248,7 +261,8 @@ local get_controller_assembled_formspec = function(digtron_id, player_name)
 	elseif context.current_tab == 2 then
 		return sequence_tab() .. tabs
 	else
-		return inv_tab(context.tabs[context.current_tab - 2].listname) .. tabs
+		local inv_tab_context = context.tabs[context.current_tab - 2]
+		return inv_tab(inv_tab_context) .. tabs
 	end
 end
 
@@ -353,6 +367,20 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 		--Sequencer
 		update_sequence(digtron_id, fields)
 		refresh = true
+	else -- inventory tabs
+		local tab_context = context.tabs[current_tab - 2]
+		if fields.page_forward then
+			if tab_context.current_page < tab_context.pages then
+				tab_context.current_page = tab_context.current_page + 1
+				refresh = true
+			end
+		end
+		if fields.page_back then
+			if tab_context.current_page > 1 then
+				tab_context.current_page = tab_context.current_page - 1
+				refresh = true
+			end		
+		end	
 	end
 	
 	if refresh then
