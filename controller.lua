@@ -8,32 +8,64 @@ local listname_to_title =
 	["fuel"] = S("Fuel"),
 }
 
+-- Sequencer commands
+-- Yes, this indexing scheme is complicated. It's necessary in order to make sequences
+-- language-agnostic, and saves a bit of storage space in the process by shortening and 
+-- standardizing command tags.
+-- Also makes it future-proof, we can add new commands without disrupting existing stored sequences
 local sequencer_commands = 
 {
-	S("Sequence"),
-	S("Dig Move Build"),
-	S("Dig Move Down"),
-	S("Move Up"),
-	S("Move Down"),
-	S("Move Left"),
-	S("Move Right"),
-	S("Move Forward"),
-	S("Move Back"),
-	S("Yaw Left"),
-	S("Yaw Right"),
-	S("Pitch Up"),
-	S("Pitch Down"),
-	S("Roll Clockwise"),
-	S("Roll Widdershins"),
+	seq = S("Sequence"),
+	dmb = S("Dig Move Build"),
+	dmd = S("Dig Move Down"),
+	mup = S("Move Up"),
+	mdn = S("Move Down"),
+	mlt = S("Move Left"),
+	mrt = S("Move Right"),
+	mfw = S("Move Forward"),
+	mbk = S("Move Back"),
+	rlt = S("Yaw Left"),
+	rrt = S("Yaw Right"),
+	rup = S("Pitch Up"),
+	rdn = S("Pitch Down"),
+	rcl = S("Roll Clockwise"),
+	rcc = S("Roll Widdershins"),
 }
 
-local sequencer_dropdown_list = table.concat(sequencer_commands, ",")
-
-local sequencer_commands_reverse = {}
-for i, command in ipairs(sequencer_commands) do
-	sequencer_commands_reverse[command] = i
+-- This sets the order in which they'll be shown on the dropdown menu
+local sequencer_dropdown_order = 
+{
+	"seq", "dmb", "dmd", "mup", "mdn", "mlt", "mrt", "mfw", "mbk", "rlt", "rrt", "rup", "rdn", "rcl", "rcc"
+}
+-- Allows commands to be turned into an index into the dropdown order, needed for defaulting to the current command when building the formspec
+local sequencer_dropdown_order_reverse = {}
+for i, command in ipairs(sequencer_dropdown_order) do
+	sequencer_dropdown_order_reverse[command] = i
 end
 
+-- Build the actual text string used in the formspec dropdown
+local sequencer_dropdown_list = {}
+for _, cmd in ipairs(sequencer_dropdown_order) do
+	table.insert(sequencer_dropdown_list, sequencer_commands[cmd])
+end
+sequencer_dropdown_list = table.concat(sequencer_dropdown_list, ",")
+
+-- Reverse lookup from human-readable command to internal tag, used in on_recieve_fields processing
+local sequencer_commands_reverse = {}
+for cmd, command in pairs(sequencer_commands) do
+	sequencer_commands_reverse[command] = cmd
+end
+
+
+-- Manipulating sequences
+
+-- Recursively builds a formspec representation. Dropdowns and buttons are indexed with : delimiters, eg:
+--:1
+--:2
+--:2:1
+--:2:2
+--:2:2:1
+--:3
 local create_sequence_list
 create_sequence_list = function(sequence_in, list_out, root_index, x, y)
 	root_index = root_index or ""
@@ -42,15 +74,17 @@ create_sequence_list = function(sequence_in, list_out, root_index, x, y)
 	
 	for i, val in ipairs(sequence_in) do
 		local index = root_index .. ":" .. i
-		local line = "dropdown[".. x ..","..y..";1.5;sequencer_com"..index..";"..sequencer_dropdown_list..";"..val[1]..
-			"]field[".. x+1.75 ..",".. y+0.25 ..";1,1;sequencer_cnt"..index..";;"..val[2].."]"..
+		local line = "dropdown[".. x ..","..y..";1.5;sequencer_com"..index..";"..sequencer_dropdown_list..";"
+			..sequencer_dropdown_order_reverse[val.cmd].."]field["
+			.. x+1.75 ..",".. y+0.25 ..";1,1;sequencer_cnt"..index..";;"..val.cnt.."]"..
 			"field_close_on_enter[sequencer_cnt_"..i..";false]"..
-			"button[".. x+ 2.375 .. ","..y-0.0625 ..";1,1;sequencer_del"..index..";Delete]"
-		if val[1] == 1 then
-			line = line .. "button[".. x+3.25 ..","..y-0.0625 ..";1,1;sequencer_ins"..index..";Insert]"
+			"button[".. x+ 2.375 .. ","..y-0.0625 ..";1,1;sequencer_del"..index..";"..S("Delete").."]"
+		if val.cmd == "seq" then
+			line = line .. "button[".. x+3.25 ..","..y-0.0625 ..";1,1;sequencer_ins"..index..";"..S("Insert").."]"
 			table.insert(list_out, line)
 			y = y + 0.8
-			y = create_sequence_list(val[3], list_out, index, x+0.5, y)
+			-- Recurse into sub-sequence
+			y = create_sequence_list(val.seq, list_out, index, x+0.5, y)
 		else
 			table.insert(list_out, line)
 			y = y + 0.8
@@ -65,9 +99,9 @@ local sequencer_field_length = string.len("sequencer_com:")
 
 local find_item = function(field, sequence)
 	local index_list = field:sub(sequencer_field_length+1):split(":")
-	local target = {[3] = sequence}
+	local target = {seq = sequence}
 	for i = 1, #index_list do
-		target = target[3][tonumber(index_list[i])]
+		target = target.seq[tonumber(index_list[i])]
 		if target == nil then
 			minetest.log("error", "[Digtron] find_item failed to find a sequence item.")
 			return nil
@@ -78,76 +112,79 @@ end
 
 local delete_item = function(field, sequence)
 	local index_list = field:sub(sequencer_field_length+1):split(":")
-	local target = {[3] = sequence}
+	local target = {seq = sequence}
 	for i = 1, #index_list-1 do
-		target = target[3][tonumber(index_list[i])]
+		target = target.seq[tonumber(index_list[i])]
 		if target == nil then
 			minetest.log("error", "[Digtron] delete_item failed to find a sequence item.")
 			return nil
 		end
 	end	
-	table.remove(target[3], tonumber(index_list[#index_list]))
+	table.remove(target.seq, tonumber(index_list[#index_list]))
 end
 
--- recurses through sequences ensuring there are tables for them
+-- recurses through sequences ensuring there are tables for seq commands
 local clean_subsequences
 clean_subsequences = function(sequence)
 	for i, val in ipairs(sequence) do
-		if val[1] == 1 then
-			if val[3] == nil then
-				val[3] = {}
+		if val.cmd == "seq" then
+			if val.seq == nil then
+				val.seq = {}
 			else
-				clean_subsequences(val[3])
+				clean_subsequences(val.seq)
 			end
 		else
-			val[3] = nil		
+			val.seq = nil
 		end
 	end
 end
 
 local update_sequence = function(digtron_id, fields)
 	local sequence = digtron.get_sequence(digtron_id)
-	local delete_index = {}
-	local insert_index = {}
+	local delete_field = nil
+	local insert_field = nil
 	for field, value in pairs(fields) do
 		local command_type = field:sub(1,sequencer_field_length)
 		if command_type == "sequencer_com:" then
 			local seq_item = find_item(field, sequence)
-			seq_item[1] = sequencer_commands_reverse[value]
+			seq_item.cmd = sequencer_commands_reverse[value]
 		elseif command_type == "sequencer_cnt:" then
 			local val_int = tonumber(value)
 			if val_int then
 				val_int = math.floor(val_int)
 				local seq_item = find_item(field, sequence)
-				seq_item[2] = val_int
+				seq_item.cnt = val_int
 			end
 				
 		--Save these to do last so as to not invalidate indices
+		--Adding and removing items makes find_item not work
 		elseif command_type == "sequencer_del:" then
-			table.insert(delete_index, field)
+			delete_field = field
 		elseif command_type == "sequencer_ins:" then
-			table.insert(insert_index, field)
+			insert_field = field
 		end
 	end
 	
-	for _, insert in ipairs(insert_index) do
-		local item = find_item(insert, sequence)
-		table.insert(item[3], {2,1})
+	if insert_field and delete_field then
+		minetest.log("error", "[Digtron] somehow an insertion and a deletion were both registered for a single update_sequence call. "
+			.. "ignoring the deletion.")
+		delete_field = nil
 	end
-	for _, delete in ipairs(delete_index) do
-		delete_item(delete, sequence)
+	
+	if insert_field then
+		local item = find_item(insert_field, sequence)
+		table.insert(item.seq, {cmd="dmb",cnt=1})
+	elseif delete_field then
+		delete_item(delete_field, sequence)
 	end
 	
 	if fields.sequencer_insert_end then
-		table.insert(sequence, {2,1})
+		table.insert(sequence, {cmd="dmb",cnt=1})
 	end
 	
-	clean_subsequences(sequence)
+	clean_subsequences(sequence) -- if commands were changed to or away from "seq", ensure they have a .seq member
 	digtron.set_sequence(digtron_id, sequence)
 end
-
-
-
 
 -- This allows us to know which digtron the player has a formspec open for without
 -- sending the digtron_id over the network
@@ -181,7 +218,7 @@ local get_controller_assembled_formspec = function(digtron_id, player_name)
 
 	local position_and_anchor = "position[0.025,0.1]anchor[0,0]"
 
-	local tabs = "tabheader[0,0;tab_header;Controls,Sequence"
+	local tabs = "tabheader[0,0;tab_header;"..S("Controls")..","..S("Sequence")
 	for _, tab in ipairs(context.tabs) do
 		tabs = tabs .. "," .. listname_to_title[tab.listname] or tab.listname
 	end
@@ -195,7 +232,7 @@ local get_controller_assembled_formspec = function(digtron_id, player_name)
 		local paging_controls = ""
 		if pages > 1 then
 			paging_controls = "button[0,0;1,1;page_back;<<]"
-			.. "label[1.125,0.25;Page " .. current_page .. "/" .. pages .. "]"
+			.. "label[1.125,0.25;"..S("Page @1/@2", current_page, pages) .. "]"
 			.. "button[2,0;1,1;page_forward;>>]"
 		end
 		
@@ -217,43 +254,43 @@ local get_controller_assembled_formspec = function(digtron_id, player_name)
 		return "size[4.2,5]"
 			.. position_and_anchor
 			.. "container[0,0]"
-			.. table.concat(list_out)		
-			.. "button[0,"..y-0.0625 ..";1,1;sequencer_insert_end;Insert]"
-			.. "container_end[]"	
+			.. table.concat(list_out)
+			.. "button[0,"..y-0.0625 ..";1,1;sequencer_insert_end;"..S("New\nCommand").."]"
+			.. "container_end[]"
 	end
 	
 	local controls = "size[4.2,5]"
 		.. position_and_anchor
 		.. "container[0,0]"
-		.. "button[0,0;1,1;disassemble;Disassemble]"
-		.. "field[1.2,0.3;1.75,1;digtron_name;Digtron name;"
+		.. "button[0,0;1,1;disassemble;"..S("Disassemble").."]"
+		.. "field[1.2,0.3;1.75,1;digtron_name;"..S("Digtron name")..";"
 		.. minetest.formspec_escape(digtron.get_name(digtron_id)).."]"
 		.. "field_close_on_enter[digtron_name;false]"
-		.. "field[2.9,0.3;0.7,1;cycles;Cycles;1]" -- TODO persist, actually use
-		.. "button[3.2,0;1,1;execute;Execute]"
-		.. "button[3.7,0;1,1;execute_down;Dig Down]"
+		.. "field[2.9,0.3;0.7,1;cycles;"..S("Cycles")..";1]" -- TODO persist, actually use
+		.. "button[3.2,0;1,1;execute;"..S("Execute").."]"
+		.. "button[3.7,0;1,1;execute_down;Dig Down]" -- TODO: for testing purposes only, remove once sequences actually work
 		.. "container_end[]"
 		
 		.. "container[0,1]"
 		.. "box[0,0;4,2;#DDDDDD]"
-		.. "label[1.8,0.825;Move]"
-		.. "button[1.1,0.1;1,1;move_up;Up]"
-		.. "button[1.1,1.1;1,1;move_down;Down]"
-		.. "button[2.1,0.1;1,1;move_forward;Forward]"
-		.. "button[2.1,1.1;1,1;move_back;Back]"
-		.. "button[0.1,0.6;1,1;move_left;Left]"
-		.. "button[3.1,0.6;1,1;move_right;Right]"
+		.. "label[1.8,0.825;"..S("Move").."]"
+		.. "button[1.1,0.1;1,1;move_up;"..S("Up").."]"
+		.. "button[1.1,1.1;1,1;move_down;"..S("Down").."]"
+		.. "button[2.1,0.1;1,1;move_forward;"..S("Forward").."]"
+		.. "button[2.1,1.1;1,1;move_back;"..S("Back").."]"
+		.. "button[0.1,0.6;1,1;move_left;"..S("Left").."]"
+		.. "button[3.1,0.6;1,1;move_right;"..S("Right").."]"
 		.. "container_end[]"
 
 		.. "container[0.5,3.2]"
 		.. "box[0,0;3,2;#DDDDDD]"
-		.. "label[1.3,0.825;Rotate]"
-		.. "button[0.1,0.1;1,1;rot_counterclockwise;Roll\nWiddershins]"
-		.. "button[2.1,0.1;1,1;rot_clockwise;Roll\nClockwise]"
-		.. "button[1.1,0.1;1,1;rot_up;Pitch Up]"
-		.. "button[1.1,1.1;1,1;rot_down;Pitch Down]"
-		.. "button[0.1,1.1;1,1;rot_left;Yaw Left]"
-		.. "button[2.1,1.1;1,1;rot_right;Yaw Right]"
+		.. "label[1.3,0.825;"..S("Rotate").."]"
+		.. "button[0.1,0.1;1,1;rot_counterclockwise;"..S("Roll\nWiddershins").."]"
+		.. "button[2.1,0.1;1,1;rot_clockwise;"..S("Roll\nClockwise").."]"
+		.. "button[1.1,0.1;1,1;rot_up;"..S("Pitch Up").."]"
+		.. "button[1.1,1.1;1,1;rot_down;"..S("Pitch Down").."]"
+		.. "button[0.1,1.1;1,1;rot_left;"..S("Yaw Left").."]"
+		.. "button[2.1,1.1;1,1;rot_right;"..S("Yaw Right").."]"
 		.. "container_end[]"
 		
 	if context.current_tab == 1 then
@@ -466,7 +503,7 @@ minetest.register_node("digtron:controller_unassembled", combine_defs(base_def, 
 }))
 
 minetest.register_node("digtron:controller", combine_defs(base_def, {
-	description = S("Digtron Assembly"),
+	description = S("Digtron Assembly"), -- Will normally be obscured by the player-set Digtron name
 	tiles = {
 		"digtron_plate.png^[transformR90",
 		"digtron_plate.png^[transformR270",
