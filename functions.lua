@@ -736,13 +736,13 @@ local move = function(digtron_id, dest_pos, player_name)
 				minetest.check_for_falling(removed_pos)
 			end
 		end
+		return true
 	else
 		digtron.show_buildable_nodes({}, failed)
 		minetest.sound_play("digtron_squeal", {gain = 0.5, pos=dest_pos})
+		return false
 	end	
 end
-
-
 
 ------------------------------------------------------------------------
 -- Rotation
@@ -800,9 +800,11 @@ local rotate = function(digtron_id, axis, player_name)
 				minetest.check_for_falling(removed_pos)
 			end
 		end
+		return true
 	else
 		digtron.show_buildable_nodes({}, failed)
 		minetest.sound_play("digtron_squeal", {gain = 0.5, pos=root_pos})
+		return false
 	end	
 end
 
@@ -1155,12 +1157,13 @@ local execute_dig_move_build_cycle = function(digtron_id, player_name, dig_down)
 		minetest.sound_play("digtron_squeal", {gain = 0.5, pos=old_root_pos})	
 		minetest.chat_send_player(player_name, S("@1 at @2 has encountered an obstacle.",
 			get_name(digtron_id), minetest.pos_to_string(old_root_pos)))
+		return false
 	elseif next(missing_items) ~= nil then
 		clear_predictive_inventory(digtron_id)
 		local items = {}
 		for item, count in ipairs(missing_items) do
 			local item_def = minetest.registered_items[item]
-			if item_def == nil then -- Shouldn't be a problem, but don't crash if it does happen somehow
+			if item_def == nil then -- Shouldn't be possible, but don't crash if it does happen somehow
 				table.insert(items, count .. " " .. item)
 			else
 				table.insert(items, count .. " " .. item_def.description)
@@ -1169,6 +1172,7 @@ local execute_dig_move_build_cycle = function(digtron_id, player_name, dig_down)
 		minetest.chat_send_player(player_name, S("@1 at @2 requires @3 to execute its next build cycle.",
 			get_name(digtron_id), minetest.pos_to_string(old_root_pos), table.concat(items, ", ")))
 		minetest.sound_play("digtron_dingding", {gain = 0.5, pos=old_root_pos})
+		return false
 	else
 		digtron.fake_player:update(old_root_pos, player_name)
 		
@@ -1210,6 +1214,7 @@ local execute_dig_move_build_cycle = function(digtron_id, player_name, dig_down)
 		
 			commit_predictive_inventory(digtron_id)
 		end
+		return true
 	end
 end
 
