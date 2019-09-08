@@ -470,7 +470,7 @@ local assemble = function(root_pos, player_name)
 	set_name(digtron_id, digtron_name)
 	invalidate_layout_cache(digtron_id)
 	persist_pos(digtron_id, root_pos)
-	persist_sequence(digtron_id, {{cmd="dmb",cnt=1}}) -- TODO find a better place to set a default like this
+	persist_sequence(digtron_id, digtron.default_sequence())
 	
 	-- Wipe out the inventories of all in-world nodes, it's stored in the mod_meta now.
 	-- Wait until now to do it in case the above loop fails partway through.

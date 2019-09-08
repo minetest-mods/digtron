@@ -2,6 +2,8 @@
 local MP = minetest.get_modpath(minetest.get_current_modname())
 local S, NS = dofile(MP.."/intllib.lua")
 
+local position_and_anchor = "position[0.025,0.1]anchor[0,0]"
+
 local listname_to_title =
 {
 	["main"] = S("Main Inventory"),
@@ -56,8 +58,14 @@ for cmd, command in pairs(sequencer_commands) do
 	sequencer_commands_reverse[command] = cmd
 end
 
+-- Creates a default sequence
+-- Root must always be a seq command
+digtron.default_sequence = function()
+	return {cmd="seq", cnt=1, cur=1, seq={{cmd="dmb", cnt=1, cur=1}}}
+end
 
--- Manipulating sequences
+-------------------------------------------------------------------------------------------------------------------
+-- Sequence tab formspec
 
 -- Recursively builds a formspec representation. Dropdowns and buttons are indexed with : delimiters, eg:
 --:1
@@ -68,42 +76,150 @@ end
 --:3
 local create_sequence_list
 create_sequence_list = function(sequence_in, list_out, root_index, x, y)
+	if sequence_in == nil then
+		minetest.log("error", "[Digtron] create_sequence_list was given a nil sequence_in parameter")
+		return y
+	end
 	root_index = root_index or ""
 	x = x or 0
 	y = y or 0
-	
 	for i, val in ipairs(sequence_in) do
 		local index = root_index .. ":" .. i
-		local line = "dropdown[".. x ..","..y..";1.5;sequencer_com"..index..";"..sequencer_dropdown_list..";"
-			..sequencer_dropdown_order_reverse[val.cmd].."]field["
-			.. x+1.75 ..",".. y+0.25 ..";1,1;sequencer_cnt"..index..";;"..val.cnt.."]"..
-			"field_close_on_enter[sequencer_cnt_"..i..";false]"..
-			"button[".. x+ 2.375 .. ","..y-0.0625 ..";1,1;sequencer_del"..index..";"..S("Delete").."]"
+		if val.cur == 0 then
+			table.insert(list_out, "box[" .. x+2.6 .. "," .. y .. ";0.7,0.5;#FF000088]")
+		end
+		
+		table.insert(list_out, "dropdown[".. x ..","..y..";1.75,0.5;sequencer_com"..index..";"..sequencer_dropdown_list..";"
+			.. sequencer_dropdown_order_reverse[val.cmd].."]field["
+			.. x+1.8 ..",".. y ..";0.75,0.5;sequencer_cnt"..index..";;"..val.cnt.."]"
+			.. "field_close_on_enter[sequencer_cnt"..index..";false]"
+			.. "label[".. x+2.65 .."," .. y+0.25 .. ";" .. S("@1 left", val.cur) .. "]"
+			.. "button[".. x+3.3 .. ","..y ..";0.75,0.5;sequencer_del"..index..";"..S("Delete").."]")
 		if val.cmd == "seq" then
-			line = line .. "button[".. x+3.25 ..","..y-0.0625 ..";1,1;sequencer_ins"..index..";"..S("Insert").."]"
-			table.insert(list_out, line)
-			y = y + 0.8
+			table.insert(list_out, "button[".. x+4.1 ..","..y ..";0.75,0.5;sequencer_ins"..index..";"..S("Insert").."]")
+			y = y + 0.6
 			-- Recurse into sub-sequence
-			y = create_sequence_list(val.seq, list_out, index, x+0.5, y)
+			y = create_sequence_list(val.seq, list_out, index, x+0.25, y)
 		else
-			table.insert(list_out, line)
-			y = y + 0.8
+			y = y + 0.6
 		end
 	end
-
 	return y
 end
 
--- all field prefixes in the above create_sequence_list should be of this length
-local sequencer_field_length = string.len("sequencer_com:")
+local sequence_tab = function(digtron_id)
+	local sequence = digtron.get_sequence(digtron_id)
+	local list_out = {"size[5.75,6.75]"
+		.. position_and_anchor
+		.. "real_coordinates[true]"
+		
+		.. "container[0.2,0.2]"
+		.. "field[0,0.1;0.7,0.5;cycles;"..S("Cycles")..";" .. sequence.cnt .."]"
+		.. "field_close_on_enter[cycles;false]"
+	}
+	if sequence.cur == 0 then
+		table.insert(list_out, "box[0.75,0.1;0.7,0.5;#FF000088]")
+	end	
+	table.insert(list_out,
+		"label[0.8,0.35;" .. S("@1 left", sequence.cur) .."]"
+		.. "button[1.5,0.1;1,0.5;execute;"..S("Execute").."]" -- TODO pause
+		.. "button[2.5,0.1;1,0.5;reset;"..S("Reset").."]"
+		.. "container_end[]"
+		.. "container[0.2,1]"
+	)
+	local y = create_sequence_list(sequence.seq, list_out)
+	table.insert(list_out,
+		"button[0,".. y ..";1,0.5;sequencer_insert_end;"..S("New\nCommand").."]"
+		.. "container_end[]"
+	)
+	return table.concat(list_out)
+end
 
+-----------------------------------------------------------------------------------------
+--- Maniupulating sequences
+
+-- searches down through the sequence tree to find the next command that can be executed
+local find_next_item_to_execute = function(sequence)
+	local target = sequence
+	while target and target.cur > 0 do
+		if target.cmd ~= "seq" then
+			return target
+		else
+			local found = false
+			for i, command in ipairs(target.seq) do
+				if command.cur > 0 then
+					target = command
+					found = true
+					break
+				end
+			end
+			if not found then return nil end -- TODO whoops! Didn't reset a sequence or something
+		end
+	end
+end
+
+-- recurses down through the sequence tree to modify the current counts of sequence items
+-- with target_item having just been executed.
+local decrement_sequence
+decrement_sequence = function(sequence, target_item)
+	local found = false
+	for i, command in ipairs(sequence.seq) do
+		if found then
+			-- there's further items in the curent sequence's list after the target_item,
+			-- return without decrementing its parent
+			return "found"
+		elseif command == target_item then
+			target_item.cur = target_item.cur - 1
+			found = true
+		elseif command.cmd == "seq" then
+			local subsequence_result = decrement_sequence(command, target_item)
+			if subsequence_result == "decrement_parent" then
+				-- the item was in the subsequence and the subsequence's list of commands are finished
+				-- so decrement the subsequence and reset its constituents
+				command.cur = command.cur - 1
+				for _, subcommand in ipairs(command.seq) do
+					subcommand.cur = subcommand.cnt
+				end
+				found = true
+				target_item = command
+			end
+		end
+	end
+	if found and target_item.cur == 0 then
+		-- the item was found and was the last in the list and it's at 0.
+		-- Tell the previous call that it needs to decrement its sequence count.
+		return "decrement_parent"
+	end
+end
+
+local reset_sequence
+reset_sequence = function(sequence)
+	for _, command in ipairs(sequence.seq) do
+		command.cur = command.cnt
+		if command.cmd == "seq" then
+			reset_sequence(command)
+		end
+	end
+end
+
+----------------------------------------------------------------------------------------------
+-- Finding, adding, removing
+
+-- all field prefixes in the above create_sequence_list should be of this length
+-- saves computation in trying to find the index part of the field name
+local sequencer_field_length = string.len("sequencer_com:")
+-- find an item based on the index string at the end of its field
 local find_item = function(field, sequence)
 	local index_list = field:sub(sequencer_field_length+1):split(":")
-	local target = {seq = sequence}
+	local target = sequence
 	for i = 1, #index_list do
-		target = target.seq[tonumber(index_list[i])]
+		if target.seq then
+			target = target.seq[tonumber(index_list[i])]
+		else
+			return nil
+		end
 		if target == nil then
-			minetest.log("error", "[Digtron] find_item failed to find a sequence item.")
+			--minetest.log("error", "[Digtron] find_item failed to find a sequence item.")
 			return nil
 		end
 	end
@@ -112,7 +228,7 @@ end
 
 local delete_item = function(field, sequence)
 	local index_list = field:sub(sequencer_field_length+1):split(":")
-	local target = {seq = sequence}
+	local target = sequence
 	for i = 1, #index_list-1 do
 		target = target.seq[tonumber(index_list[i])]
 		if target == nil then
@@ -126,12 +242,12 @@ end
 -- recurses through sequences ensuring there are tables for seq commands
 local clean_subsequences
 clean_subsequences = function(sequence)
-	for i, val in ipairs(sequence) do
+	for i, val in ipairs(sequence.seq) do
 		if val.cmd == "seq" then
 			if val.seq == nil then
 				val.seq = {}
 			else
-				clean_subsequences(val.seq)
+				clean_subsequences(val)
 			end
 		else
 			val.seq = nil
@@ -139,21 +255,29 @@ clean_subsequences = function(sequence)
 	end
 end
 
+-- Handles returned fields for the sequence tab
 local update_sequence = function(digtron_id, fields)
 	local sequence = digtron.get_sequence(digtron_id)
 	local delete_field = nil
-	local insert_field = nil
+	local insert_field = nil	
 	for field, value in pairs(fields) do
+		-- Go through all fields submitted to find the ones that are for changing commands in the sequence list	
 		local command_type = field:sub(1,sequencer_field_length)
 		if command_type == "sequencer_com:" then
 			local seq_item = find_item(field, sequence)
-			seq_item.cmd = sequencer_commands_reverse[value]
+			local new_cmd = sequencer_commands_reverse[value]
+			if seq_item.cmd ~= new_cmd then
+				seq_item.cmd = new_cmd
+			end			
 		elseif command_type == "sequencer_cnt:" then
 			local val_int = tonumber(value)
 			if val_int then
 				val_int = math.floor(val_int)
 				local seq_item = find_item(field, sequence)
-				seq_item.cnt = val_int
+				if seq_item.cnt ~= val_int then
+					seq_item.cnt = val_int
+					seq_item.cur = val_int
+				end
 			end
 				
 		--Save these to do last so as to not invalidate indices
@@ -173,18 +297,144 @@ local update_sequence = function(digtron_id, fields)
 	
 	if insert_field then
 		local item = find_item(insert_field, sequence)
-		table.insert(item.seq, {cmd="dmb",cnt=1})
+		-- adds a "dig move build" command as the default new item
+		item.seq = item.seq or {} -- just in case something went wrong with clean_subsequence
+		table.insert(item.seq, {cmd="dmb",cnt=1,cur=1})
 	elseif delete_field then
 		delete_item(delete_field, sequence)
 	end
 	
 	if fields.sequencer_insert_end then
-		table.insert(sequence, {cmd="dmb",cnt=1})
+		-- adds a "dig move build" command as the default new item
+		table.insert(sequence.seq, {cmd="dmb",cnt=1,cur=1})
 	end
 	
-	clean_subsequences(sequence) -- if commands were changed to or away from "seq", ensure they have a .seq member
+	if fields.cycles then
+		local new_cycles = tonumber(fields.cycles)
+		if new_cycles ~= nil then
+			new_cycles = math.floor(new_cycles)
+			if new_cycles ~= sequence.cnt then
+				sequence.cnt = new_cycles
+				sequence.cur = sequence.cnt
+			end
+		end
+	end
+	
+	if fields.execute and sequence.cur > 0 then
+		local target = find_next_item_to_execute(sequence)
+		local decrement_result = decrement_sequence(sequence, target)
+		if decrement_result == "decrement_parent" then
+			sequence.cur = sequence.cur - 1
+			reset_sequence(sequence)
+		end
+	end
+	
+	if fields.reset then
+		reset_sequence(sequence)
+		sequence.cur = sequence.cnt
+	end
+	
+	clean_subsequences(sequence) -- if commands were changed to or away from "seq", ensure they have the right .seq member
 	digtron.set_sequence(digtron_id, sequence)
 end
+
+-------------------------------------------------------------------------------------------------------
+-- Controls tab
+
+local controls_tab = function(digtron_id)
+	local sequence = digtron.get_sequence(digtron_id)
+	return "size[4.2,5]"
+		.. position_and_anchor
+		.. "container[0,0]"
+		.. "button[0,0;1,1;disassemble;"..S("Disassemble").."]"
+		.. "field[1.2,0.3;1.75,1;digtron_name;"..S("Digtron name")..";"
+		.. minetest.formspec_escape(digtron.get_name(digtron_id)).."]"
+		.. "field_close_on_enter[digtron_name;false]"
+		.. "field[2.9,0.3;0.7,1;cycles;"..S("Cycles")..";" .. sequence.cnt .."]"
+		.. "label[3.2,0.3;" .. S("@1 left", sequence.cur) .."]"
+		.. "button[3.5,0;1,1;execute;"..S("Execute").."]"
+		.. "container_end[]"
+		
+		.. "container[0,1]"
+		.. "box[0,0;4,2;#DDDDDD]"
+		.. "label[1.8,0.825;"..S("Move").."]"
+		.. "button[1.1,0.1;1,1;move_up;"..S("Up").."]"
+		.. "button[1.1,1.1;1,1;move_down;"..S("Down").."]"
+		.. "button[2.1,0.1;1,1;move_forward;"..S("Forward").."]"
+		.. "button[2.1,1.1;1,1;move_back;"..S("Back").."]"
+		.. "button[0.1,0.6;1,1;move_left;"..S("Left").."]"
+		.. "button[3.1,0.6;1,1;move_right;"..S("Right").."]"
+		.. "container_end[]"
+
+		.. "container[0.5,3.2]"
+		.. "box[0,0;3,2;#DDDDDD]"
+		.. "label[1.3,0.825;"..S("Rotate").."]"
+		.. "button[0.1,0.1;1,1;rot_counterclockwise;"..S("Roll\nWiddershins").."]"
+		.. "button[2.1,0.1;1,1;rot_clockwise;"..S("Roll\nClockwise").."]"
+		.. "button[1.1,0.1;1,1;rot_up;"..S("Pitch Up").."]"
+		.. "button[1.1,1.1;1,1;rot_down;"..S("Pitch Down").."]"
+		.. "button[0.1,1.1;1,1;rot_left;"..S("Yaw Left").."]"
+		.. "button[2.1,1.1;1,1;rot_right;"..S("Yaw Right").."]"
+		.. "container_end[]"
+
+end
+
+local update_controls = function(digtron_id, player_name, formname, facedir, fields)
+	local refresh = false
+
+	if fields.disassemble then
+		local pos = digtron.disassemble(digtron_id, player_name)
+		minetest.close_formspec(player_name, formname)
+	end
+	
+	-- Translation
+	if fields.move_forward then
+		digtron.move(digtron_id, vector.add(pos, digtron.facedir_to_dir(facedir)), player_name)
+	elseif fields.move_back then
+		digtron.move(digtron_id, vector.add(pos, vector.multiply(digtron.facedir_to_dir(facedir), -1)), player_name)
+	elseif fields.move_up then
+		digtron.move(digtron_id, vector.add(pos, digtron.facedir_to_up(facedir)), player_name)
+	elseif fields.move_down then
+		digtron.move(digtron_id, vector.add(pos, vector.multiply(digtron.facedir_to_up(facedir), -1)), player_name)
+	elseif fields.move_left then
+		digtron.move(digtron_id, vector.add(pos, vector.multiply(digtron.facedir_to_right(facedir), -1)), player_name)
+	elseif fields.move_right then
+		digtron.move(digtron_id, vector.add(pos, digtron.facedir_to_right(facedir)), player_name)
+	-- Rotation	
+	elseif fields.rot_counterclockwise then
+		digtron.rotate(digtron_id, vector.multiply(digtron.facedir_to_dir(facedir), -1), player_name)
+	elseif fields.rot_clockwise then
+		digtron.rotate(digtron_id, digtron.facedir_to_dir(facedir), player_name)
+	elseif fields.rot_up then
+		digtron.rotate(digtron_id, digtron.facedir_to_right(facedir), player_name)
+	elseif fields.rot_down then
+		digtron.rotate(digtron_id, vector.multiply(digtron.facedir_to_right(facedir), -1), player_name)
+	elseif fields.rot_left then
+		digtron.rotate(digtron_id, vector.multiply(digtron.facedir_to_up(facedir), -1), player_name)
+	elseif fields.rot_right then
+		digtron.rotate(digtron_id, digtron.facedir_to_up(facedir), player_name)
+	end
+
+	if fields.execute then
+		digtron.execute_dig_move_build_cycle(digtron_id, player_name)
+		refresh = true
+	end
+	
+	if fields.key_enter_field == "digtron_name" or fields.digtron_name then
+		local pos = digtron.get_pos(digtron_id)
+		if pos then
+			local meta = minetest.get_meta(pos)
+			meta:set_string("infotext", fields.digtron_name)
+			digtron.set_name(digtron_id, fields.digtron_name)
+			refresh = true
+		end
+	end
+
+	return refresh
+end
+
+------------------------------------------------------------------------------------------------------
+
 
 -- This allows us to know which digtron the player has a formspec open for without
 -- sending the digtron_id over the network
@@ -216,8 +466,6 @@ local get_controller_assembled_formspec = function(digtron_id, player_name)
 		context.current_tab = 1
 	end
 
-	local position_and_anchor = "position[0.025,0.1]anchor[0,0]"
-
 	local tabs = "tabheader[0,0;tab_header;"..S("Controls")..","..S("Sequence")
 	for _, tab in ipairs(context.tabs) do
 		tabs = tabs .. "," .. listname_to_title[tab.listname] or tab.listname
@@ -246,57 +494,11 @@ local get_controller_assembled_formspec = function(digtron_id, player_name)
 			.. "listring[current_player;main]"
 			.. "listring[detached:" .. digtron_id .. ";"..inv_list.."]"
 	end
-	
-	local sequence_tab = function()
-		local sequence = digtron.get_sequence(digtron_id)
-		local list_out = {}
-		local y = create_sequence_list(sequence, list_out)
-		return "size[4.2,5]"
-			.. position_and_anchor
-			.. "container[0,0]"
-			.. table.concat(list_out)
-			.. "button[0,"..y-0.0625 ..";1,1;sequencer_insert_end;"..S("New\nCommand").."]"
-			.. "container_end[]"
-	end
-	
-	local controls = "size[4.2,5]"
-		.. position_and_anchor
-		.. "container[0,0]"
-		.. "button[0,0;1,1;disassemble;"..S("Disassemble").."]"
-		.. "field[1.2,0.3;1.75,1;digtron_name;"..S("Digtron name")..";"
-		.. minetest.formspec_escape(digtron.get_name(digtron_id)).."]"
-		.. "field_close_on_enter[digtron_name;false]"
-		.. "field[2.9,0.3;0.7,1;cycles;"..S("Cycles")..";1]" -- TODO persist, actually use
-		.. "button[3.2,0;1,1;execute;"..S("Execute").."]"
-		.. "button[3.7,0;1,1;execute_down;Dig Down]" -- TODO: for testing purposes only, remove once sequences actually work
-		.. "container_end[]"
-		
-		.. "container[0,1]"
-		.. "box[0,0;4,2;#DDDDDD]"
-		.. "label[1.8,0.825;"..S("Move").."]"
-		.. "button[1.1,0.1;1,1;move_up;"..S("Up").."]"
-		.. "button[1.1,1.1;1,1;move_down;"..S("Down").."]"
-		.. "button[2.1,0.1;1,1;move_forward;"..S("Forward").."]"
-		.. "button[2.1,1.1;1,1;move_back;"..S("Back").."]"
-		.. "button[0.1,0.6;1,1;move_left;"..S("Left").."]"
-		.. "button[3.1,0.6;1,1;move_right;"..S("Right").."]"
-		.. "container_end[]"
-
-		.. "container[0.5,3.2]"
-		.. "box[0,0;3,2;#DDDDDD]"
-		.. "label[1.3,0.825;"..S("Rotate").."]"
-		.. "button[0.1,0.1;1,1;rot_counterclockwise;"..S("Roll\nWiddershins").."]"
-		.. "button[2.1,0.1;1,1;rot_clockwise;"..S("Roll\nClockwise").."]"
-		.. "button[1.1,0.1;1,1;rot_up;"..S("Pitch Up").."]"
-		.. "button[1.1,1.1;1,1;rot_down;"..S("Pitch Down").."]"
-		.. "button[0.1,1.1;1,1;rot_left;"..S("Yaw Left").."]"
-		.. "button[2.1,1.1;1,1;rot_right;"..S("Yaw Right").."]"
-		.. "container_end[]"
-		
+			
 	if context.current_tab == 1 then
-		return controls .. tabs
+		return controls_tab(digtron_id) .. tabs
 	elseif context.current_tab == 2 then
-		return sequence_tab() .. tabs
+		return sequence_tab(digtron_id) .. tabs
 	else
 		local inv_tab_context = context.tabs[context.current_tab - 2]
 		return inv_tab(inv_tab_context) .. tabs
@@ -349,57 +551,8 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 
 	if current_tab == 1 then
 		-- Controls
-		if fields.disassemble then
-			local pos = digtron.disassemble(digtron_id, player_name)
-			minetest.close_formspec(player_name, formname)
-		end
-		
-		local facedir = node.param2
-		-- Translation
-		if fields.move_forward then
-			digtron.move(digtron_id, vector.add(pos, digtron.facedir_to_dir(facedir)), player_name)
-		elseif fields.move_back then
-			digtron.move(digtron_id, vector.add(pos, vector.multiply(digtron.facedir_to_dir(facedir), -1)), player_name)
-		elseif fields.move_up then
-			digtron.move(digtron_id, vector.add(pos, digtron.facedir_to_up(facedir)), player_name)
-		elseif fields.move_down then
-			digtron.move(digtron_id, vector.add(pos, vector.multiply(digtron.facedir_to_up(facedir), -1)), player_name)
-		elseif fields.move_left then
-			digtron.move(digtron_id, vector.add(pos, vector.multiply(digtron.facedir_to_right(facedir), -1)), player_name)
-		elseif fields.move_right then
-			digtron.move(digtron_id, vector.add(pos, digtron.facedir_to_right(facedir)), player_name)
-		-- Rotation	
-		elseif fields.rot_counterclockwise then
-			digtron.rotate(digtron_id, vector.multiply(digtron.facedir_to_dir(facedir), -1), player_name)
-		elseif fields.rot_clockwise then
-			digtron.rotate(digtron_id, digtron.facedir_to_dir(facedir), player_name)
-		elseif fields.rot_up then
-			digtron.rotate(digtron_id, digtron.facedir_to_right(facedir), player_name)
-		elseif fields.rot_down then
-			digtron.rotate(digtron_id, vector.multiply(digtron.facedir_to_right(facedir), -1), player_name)
-		elseif fields.rot_left then
-			digtron.rotate(digtron_id, vector.multiply(digtron.facedir_to_up(facedir), -1), player_name)
-		elseif fields.rot_right then
-			digtron.rotate(digtron_id, digtron.facedir_to_up(facedir), player_name)
-		end
-	
-		if fields.execute then
-			digtron.execute_dig_move_build_cycle(digtron_id, player_name)
-		end
-		
-		if fields.execute_down then
-			digtron.execute_dig_move_build_cycle(digtron_id, player_name, true)
-		end
-		
-		if fields.key_enter_field == "digtron_name" or fields.digtron_name then
-			local pos = digtron.get_pos(digtron_id)
-			if pos then
-				local meta = minetest.get_meta(pos)
-				meta:set_string("infotext", fields.digtron_name)
-				digtron.set_name(digtron_id, fields.digtron_name)
-			end
-		end
-		
+		refresh = update_controls(digtron_id, player_name, formname, node.param2, fields)
+
 	elseif current_tab == 2 then
 		--Sequencer
 		update_sequence(digtron_id, fields)
