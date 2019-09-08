@@ -444,7 +444,7 @@ local controls_tab = function(digtron_id)
 	return "size[4.2,5]"
 		.. position_and_anchor
 		.. "container[0,0]"
-		.. "button[0,0;1,1;disassemble;"..S("Disassemble").."]"
+		.. "button_exit[0,0;1,1;disassemble;"..S("Disassemble").."]"
 		.. "field[1.2,0.3;1.75,1;digtron_name;"..S("Digtron name")..";"
 		.. minetest.formspec_escape(digtron.get_name(digtron_id)).."]"
 		.. "field_close_on_enter[digtron_name;false]"
@@ -476,12 +476,11 @@ local controls_tab = function(digtron_id)
 		.. "container_end[]"
 end
 
-local update_controls = function(digtron_id, pos, player_name, formname, facedir, fields)
+local update_controls = function(digtron_id, pos, player_name, facedir, fields)
 	local refresh = false
 
 	if fields.disassemble then
 		local pos = digtron.disassemble(digtron_id, player_name)
-		minetest.close_formspec(player_name, formname)
 	end
 	
 	local cycles = math.max(math.floor(tonumber(fields.cycles) or 1), 1)
@@ -651,7 +650,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 
 	if current_tab == 1 then
 		-- Controls
-		refresh = update_controls(digtron_id, pos, player_name, formname, node.param2, fields)
+		refresh = update_controls(digtron_id, pos, player_name, node.param2, fields)
 
 	elseif current_tab == 2 then
 		--Sequencer
