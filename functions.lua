@@ -44,7 +44,9 @@ local damage_creatures = function(root_pos, punch_data, items_dropped)
 						lua_entity.itemstring = ""
 						obj:remove()
 					else
-						lua_entity:add_velocity(dir)
+						if lua_entity.add_velocity then
+							lua_entity:add_velocity(dir)
+						end
 						obj:set_hp(math.max(obj:get_hp() - damage_hp*armour_multiplier, 0))
 					end
 				end
@@ -992,6 +994,7 @@ local predict_build = function(digtron_id, root_pos, player_name, ignore_nodes, 
 		local periodicity_permitted = nil
 		for i = 1, builder_data.extrusion do
 			local target_pos = vector.add(minetest.get_position_from_hash(target_hash + i * dir_hash), root_pos)
+			local test_hash = minetest.hash_node_position(target_pos)
 			if periodicity_permitted == nil then
 				-- test periodicity and offset once
 				periodicity_permitted = (target_pos[controlling_coordinate] + builder_data.offset) % builder_data.period == 0
@@ -1003,7 +1006,7 @@ local predict_build = function(digtron_id, root_pos, player_name, ignore_nodes, 
 			local target_name = target_node.name
 			local targetdef = minetest.registered_nodes[target_name]
 			if
-				ignore_hashes[target_hash] or
+				ignore_hashes[test_hash] or
 				(targetdef ~= nil
 					and targetdef.buildable_to
 					and not protection_check(target_pos, player_name)
@@ -1031,7 +1034,6 @@ local predict_build = function(digtron_id, root_pos, player_name, ignore_nodes, 
 			end
 		end
 	end
-	
 	return missing_items, built_nodes, cost
 end
 

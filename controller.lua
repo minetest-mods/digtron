@@ -557,6 +557,7 @@ end
 -- This allows us to know which digtron the player has a formspec open for without
 -- sending the digtron_id over the network
 local player_interacting_with_digtron_id = {}
+-- Call this when the player opens a formspec to initialize these values
 local player_opening_formspec = function(digtron_id, player_name)
 	local context = player_interacting_with_digtron_id[player_name] or {}
 	context.digtron_id = digtron_id
@@ -629,9 +630,11 @@ local get_controller_assembled_formspec = function(digtron_id, player_name)
 	end
 end
 
+-- For now, only refresh the UI if it's open to tab 2 (the sequencer). Other tabs
+-- don't have things that are changed "on the fly" by Digtron operation.
 refresh_open_formspec = function(digtron_id)
 	for player_name, context in pairs(player_interacting_with_digtron_id) do
-		if context.open and context.digtron_id == digtron_id then
+		if context.open and context.digtron_id == digtron_id and context.current_tab == 2 then
 			minetest.show_formspec(player_name,
 				"digtron:controller_assembled",
 				get_controller_assembled_formspec(digtron_id, player_name))
