@@ -128,6 +128,7 @@ local builder_on_rightclick = function(pos, node, clicker, itemstack, pointed_th
 	if digtron_id ~= "" then
 		minetest.sound_play({name = "digtron_error", gain = 0.1}, {to_player=player_name})
 		minetest.chat_send_player(player_name, S("This Digtron is active, interact with it via the controller node."))
+		digtron.update_builder_items(digtron_id)
 		return
 	end
 	

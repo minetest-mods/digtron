@@ -158,6 +158,7 @@ digtron.remove_builder_item = function(pos)
 	end
 end
 
+-- Used by unassembled builders
 digtron.update_builder_item = function(pos)
 	local node = minetest.get_node(pos)
 	if minetest.get_node_group(node.name, "digtron") ~= 4 then
@@ -169,7 +170,27 @@ digtron.update_builder_item = function(pos)
 	local item = meta:get_string("item")
 	if item ~= "" then
 		digtron.create_builder_item = item
-		minetest.add_entity(target_pos,"digtron:builder_item")
+		safe_add_entity(target_pos,"digtron:builder_item")
+	end
+end
+
+-- Updates entire Digtron
+digtron.update_builder_items = function(digtron_id)
+	local layout = digtron.get_layout(digtron_id)
+	local root_pos = digtron.get_pos(digtron_id)
+	
+	for hash, data in pairs(layout) do
+		local node = data.node
+		if minetest.get_node_group(node.name, "digtron") == 4 then
+			local item = data.meta.fields.item
+			local pos = vector.add(minetest.get_position_from_hash(hash), root_pos)
+			local target_pos = vector.add(pos, minetest.facedir_to_dir(node.param2))
+			digtron.remove_builder_item(target_pos)
+			if item ~= "" then
+				digtron.create_builder_item = item
+				safe_add_entity(target_pos,"digtron:builder_item")
+			end			
+		end	
 	end
 end
 

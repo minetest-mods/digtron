@@ -14,10 +14,10 @@ local listname_to_title =
 
 -- Sequencer commands
 -- Yes, this indexing scheme is complicated. It's necessary in order to make sequences
--- language-agnostic, and saves a bit of storage space in the process by shortening and 
+-- language-agnostic, and saves a bit of storage space in the process by shortening and
 -- standardizing command tags.
 -- Also makes it future-proof, we can add new commands without disrupting existing stored sequences
-local sequencer_commands = 
+local sequencer_commands =
 {
 	seq = S("Sequence"),
 	dmb = S("Dig Move Build"),
@@ -37,7 +37,7 @@ local sequencer_commands =
 }
 
 -- This sets the order in which they'll be shown on the dropdown menu
-local sequencer_dropdown_order = 
+local sequencer_dropdown_order =
 {
 	"seq", "dmb", "dmd", "mup", "mdn", "mlt", "mrt", "mfw", "mbk", "rlt", "rrt", "rup", "rdn", "rcl", "rcc"
 }

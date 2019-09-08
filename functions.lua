@@ -191,7 +191,6 @@ end
 local persist_layout, retrieve_layout = get_table_functions("layout")
 local persist_pos, retrieve_pos, dispose_pos = get_table_functions("pos")
 local persist_sequence, retrieve_sequence = get_table_functions("sequence")
-local persist_step, retrieve_step = get_table_functions("step") -- actually just an integer, but table_functions works for that too
 
 -------------------------------------------------------------------------------------------------------
 -- Layout creation helpers
@@ -1383,8 +1382,6 @@ digtron.get_bounding_box = retrieve_bounding_box
 digtron.get_inventory = retrieve_inventory
 digtron.set_sequence = persist_sequence
 digtron.get_sequence = retrieve_sequence
-digtron.set_step = persist_step
-digtron.get_step = retrieve_step
 
 -- Used by duplicator
 digtron.get_layout = retrieve_layout
