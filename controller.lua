@@ -205,6 +205,9 @@ local is_cycling = function(digtron_id)
 	return cycling_digtrons[digtron_id] ~= nil
 end
 
+local execute_command
+local refresh_open_formspec
+
 local command_functions = {
 	mup = function(digtron_id, pos, facedir, player_name)
 		return digtron.move(digtron_id, vector.add(pos, digtron.facedir_to_up(facedir)), player_name) end,
@@ -235,12 +238,26 @@ local command_functions = {
 	dmd = function(digtron_id, pos, facedir, player_name)
 		return digtron.execute_dig_move_build_cycle(digtron_id, player_name, true) end,
 	seq = function(digtron_id, pos, facedir, player_name)
-		minetest.chat_send_all("Seq!") -- TODO
-		return true
+		local sequence = digtron.get_sequence(digtron_id)
+		local target = find_next_item_to_execute(sequence)
+		if target == nil then
+			return false
+		end
+		local success = execute_command(digtron_id, target.cmd, player_name)
+		if success then
+			local decrement_result = decrement_sequence(sequence, target)
+			if decrement_result == "decrement_parent" then
+				sequence.cur = sequence.cur - 1
+				reset_sequence(sequence)
+			end		
+			return true
+		else
+			return false
+		end
 	end
 }
 
-local execute_command = function(digtron_id, command, player_name)
+execute_command = function(digtron_id, command, player_name)
 	local pos = digtron.get_pos(digtron_id)
 	local node = minetest.get_node(pos)
 	if node.name ~= "digtron:controller" then
@@ -266,7 +283,14 @@ minetest.register_globalstep(function(dtime)
 	for digtron_id, data in pairs(cycling_digtrons) do
 		if data.last_action < gametime then
 			local success = execute_command(digtron_id, data.command, data.player_name)
-			local new_count = data.count - 1
+			refresh_open_formspec(digtron_id)
+			local new_count = data.count
+			if data.command ~= "seq" then
+				-- It's somewhat hacky having two different counters,
+				-- but I'm getting tired of laborious elegance at this point.
+				-- sequences handle their own counters internally and that's fine.
+				new_count = new_count - 1
+			end
 			if new_count < 1 or not success then
 				table.insert(done_cycling, digtron_id)
 			else
@@ -353,7 +377,7 @@ local sequence_tab = function(digtron_id)
 end
 
 -- Handles returned fields for the sequence tab
-local update_sequence = function(digtron_id, fields)
+local update_sequence = function(digtron_id, fields, player_name)
 	local sequence = digtron.get_sequence(digtron_id)
 	local delete_field = nil
 	local insert_field = nil	
@@ -418,15 +442,11 @@ local update_sequence = function(digtron_id, fields)
 	end
 	
 	if fields.execute and sequence.cur > 0 then
-		local target = find_next_item_to_execute(sequence)
-		local decrement_result = decrement_sequence(sequence, target)
-		if decrement_result == "decrement_parent" then
-			sequence.cur = sequence.cur - 1
-			reset_sequence(sequence)
-		end
+		start_command(digtron_id, "seq", 1, player_name)
 	end
 	
 	if fields.reset then
+		cancel_command(digtron_id)
 		reset_sequence(sequence)
 		sequence.cur = sequence.cnt
 	end
@@ -438,7 +458,7 @@ end
 -------------------------------------------------------------------------------------------------------
 -- Controls tab
 
-local temp_cycles_cache = {} -- TODO
+local cycles_cache = {} -- TODO something's not saving right here
 
 local controls_tab = function(digtron_id)
 	return "size[4.2,5]"
@@ -448,7 +468,7 @@ local controls_tab = function(digtron_id)
 		.. "field[1.2,0.3;1.75,1;digtron_name;"..S("Digtron name")..";"
 		.. minetest.formspec_escape(digtron.get_name(digtron_id)).."]"
 		.. "field_close_on_enter[digtron_name;false]"
-		.. "field[2.9,0.3;0.7,1;cycles;"..S("Cycles")..";".. (temp_cycles_cache[digtron_id] or 1) .."]"
+		.. "field[2.9,0.3;0.7,1;cycles;"..S("Cycles")..";".. (cycles_cache[digtron_id] or 1) .."]"
 		.. "field_close_on_enter[cycles;false]"
 		.. "button[3.3,0;1,1;execute;"..S("Execute").."]"
 		.. "container_end[]"
@@ -484,7 +504,7 @@ local update_controls = function(digtron_id, pos, player_name, facedir, fields)
 	end
 	
 	local cycles = math.max(math.floor(tonumber(fields.cycles) or 1), 1)
-	temp_cycles_cache[digtron_id] = cycles
+	cycles_cache[digtron_id] = cycles
 	
 	-- Translation
 	if fields.move_forward then
@@ -534,10 +554,15 @@ end
 
 ------------------------------------------------------------------------------------------------------
 
-
 -- This allows us to know which digtron the player has a formspec open for without
 -- sending the digtron_id over the network
 local player_interacting_with_digtron_id = {}
+local player_opening_formspec = function(digtron_id, player_name)
+	local context = player_interacting_with_digtron_id[player_name] or {}
+	context.digtron_id = digtron_id
+	context.open = true
+	player_interacting_with_digtron_id[player_name] = context
+end
 
 local get_controller_assembled_formspec = function(digtron_id, player_name)
 	local context = player_interacting_with_digtron_id[player_name]
@@ -604,6 +629,16 @@ local get_controller_assembled_formspec = function(digtron_id, player_name)
 	end
 end
 
+refresh_open_formspec = function(digtron_id)
+	for player_name, context in pairs(player_interacting_with_digtron_id) do
+		if context.open and context.digtron_id == digtron_id then
+			minetest.show_formspec(player_name,
+				"digtron:controller_assembled",
+				get_controller_assembled_formspec(digtron_id, player_name))
+		end
+	end
+end
+
 -- Controlling a fully armed and operational Digtron
 minetest.register_on_player_receive_fields(function(player, formname, fields)
 	if formname ~= "digtron:controller_assembled" then
@@ -654,7 +689,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 
 	elseif current_tab == 2 then
 		--Sequencer
-		update_sequence(digtron_id, fields)
+		update_sequence(digtron_id, fields, player_name)
 		refresh = true
 	else -- inventory tabs
 		local tab_context = context.tabs[current_tab - 2]
@@ -670,6 +705,10 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 				refresh = true
 			end		
 		end	
+	end
+	
+	if fields.quit then
+		context.open = false
 	end
 	
 	if refresh then
@@ -746,7 +785,7 @@ minetest.register_node("digtron:controller_unassembled", combine_defs(base_def, 
 			local meta = minetest.get_meta(pos)
 			meta:set_string("digtron_id", digtron_id)
 			meta:mark_as_private("digtron_id")
-			player_interacting_with_digtron_id[player_name] = {digtron_id = digtron_id}
+			player_opening_formspec(digtron_id, player_name)
 			minetest.show_formspec(player_name,
 				"digtron:controller_assembled",
 				get_controller_assembled_formspec(digtron_id, player_name))
@@ -904,7 +943,7 @@ minetest.register_node("digtron:controller", combine_defs(base_def, {
 			end
 		end
 		
-		player_interacting_with_digtron_id[player_name] = {digtron_id = digtron_id}
+		player_opening_formspec(digtron_id, player_name)
 		minetest.show_formspec(player_name,
 			"digtron:controller_assembled",
 			get_controller_assembled_formspec(digtron_id, player_name))

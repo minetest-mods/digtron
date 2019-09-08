@@ -730,7 +730,7 @@ local move = function(digtron_id, dest_pos, player_name)
 		local removed = remove_from_world(digtron_id, player_name)
 		if removed then
 			build_to_world(digtron_id, layout, dest_pos, player_name)
-			minetest.sound_play("digtron_truck", {gain = 0.5, pos=dest_pos})
+			minetest.sound_play("digtron_engine", {gain = 0.5, pos=dest_pos})
 			for _, removed_pos in ipairs(removed) do
 				minetest.check_for_falling(removed_pos)
 			end

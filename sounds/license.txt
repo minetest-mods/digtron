@@ -12,6 +12,7 @@ digtron_whirr.ogg - https://www.freesound.org/people/daveincamas/sounds/25034/ -
 digtron_woopwoopwoop.ogg - https://www.freesound.org/people/gregconquest/sounds/188012/ public domain via CC 1.0 by gregconquest
 digtron_steam_puff.ogg - https://freesound.org/people/Aiwha/sounds/250703/ under the CC BY 3.0 license by Aiwha
 digtron_hydraulic.ogg - https://freesound.org/people/jesabat/sounds/119745/ under the CC BY 3.0 license by jesabat
+digtron_engine.ogg - https://freesound.org/people/NoiseCollector/sounds/55093/ under the CC BY 3.0 license by NoiseCollector
 
 Creative Commons Attribution 3.0 license:
 
