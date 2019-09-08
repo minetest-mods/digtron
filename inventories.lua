@@ -113,7 +113,8 @@ local get_predictive_inventory = function(digtron_id)
 	local existing = predictive_inventory[digtron_id]
 	if existing then return existing end
 	
-	local predictive_inv = minetest.create_detached_inventory("digtron_predictive_"..digtron_id, detached_inventory_callbacks)
+	-- Using digtron_id as the player_name parameter to prevent this from being sent on the network to anyone real.
+	local predictive_inv = minetest.create_detached_inventory("digtron_predictive_"..digtron_id, detached_inventory_callbacks, digtron_id)
 	predictive_inventory[digtron_id] = predictive_inv
 	local source_inv = retrieve_inventory(digtron_id)
 	

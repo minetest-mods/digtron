@@ -800,6 +800,7 @@ local rotate = function(digtron_id, axis, player_name)
 			for _, removed_pos in ipairs(removed) do
 				minetest.check_for_falling(removed_pos)
 			end
+			invalidate_layout_cache(digtron_id)
 		end
 		return true
 	else
