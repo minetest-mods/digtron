@@ -552,89 +552,102 @@ local update_controls = function(digtron_id, pos, player_name, facedir, fields)
 	return refresh
 end
 
+--------------------------------------------------------------------------------------------------
+-- Inventory tab formspec
+
+local inv_tab = function(digtron_id, inv_tab_context, player_context)
+	local inv_list = inv_tab_context.listname
+	local pages = inv_tab_context.pages
+	local current_page = player_context.inv_page[inv_list]
+	local starting_index = (current_page - 1) * 8 * 4
+	local paging_controls = ""
+	if pages > 1 then
+		paging_controls = "button[0,0;1,1;page_back;<<]"
+		.. "label[1.125,0.25;"..S("Page @1/@2", current_page, pages) .. "]"
+		.. "button[2,0;1,1;page_forward;>>]"
+	end
+	
+	return "size[8,9]"
+		.. position_and_anchor
+		.. "container[0,0]"
+		.. "list[detached:" .. digtron_id .. ";"..inv_list..";0,0;8,4;"..starting_index.."]"
+		.. "container_end[]"
+		.. "container[2.5,4]" .. paging_controls .. "container_end[]"
+		.. "container[0,5]list[current_player;main;0,0;8,1;]list[current_player;main;0,1.25;8,3;8]container_end[]"
+		.. "listring[current_player;main]"
+		.. "listring[detached:" .. digtron_id .. ";"..inv_list.."]"
+end
+
 ------------------------------------------------------------------------------------------------------
 
 -- This allows us to know which digtron the player has a formspec open for without
 -- sending the digtron_id over the network
 local player_interacting_with_digtron_id = {}
--- Call this when the player opens a formspec to initialize these values
-local player_opening_formspec = function(digtron_id, player_name)
-	local context = player_interacting_with_digtron_id[player_name] or {}
-	context.digtron_id = digtron_id
-	context.open = true
-	player_interacting_with_digtron_id[player_name] = context
+local get_context = function(digtron_id, player_name)
+	local digtron_context = player_interacting_with_digtron_id[digtron_id] or {players={}}
+	local player_context = digtron_context.players[player_name] or {current_tab = 1}
+	digtron_context.players[player_name] = player_context
+	player_interacting_with_digtron_id[digtron_id] = digtron_context
+	return player_context, digtron_context
 end
+local get_context_for_player = function(player_name)
+	for digtron_id, digtron_context in pairs(player_interacting_with_digtron_id) do
+		local player_context = digtron_context.players[player_name]
+		if player_context and player_context.open then
+			return player_context, digtron_context, digtron_id
+		end
+	end
+end
+-- TODO: dispose of cached digtron context when a digtron is disposed
 
 local get_controller_assembled_formspec = function(digtron_id, player_name)
-	local context = player_interacting_with_digtron_id[player_name]
-	if context == nil or context.digtron_id ~= digtron_id then
-		minetest.log("error", "[Digtron] get_controller_assembled_formspec was called for Digtron "
-			..digtron_id .. " by " .. player_name .. " but there was no context recorded or the context was"
-			.." for the wrong digtron. This shouldn't be possible.")
-		return ""
-	end
-	
+	local player_context, digtron_context = get_context(digtron_id, player_name)
 	local inv = digtron.get_inventory(digtron_id) -- ensures the detatched inventory exists and is populated
 	
-	-- TODO: will probably want a centralized cache for most of this, right now there's tons of redundancy
-	if context.tabs == nil then
-		context.tabs = {}
+	if digtron_context.tabs == nil then
+		digtron_context.tabs = {}
 		local lists = inv:get_lists()
 		for listname, contents in pairs(lists) do
-			table.insert(context.tabs, {
+			table.insert(digtron_context.tabs, {
 				tab_type = "inventory",
 				listname = listname,
 				size = #contents,
-				pages = math.floor(#contents/(8*4)) + 1,
-				current_page = 1})
+				pages = math.floor(#contents/(8*4)) + 1})
 		end
-		context.current_tab = 1
+	end
+	if player_context.inv_page == nil then
+		player_context.inv_page = {}
+		local lists = inv:get_lists()
+		for listname, contents in pairs(lists) do
+			player_context.inv_page[listname] = player_context.inv_page[listname] or 1
+		end
 	end
 
 	local tabs = "tabheader[0,0;tab_header;"..S("Controls")..","..S("Sequence")
-	for _, tab in ipairs(context.tabs) do
+	for _, tab in ipairs(digtron_context.tabs) do
 		tabs = tabs .. "," .. listname_to_title[tab.listname] or tab.listname
 	end
-	tabs = tabs .. ";" .. context.current_tab .. "]"
+	tabs = tabs .. ";" .. player_context.current_tab .. "]"
 	
-	local inv_tab = function(inv_tab_context)
-		local inv_list = inv_tab_context.listname
-		local pages = inv_tab_context.pages
-		local current_page = inv_tab_context.current_page
-		local starting_index = (current_page - 1) * 8 * 4
-		local paging_controls = ""
-		if pages > 1 then
-			paging_controls = "button[0,0;1,1;page_back;<<]"
-			.. "label[1.125,0.25;"..S("Page @1/@2", current_page, pages) .. "]"
-			.. "button[2,0;1,1;page_forward;>>]"
-		end
-		
-		return "size[8,9]"
-			.. position_and_anchor
-			.. "container[0,0]"
-			.. "list[detached:" .. digtron_id .. ";"..inv_list..";0,0;8,4;"..starting_index.."]"
-			.. "container_end[]"
-			.. "container[2.5,4]" .. paging_controls .. "container_end[]"
-			.. "container[0,5]list[current_player;main;0,0;8,1;]list[current_player;main;0,1.25;8,3;8]container_end[]"
-			.. "listring[current_player;main]"
-			.. "listring[detached:" .. digtron_id .. ";"..inv_list.."]"
-	end
-			
-	if context.current_tab == 1 then
+	if player_context.current_tab == 1 then
 		return controls_tab(digtron_id) .. tabs
-	elseif context.current_tab == 2 then
+	elseif player_context.current_tab == 2 then
 		return sequence_tab(digtron_id) .. tabs
 	else
-		local inv_tab_context = context.tabs[context.current_tab - 2]
-		return inv_tab(inv_tab_context) .. tabs
+		local inv_tab_context = digtron_context.tabs[player_context.current_tab - 2]
+		return inv_tab(digtron_id, inv_tab_context, player_context) .. tabs
 	end
 end
 
 -- For now, only refresh the UI if it's open to tab 2 (the sequencer). Other tabs
 -- don't have things that are changed "on the fly" by Digtron operation.
 refresh_open_formspec = function(digtron_id)
-	for player_name, context in pairs(player_interacting_with_digtron_id) do
-		if context.open and context.digtron_id == digtron_id and context.current_tab == 2 then
+	local digtron_context = player_interacting_with_digtron_id[digtron_id]
+	if digtron_context == nil then
+		return
+	end
+	for player_name, player_context in pairs(digtron_context.players) do
+		if player_context.open and player_context.current_tab == 2 then
 			minetest.show_formspec(player_name,
 				"digtron:controller_assembled",
 				get_controller_assembled_formspec(digtron_id, player_name))
@@ -650,14 +663,9 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 	local player_name = player:get_player_name()
 	
 	-- Get and validate various values
-	local context = player_interacting_with_digtron_id[player_name]
-	if context == nil then
+	local player_context, digtron_context, digtron_id = get_context_for_player(player_name)
+	if player_context == nil then
 		minetest.log("error", "[Digtron] player_interacting_with_digtron_id context not found for " .. player_name)
-		return
-	end
-	local digtron_id = context.digtron_id
-	if digtron_id == nil then
-		minetest.log("error", "[Digtron] player_interacting_with_digtron_id context had no digtron id for " .. player_name)
 		return
 	end
 	local pos = digtron.get_pos(digtron_id)
@@ -673,12 +681,12 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 		return
 	end
 
-	local current_tab = context.current_tab
+	local current_tab = player_context.current_tab
 	local refresh = false
 	if fields.tab_header then
 		local new_tab = tonumber(fields.tab_header)
-		if new_tab <= #(context.tabs) + 2 then
-			context.current_tab = new_tab
+		if new_tab <= #(digtron_context.tabs) + 2 then
+			player_context.current_tab = new_tab
 			refresh = true
 		else
 			minetest.log("error", "[Digtron] digtron:controller_assembled formspec returned the out-of-range tab index "
@@ -695,23 +703,24 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 		update_sequence(digtron_id, fields, player_name)
 		refresh = true
 	else -- inventory tabs
-		local tab_context = context.tabs[current_tab - 2]
+		local tab_context = digtron_context.tabs[current_tab - 2]
+		local current_page = player_context.inv_page[tab_context.listname]
 		if fields.page_forward then
-			if tab_context.current_page < tab_context.pages then
-				tab_context.current_page = tab_context.current_page + 1
+			if current_page < tab_context.pages then
+				player_context.inv_page[tab_context.listname] = current_page + 1
 				refresh = true
 			end
 		end
 		if fields.page_back then
-			if tab_context.current_page > 1 then
-				tab_context.current_page = tab_context.current_page - 1
+			if current_page > 1 then
+				player_context.inv_page[tab_context.listname] = current_page - 1
 				refresh = true
 			end		
 		end	
 	end
 	
 	if fields.quit then
-		context.open = false
+		player_context.open = false
 	end
 	
 	if refresh then
@@ -946,7 +955,8 @@ minetest.register_node("digtron:controller", combine_defs(base_def, {
 			end
 		end
 		
-		player_opening_formspec(digtron_id, player_name)
+		local player_context = get_context(digtron_id, player_name)
+		player_context.open = true
 		minetest.show_formspec(player_name,
 			"digtron:controller_assembled",
 			get_controller_assembled_formspec(digtron_id, player_name))
