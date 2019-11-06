@@ -95,6 +95,12 @@ local function test_stop_block(pos, items)
 	return false
 end
 
+local function check_digtron_size(layout)
+	if #layout.all > digtron.config.size_limit then
+		return S("Size limit of @1 reached with @2 nodes!", digtron.config.size_limit, #layout.all)
+	end
+end
+
 -- returns newpos, status string, and a return code indicating why the method returned (so the auto-controller can keep trying if it's due to unloaded nodes)
 -- 0 - success
 -- 1 - failed due to unloaded nodes
@@ -104,6 +110,7 @@ end
 -- 5 - unknown builder error during testing
 -- 6 - builder with unset output
 -- 7 - insufficient builder materials in inventory
+-- 8 - size/node limit reached
 digtron.execute_dig_cycle = function(pos, clicker)
 	local meta = minetest.get_meta(pos)
 	local facing = minetest.get_node(pos).param2
@@ -117,6 +124,11 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	local status_text, return_code = neighbour_test(layout, status_text, dir)
 	if return_code ~= 0 then
 		return pos, status_text, return_code
+	end
+
+	local size_check_error = check_digtron_size(layout)
+	if size_check_error then
+		return pos, size_check_error, 8
 	end
 	
 	local controlling_coordinate = digtron.get_controlling_coordinate(pos, facing)
@@ -405,6 +417,11 @@ digtron.execute_move_cycle = function(pos, clicker)
 		return pos, status_text, return_code
 	end
 
+	local size_check_error = check_digtron_size(layout)
+	if size_check_error then
+		return pos, size_check_error, 8
+	end
+
 	local facing = minetest.get_node(pos).param2
 	local dir = minetest.facedir_to_dir(facing)
 	local controlling_coordinate = digtron.get_controlling_coordinate(pos, facing)
@@ -459,6 +476,12 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 	if return_code ~= 0 then
 		return pos, status_text, return_code
 	end
+
+	local size_check_error = check_digtron_size(layout)
+	if size_check_error then
+		return pos, size_check_error, 8
+	end
+
 	
 	local controlling_coordinate = digtron.get_controlling_coordinate(pos, facing)
 	
@@ -532,7 +555,7 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 			local target = minetest.get_node(location.pos)
 			local targetdef = minetest.registered_nodes[target.name]
 			if targetdef.damage_creatures ~= nil then
-				targetdef.damage_creatures(clicker, location.pos, controlling_coordinate)
+				targetdef.damage_creatures(clicker, location.pos, controlling_coordinate, items_dropped)
 			end
 		end
 	end

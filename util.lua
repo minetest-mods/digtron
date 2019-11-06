@@ -312,6 +312,7 @@ digtron.update_builder_item = function(pos)
 	digtron.remove_builder_item(pos)
 	node_inventory_table.pos = pos
 	local inv = minetest.get_inventory(node_inventory_table)
+	if inv == nil or inv:get_size("main") < 1 then return end
 	local item_stack = inv:get_stack("main", 1)
 	if not item_stack:is_empty() then
 		digtron.create_builder_item = item_stack:get_name()
@@ -391,32 +392,45 @@ digtron.is_soft_material = function(target)
 	return false
 end
 
+-- If someone sets very large offsets or intervals for the offset markers they might be added too far
+-- away. safe_add_entity causes these attempts to be ignored rather than crashing the game.
+-- returns the entity if successful, nil otherwise
+function safe_add_entity(pos, name)
+	success, ret = pcall(minetest.add_entity, pos, name)
+	if success then return ret else return nil end
+end
+
 digtron.show_offset_markers = function(pos, offset, period)
 	local buildpos = digtron.find_new_pos(pos, minetest.get_node(pos).param2)
 	local x_pos = math.floor((buildpos.x+offset)/period)*period - offset
-	minetest.add_entity({x=x_pos, y=buildpos.y, z=buildpos.z}, "digtron:marker")
+	safe_add_entity({x=x_pos, y=buildpos.y, z=buildpos.z}, "digtron:marker")
 	if x_pos >= buildpos.x then
-		minetest.add_entity({x=x_pos - period, y=buildpos.y, z=buildpos.z}, "digtron:marker")
+		safe_add_entity({x=x_pos - period, y=buildpos.y, z=buildpos.z}, "digtron:marker")
 	end
 	if x_pos <= buildpos.x then
-		minetest.add_entity({x=x_pos + period, y=buildpos.y, z=buildpos.z}, "digtron:marker")
+		safe_add_entity({x=x_pos + period, y=buildpos.y, z=buildpos.z}, "digtron:marker")
 	end
 
 	local y_pos = math.floor((buildpos.y+offset)/period)*period - offset
-	minetest.add_entity({x=buildpos.x, y=y_pos, z=buildpos.z}, "digtron:marker_vertical")
+	safe_add_entity({x=buildpos.x, y=y_pos, z=buildpos.z}, "digtron:marker_vertical")
 	if y_pos >= buildpos.y then
-		minetest.add_entity({x=buildpos.x, y=y_pos - period, z=buildpos.z}, "digtron:marker_vertical")
+		safe_add_entity({x=buildpos.x, y=y_pos - period, z=buildpos.z}, "digtron:marker_vertical")
 	end
 	if y_pos <= buildpos.y then
-		minetest.add_entity({x=buildpos.x, y=y_pos + period, z=buildpos.z}, "digtron:marker_vertical")
+		safe_add_entity({x=buildpos.x, y=y_pos + period, z=buildpos.z}, "digtron:marker_vertical")
 	end
 
 	local z_pos = math.floor((buildpos.z+offset)/period)*period - offset
-	minetest.add_entity({x=buildpos.x, y=buildpos.y, z=z_pos}, "digtron:marker"):setyaw(1.5708)
+
+	local entity = safe_add_entity({x=buildpos.x, y=buildpos.y, z=z_pos}, "digtron:marker")
+	if entity ~= nil then entity:setyaw(1.5708) end
+	
 	if z_pos >= buildpos.z then
-		minetest.add_entity({x=buildpos.x, y=buildpos.y, z=z_pos - period}, "digtron:marker"):setyaw(1.5708)
+		local entity = safe_add_entity({x=buildpos.x, y=buildpos.y, z=z_pos - period}, "digtron:marker")
+		if entity ~= nil then entity:setyaw(1.5708) end
 	end
 	if z_pos <= buildpos.z then
-		minetest.add_entity({x=buildpos.x, y=buildpos.y, z=z_pos + period}, "digtron:marker"):setyaw(1.5708)
+		local entity = safe_add_entity({x=buildpos.x, y=buildpos.y, z=z_pos + period}, "digtron:marker")
+		if entity ~= nil then entity:setyaw(1.5708) end
 	end
 end

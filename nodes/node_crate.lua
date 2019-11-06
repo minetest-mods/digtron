@@ -50,12 +50,6 @@ local store_digtron = function(pos, clicker, loaded_node_name, protected)
 	
 	local layout_string = layout:serialize()
 	
-	if not layout_string or layout_string == "" then
-		minetest.sound_play("buzzer", {gain=0.5, pos=pos})
-		minetest.chat_send_player(clicker:get_player_name(), "Crating error: digtron is broken!")
-		return nil
-	end
-	
 	-- destroy everything. Note that this includes the empty crate, which will be bundled up with the layout.
 	for _, node_image in pairs(layout.all) do
 		local old_pos = node_image.pos
@@ -269,14 +263,11 @@ end
 
 local loaded_on_dig = function(pos, player, loaded_node_name)
 	local meta = minetest.get_meta(pos)
-	local to_serialize = {title=meta:get_string("title"), layout=meta:get_string("crated_layout")}
 	
-	if not meta:get_string("crated_layout") or meta:get_string("crated_layout") == "" then
-		minetest.sound_play("buzzer", {gain=0.5, pos=pos})
-		minetest.chat_send_player(player:get_player_name(), "Crating error: could not read contents!")
-	end
-	
-	local stack = ItemStack({name=loaded_node_name, count=1, wear=0, metadata=minetest.serialize(to_serialize)})
+	local stack = ItemStack({name=loaded_node_name, count=1, wear=0})
+	local stack_meta = stack:get_meta()
+	stack_meta:set_string("crated_layout", meta:get_string("crated_layout"))
+	stack_meta:set_string("description", meta:get_string("title"))
 	local inv = player:get_inventory()
 	local stack = inv:add_item("main", stack)
 	if stack:get_count() > 0 then
@@ -287,14 +278,28 @@ local loaded_on_dig = function(pos, player, loaded_node_name)
 end
 
 local loaded_after_place = function(pos, itemstack)
-	local deserialized = minetest.deserialize(itemstack:get_metadata())
-	if deserialized then
+
+	-- Older versions of Digtron used this deprecated method for saving layout data on items.
+	-- Maintain backward compatibility here.
+	local deprecated_metadata = itemstack:get_metadata()
+	if deprecated_metadata ~= "" then
+		deprecated_metadata = minetest.deserialize(deprecated_metadata)
+		local meta = minetest.get_meta(pos)
+		meta:set_string("crated_layout", deprecated_metadata.layout)
+		meta:set_string("title", deprecated_metadata.title)
+		meta:set_string("infotext", deprecated_metadata.title)
+		return
+	end
+
+	local stack_meta = itemstack:get_meta()
+	local layout = stack_meta:get_string("crated_layout")
+	local title = stack_meta:get_string("description")
+	if layout ~= "" then
 		local meta = minetest.get_meta(pos)
 			
-		meta:set_string("crated_layout", deserialized.layout)
-		meta:set_string("title", deserialized.title)
-		meta:set_string("infotext", deserialized.title)
-
+		meta:set_string("crated_layout", layout)
+		meta:set_string("title", title)
+		meta:set_string("infotext", title)
 		--meta:set_string("formspec", loaded_formspec(pos, meta)) -- not needed, on_construct handles this
 	end
 end
@@ -321,7 +326,7 @@ minetest.register_node("digtron:loaded_crate", {
 
 	on_dig = function(pos, node, player)
 		if player and not minetest.is_protected(pos, player:get_player_name()) then
-			loaded_on_dig(pos, player, "digtron:loaded_crate")
+			return loaded_on_dig(pos, player, "digtron:loaded_crate")
 		end
 	end,
 	
