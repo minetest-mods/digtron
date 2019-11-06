@@ -45,6 +45,26 @@ minetest.register_craft({
 			}
 })
 
+if minetest.get_modpath("technic") then
+	minetest.register_craft({
+		output = "digtron:master_builder",
+		recipe = {
+				{"","technic:control_logic_unit",""},
+				{"","digtron:digtron_core",""},
+				{"","",""}
+				}
+	})
+else
+	minetest.register_craft({
+		output = "digtron:master_builder",
+		recipe = {
+				{"","default:mese",""},
+				{"","digtron:digtron_core",""},
+				{"","",""}
+				}
+	})
+end
+
 minetest.register_craft({
 	output = "digtron:light",
 	recipe = {
