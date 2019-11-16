@@ -271,7 +271,9 @@ local loaded_on_dig = function(pos, player, loaded_node_name)
 	local inv = player:get_inventory()
 	local stack = inv:add_item("main", stack)
 	if stack:get_count() > 0 then
-		minetest.add_item(pos, stack)
+		-- prevent crash by not dropping loaded crate (see #44)
+		-- minetest.add_item(pos, stack)
+		return false
 	end		
 	-- call on_dignodes callback
 	minetest.remove_node(pos)
@@ -333,6 +335,7 @@ minetest.register_node("digtron:loaded_crate", {
 	after_place_node = function(pos, placer, itemstack, pointed_thing)
 		loaded_after_place(pos, itemstack)
 	end,
+	on_drop = function(a, b, c) end -- prevent dropping loaded digtrons, causing server to crash (see #44)
 })
 
 minetest.register_node("digtron:loaded_locked_crate", {
@@ -373,7 +376,8 @@ minetest.register_node("digtron:loaded_locked_crate", {
 				"digtron:loaded_locked_crate"..minetest.pos_to_string(pos),
 				loaded_formspec_string:gsub("${title}", meta:get_string("title"), 1))
 		end
-	end,	
+	end,
+	on_drop = function(a, b, c) end -- prevent dropping loaded digtrons, causing server to crash
 })
 
 minetest.register_on_player_receive_fields(function(player, formname, fields)
