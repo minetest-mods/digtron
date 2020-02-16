@@ -325,6 +325,9 @@ local damage_def = {
 	damage_groups = {},
 }
 digtron.damage_creatures = function(player, source_pos, target_pos, amount, items_dropped)
+	if type(player) ~= 'userdata' then
+		return
+	end
 	local objects = minetest.env:get_objects_inside_radius(target_pos, 1.0)
 	if objects ~= nil then
 		damage_def.damage_groups.fleshy = amount
