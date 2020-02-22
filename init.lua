@@ -1,6 +1,9 @@
 digtron = {}
 digtron.doc = {} -- TODO: move to doc file
 
+local modname = minetest.get_current_modname()
+digtron.S = minetest.get_translator(modname)
+
 -- A global dictionary is used here so that other substitutions can be added easily by other mods, if necessary
 digtron.builder_read_item_substitutions = {
 	["default:torch_ceiling"] = "default:torch",
@@ -36,7 +39,7 @@ digtron.builder_on_place_prefixes = {
 
 digtron.mod_meta = minetest.get_mod_storage()
 
-local modpath = minetest.get_modpath(minetest.get_current_modname())
+local modpath = minetest.get_modpath(modname)
 dofile(modpath.."/config.lua")
 
 dofile(modpath.."/class_fakeplayer.lua")

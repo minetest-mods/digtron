@@ -1,15 +1,4 @@
--- internationalization boilerplate
-local MP = minetest.get_modpath(minetest.get_current_modname())
-local S, NS = dofile(MP.."/intllib.lua")
-
-local strip_digtron_prefix = function(desc)
-	-- Having "Digtron " prefixing every description is annoying
-	local prefix = "Digtron "
-	if desc:sub(1,#prefix) == prefix then
-		desc = desc:sub(#prefix+1)
-	end
-	return desc
-end
+local S = digtron.S
 
 local get_manifest = function(pos)
 	local manifest = {}
@@ -27,7 +16,7 @@ local get_manifest = function(pos)
 				item = item_def._digtron_disassembled_node
 				item_def = minetest.registered_items[item]
 			end
-			local desc = strip_digtron_prefix(item_def.description)
+			local desc = item_def.description
 			local entry = manifest[desc]
 			if entry == nil then
 				entry = {item = item}
@@ -43,7 +32,7 @@ local get_manifest = function(pos)
 	local main_list = inv:get_list("main")
 	for _, itemstack in ipairs(main_list) do
 		if not itemstack:is_empty() then
-			local desc = strip_digtron_prefix(itemstack:get_definition().description)
+			local desc = itemstack:get_definition().description
 			local entry = manifest[desc]
 			if entry == nil then
 				entry = {item = item}

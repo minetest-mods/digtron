@@ -2,9 +2,7 @@ local mod_meta = digtron.mod_meta
 
 local cache = {}
 
--- internationalization boilerplate
-local MP = minetest.get_modpath(minetest.get_current_modname())
-local S, NS = dofile(MP.."/intllib.lua")
+local S = digtron.S
 
 
 --minetest.debug(dump(mod_meta:to_table()))

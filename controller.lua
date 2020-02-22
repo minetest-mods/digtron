@@ -1,6 +1,4 @@
--- internationalization boilerplate
-local MP = minetest.get_modpath(minetest.get_current_modname())
-local S, NS = dofile(MP.."/intllib.lua")
+local S = digtron.S
 
 local position_and_anchor = "position[0.025,0.1]anchor[0,0]"
 
@@ -100,13 +98,13 @@ decrement_sequence = function(sequence, target_item)
 			-- return without decrementing its parent
 			return "found"
 		elseif command == target_item then
-			target_item.cur = target_item.cur - 1
-			found = true
+			target_item.cur = target_item.cur - 1 -- decrement the remaining count on the target item
+			found = true -- note that we've found the target item.
 		elseif command.cmd == "seq" then
-			local subsequence_result = decrement_sequence(command, target_item)
+			local subsequence_result = decrement_sequence(command, target_item) -- recurse
 			if subsequence_result == "decrement_parent" then
 				-- the item was in the subsequence and the subsequence's list of commands are finished
-				-- so decrement the subsequence and reset its constituents
+				-- so decrement the subsequence's current count and reset its constituents to their defaults
 				command.cur = command.cur - 1
 				for _, subcommand in ipairs(command.seq) do
 					subcommand.cur = subcommand.cnt
@@ -123,6 +121,7 @@ decrement_sequence = function(sequence, target_item)
 	end
 end
 
+-- recurses through the whole sequence setting all current counts to the base value
 local reset_sequence
 reset_sequence = function(sequence)
 	for _, command in ipairs(sequence.seq) do
@@ -350,7 +349,7 @@ end
 
 local sequence_tab = function(digtron_id)
 	local sequence = digtron.get_sequence(digtron_id)
-	local list_out = {"size[5.75,6.75]"
+	local list_out = {"size[5.75,12]"
 		.. position_and_anchor
 		.. "real_coordinates[true]"
 		
@@ -797,7 +796,7 @@ minetest.register_node("digtron:controller_unassembled", combine_defs(base_def, 
 			local meta = minetest.get_meta(pos)
 			meta:set_string("digtron_id", digtron_id)
 			meta:mark_as_private("digtron_id")
-			player_opening_formspec(digtron_id, player_name)
+			get_context(digtron_id, player_name)
 			minetest.show_formspec(player_name,
 				"digtron:controller_assembled",
 				get_controller_assembled_formspec(digtron_id, player_name))

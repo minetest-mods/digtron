@@ -1,0 +1,149 @@
+# textdomain: digtron
+
+
+### controller.lua ###
+
+@1 left=
+Back=
+Controls=
+Cycles=
+Delete=
+Dig Move Build=
+Dig Move Down=
+Digtron Assembly=
+Digtron Control Module=
+Digtron name=
+Disassemble=
+Down=
+Execute=
+Forward=
+Fuel=
+Insert=
+Left=
+Main Inventory=
+Move=
+Move Back=
+Move Down=
+Move Forward=
+Move Left=
+Move Right=
+Move Up=
+New@nCommand=
+Page @1/@2=
+Pitch Down=
+Pitch Up=
+Reset=
+Right=
+Roll Clockwise=
+Roll Widdershins=
+Roll@nClockwise=
+Roll@nWiddershins=
+Rotate=
+Sequence=
+Up=
+Yaw Left=
+Yaw Right=
+
+### functions.lua ###
+
+@1 at @2 has encountered an obstacle.=
+@1 at @2 requires @3 to execute its next build cycle.=
+Copy of @1=
+Unnamed Digtron=
+
+### node_builder.lua ###
+
+Builder for @1@nperiod @2, offset @3, extrusion @4=
+
+Builder will build once every n steps.@nThese steps are globally aligned, so all builders with the@nsame period and offset will build on the same location.=
+
+Builder will extrude this many blocks in the direction it is facing.@nCan be set from 1 to @1.@nNote that Digtron won't build into unloaded map regions.=
+
+Digtron Builder Module=
+Extrusion=
+Facing=
+
+Offsets the start of periodicity counting by this amount.@nFor example, a builder with period 2 and offset 0 builds@nevery even-numbered block and one with period 2 and@noffset 1 builds every odd-numbered block.=
+
+Read=
+
+Reads the facing of the block currently in the build location.=
+
+Saves settings, closes interface, and shows the locations this builder will build to in-world.=
+
+Value from 0-23. Not all block types make use of this.@nUse the 'Read & Save' button to copy the facing of the block@ncurrently in the builder output location.=
+
+
+### node_builder.lua ###
+### node_digger.lua ###
+
+Offset=
+Periodicity=
+Save &@nShow=
+
+### node_builder.lua ###
+### node_digger.lua ###
+### node_storage.lua ###
+
+This Digtron is active, interact with it via the controller node.=
+
+
+### node_digger.lua ###
+
+Digger will dig once every n steps.@nThese steps are globally aligned, all diggers with@nthe same period and offset will dig on the same location.=
+
+Digger@nperiod @1, offset @2=
+Digtron Digger=
+Digtron Dual Digger=
+Digtron Dual Soft Digger=
+Digtron Soft Digger=
+
+Offsets the start of periodicity counting by this amount.@nFor example, a digger with period 2 and offset 0 digs@nevery even-numbered block and one with period 2 and@noffset 1 digs every odd-numbered block.=
+
+Saves settings=
+
+### node_duplicator.lua ###
+
+Amount of this component currently available.=
+
+Amount of this component required to copy the template Digtron.=
+
+Copy=
+Digtron Duplicator=
+Digtron component.=
+Digtron components=
+
+Digtron components in this inventory will be used to create the duplicate.=
+
+Duplicate=
+Duplication cannot proceed at this time.=
+Place the Digtron you want to make a copy of here.=
+
+Puts a copy of the template Digtron into the output inventory slot.=
+
+Template=
+The duplicate Digtron is output here.=
+
+### node_misc.lua ###
+
+Digtron Corner Panel=
+Digtron Edge Panel=
+Digtron Light=
+Digtron Panel=
+Digtron Structure=
+
+### node_pipeworks_interface.lua ###
+
+Digtron Inventory Interface=
+
+### node_storage.lua ###
+
+Digtron Combined Storage=
+Digtron Fuel Storage=
+Digtron Inventory Storage=
+Fuel items=
+Inventory items=
+
+### recipes.lua ###
+
+Digtron Core=
