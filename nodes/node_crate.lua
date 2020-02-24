@@ -352,7 +352,9 @@ minetest.register_node("digtron:loaded_locked_crate", {
 		local meta = minetest.get_meta(pos)
 		meta:set_string("owner", "")
 	end,
-	
+--	can_dig = function(pos,node,player)
+--		return player and not minetest.is_protected(pos, player:get_player_name()) and player_permitted(pos,player)
+--	end,
 	on_dig = function(pos, node, player)
 		if player and not minetest.is_protected(pos, player:get_player_name()) and player_permitted(pos,player) then
 			return loaded_on_dig(pos, player, "digtron:loaded_locked_crate")
