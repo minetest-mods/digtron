@@ -16,7 +16,7 @@ local damage_hp = digtron.config.damage_hp
 -- see predict_dig for how punch_data gets calculated
 local damage_creatures = function(root_pos, punch_data, items_dropped)
 	local target_pos = punch_data[2]
-	local objects = minetest.env:get_objects_inside_radius(target_pos, 1.0)
+	local objects = minetest.get_objects_inside_radius(target_pos, 1.0)
 	if objects ~= nil then
 		local source_pos = vector.add(minetest.get_position_from_hash(punch_data[1]), root_pos)
 		for _, obj in ipairs(objects) do
@@ -52,7 +52,7 @@ local damage_creatures = function(root_pos, punch_data, items_dropped)
 		end
 	end
 	-- If we killed any mobs they might have dropped some stuff, vacuum that up now too.
-	objects = minetest.env:get_objects_inside_radius(target_pos, 1.0)
+	objects = minetest.get_objects_inside_radius(target_pos, 1.0)
 	if objects ~= nil then
 		for _, obj in ipairs(objects) do
 			if not obj:is_player() then
@@ -422,7 +422,8 @@ local assemble = function(root_pos, player_name)
 	local layout = {}
 	
 	for hash, node in pairs(digtron_nodes) do
-		local relative_hash = minetest.hash_node_position(vector.subtract(minetest.get_position_from_hash(hash), root_pos))
+		local pos = minetest.get_position_from_hash(hash)
+		local relative_hash = minetest.hash_node_position(vector.subtract(pos, root_pos))
 		
 		local current_meta
 		if hash == root_hash then
@@ -462,6 +463,9 @@ local assemble = function(root_pos, player_name)
 			
 		node.param1 = nil -- we don't care about param1, wipe it to save space
 		layout[relative_hash] = {meta = current_meta_table, node = node}
+		local meta = minetest.get_meta(pos)
+		-- track this so that we can interact with individual node settings in the assembled digtron
+		meta:set_string("digtron_relative_hash", relative_hash)
 	end
 	
 	persist_inventory(digtron_id)

@@ -40,6 +40,7 @@ Roll@nClockwise=
 Roll@nWiddershins=
 Rotate=
 Sequence=
+Stop=
 Up=
 Yaw Left=
 Yaw Right=

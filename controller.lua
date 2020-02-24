@@ -65,7 +65,7 @@ digtron.default_sequence = function()
 end
 
 -----------------------------------------------------------------------------------------
---- Maniupulating sequences
+--- Manipulating sequences
 
 -- searches down through the sequence tree to find the next command that can be executed
 local find_next_item_to_execute = function(sequence)
@@ -360,9 +360,14 @@ local sequence_tab = function(digtron_id)
 	if sequence.cur == 0 then
 		table.insert(list_out, "box[0.75,0.1;0.7,0.5;#FF000088]")
 	end	
+	if is_cycling(digtron_id) then
+		table.insert(list_out, "button[1.5,0.1;1,0.5;stop;"..S("Stop").."]")
+	else
+		table.insert(list_out, "button[1.5,0.1;1,0.5;execute;"..S("Execute").."]")
+	end
+	
 	table.insert(list_out,
 		"label[0.8,0.35;" .. S("@1 left", sequence.cur) .."]"
-		.. "button[1.5,0.1;1,0.5;execute;"..S("Execute").."]" -- TODO pause
 		.. "button[2.5,0.1;1,0.5;reset;"..S("Reset").."]"
 		.. "container_end[]"
 		.. "container[0.2,1]"
@@ -442,6 +447,10 @@ local update_sequence = function(digtron_id, fields, player_name)
 	
 	if fields.execute and sequence.cur > 0 then
 		start_command(digtron_id, "seq", 1, player_name)
+	end
+	
+	if fields.stop and is_cycling(digtron_id) then
+		cancel_command(digtron_id)
 	end
 	
 	if fields.reset then
@@ -828,7 +837,7 @@ minetest.register_node("digtron:controller", combine_defs(base_def, {
 		local stack = ItemStack({name=node.name, count=1, wear=0})
 		local stack_meta = stack:get_meta()
 		stack_meta:set_string("digtron_id", digtron_id)
-		stack_meta:set_string("description", meta:get_string("infotext"))
+		stack_meta:set_string("description", digtron.get_name(digtron_id))
 		local inv = digger:get_inventory()
 		local stack = inv:add_item("main", stack)
 		if stack:get_count() > 0 then
@@ -892,6 +901,9 @@ minetest.register_node("digtron:controller", combine_defs(base_def, {
 						for _, built_pos in ipairs(built_positions) do
 							minetest.check_for_falling(built_pos)
 						end
+						
+						local meta = minetest.get_meta(target_pos)
+						meta:set_string("infotext", digtron.get_name(digtron_id))
 	
 						minetest.sound_play("digtron_machine_assemble", {gain = 0.5, pos=target_pos})
 						-- Note: DO NOT RESPECT CREATIVE MODE here.
@@ -916,18 +928,6 @@ minetest.register_node("digtron:controller", combine_defs(base_def, {
 			itemstack:set_name("digtron:controller_unassembled")
 			return minetest.item_place(itemstack, placer, pointed_thing)
 		end
-	end,
-	
-	after_place_node = function(pos, placer, itemstack, pointed_thing)
-		local stack_meta = itemstack:get_meta()
-		local title = stack_meta:get_string("description")
-		local digtron_id = stack_meta:get_string("digtron_id")
-		
-		local meta = minetest.get_meta(pos)
-			
-		meta:set_string("infotext", title)
-		meta:set_string("digtron_id", digtron_id)
-		meta:mark_as_private("digtron_id")
 	end,
 	
 	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
