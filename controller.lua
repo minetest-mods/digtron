@@ -802,10 +802,8 @@ minetest.register_node("digtron:controller_unassembled", combine_defs(base_def, 
 		local player_name = clicker:get_player_name()
 		local digtron_id = digtron.assemble(pos, player_name)
 		if digtron_id then
-			local meta = minetest.get_meta(pos)
-			meta:set_string("digtron_id", digtron_id)
-			meta:mark_as_private("digtron_id")
-			get_context(digtron_id, player_name)
+			local player_context = get_context(digtron_id, player_name)
+			player_context.open = true
 			minetest.show_formspec(player_name,
 				"digtron:controller_assembled",
 				get_controller_assembled_formspec(digtron_id, player_name))
@@ -833,10 +831,12 @@ minetest.register_node("digtron:controller", combine_defs(base_def, {
 		end
 		local meta = minetest.get_meta(pos)
 		local digtron_id = meta:get_string("digtron_id")
+		local digtron_layout_node_id = meta:get_int("digtron_layout_node_id")
 		
 		local stack = ItemStack({name=node.name, count=1, wear=0})
 		local stack_meta = stack:get_meta()
 		stack_meta:set_string("digtron_id", digtron_id)
+		stack_meta:set_int("digtron_layout_node_id", digtron_layout_node_id)
 		stack_meta:set_string("description", digtron.get_name(digtron_id))
 		local inv = digger:get_inventory()
 		local stack = inv:add_item("main", stack)
@@ -863,6 +863,7 @@ minetest.register_node("digtron:controller", combine_defs(base_def, {
 			if dropped:get_name() == "digtron:controller" then
 				local stack_meta = dropped:get_meta()
 				stack_meta:set_string("digtron_id", oldmeta:get_string("digtron_id"))
+				stack_meta:set_int("digtron_layout_node_id", oldmeta:get_int("digtron_layout_node_id"))
 				stack_meta:set_string("description", oldmeta:get_string("infotext"))
 				return
 			end

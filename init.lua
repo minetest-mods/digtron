@@ -57,7 +57,6 @@ dofile(modpath.."/nodes/node_builder.lua")
 dofile(modpath.."/nodes/node_duplicator.lua")
 dofile(modpath.."/nodes/recipes.lua")
 
-
 -- digtron group numbers:
 -- 1 - generic digtron node, nothing special is done with these. They're just dragged along.
 -- 2 - inventory-holding digtron, has a "main" inventory that the digtron can add to and take from.

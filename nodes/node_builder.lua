@@ -6,15 +6,13 @@ local S = digtron.S
 -- TODO make this global
 local player_interacting_with_builder_pos = {}
 
-local get_formspec = function(pos)
-	local meta = minetest.get_meta(pos)
-	
-	local period = meta:get_int("period")
+local get_formspec = function(meta_fields)
+	local period = tonumber(meta_fields.period)
 	if period < 1 then period = 1 end
-	local offset = meta:get_int("offset")
-	local extrusion = meta:get_int("extrusion")
-	local facing = meta:get_int("facing")
-	local item_name = meta:get_string("item")
+	local offset = tonumber(meta_fields.offset)
+	local extrusion = tonumber(meta_fields.extrusion)
+	local facing = tonumber(meta_fields.facing)
+	local item_name = meta_fields.item
 
 	return "size[8,5.2]" ..
 	"item_image[0,0;1,1;" .. item_name .. "]"..
@@ -87,22 +85,40 @@ local inv = minetest.create_detached_inventory("digtron:builder_item", {
 		
 		local meta = minetest.get_meta(pos)
 		local digtron_id = meta:get_string("digtron_id")
-		if digtron_id ~= "" then
-			minetest.log("warning", "[Digtron] builder detached inventory had player " .. player_name
-				.. " attempt to set " .. item .. " at " .. minetest.pos_to_string(pos) ..
-				" but the builder node at that location was already assembled into " .. digtron_id)
-			return 0
+		local digtron_layout_id = meta:get_int("digtron_layout_node_id")
+		
+		local layout
+		local layout_fields
+		minetest.chat_send_all(digtron_id)
+		minetest.chat_send_all(digtron_layout_id)
+		if digtron_id ~= "" and digtron_layout_id ~= 0 then
+			layout = digtron.get_layout(digtron_id)
+			layout_fields = layout[digtron_layout_id].meta.fields
 		end
 		
 		-- If we're adding a wallmounted item and the build facing is greater than 5, reset it to 0
 		if stack_def ~= nil and stack_def.paramtype2 == "wallmounted" and tonumber(meta:get_int("facing")) > 5 then
 			meta:set_int("facing", 0)
+			if layout_fields then
+				layout_fields.facing = 0
+			end
 		end
 		
 		meta:set_string("item", item)
+		if layout_fields then
+			layout_fields.item = item
+		end
+		
+		if layout_fields then
+			minetest.chat_send_all("setting layout")
+			digtron.set_layout(digtron_id, layout)
+		else
+			layout_fields = meta:to_table().fields
+		end
+		
 		digtron.update_builder_item(pos)
-		minetest.show_formspec(player_name, "digtron:builder", get_formspec(pos))
-
+		
+		minetest.show_formspec(player_name, "digtron:builder", get_formspec(layout_fields))
 		return 0
 	end,
 	allow_take = function(inv, listname, index, stack, player)
@@ -123,17 +139,19 @@ local builder_on_rightclick = function(pos, node, clicker, itemstack, pointed_th
 	local meta = minetest.get_meta(pos)	
 	
 	local digtron_id = meta:get_string("digtron_id")
-	if digtron_id ~= "" then
-		minetest.sound_play({name = "digtron_error", gain = 0.1}, {to_player=player_name})
-		minetest.chat_send_player(player_name, S("This Digtron is active, interact with it via the controller node."))
-		digtron.update_builder_items(digtron_id)
+	local digtron_node_id = meta:get_int("digtron_layout_node_id")
+	if digtron_id ~= "" and digtron_node_id ~= 0 then
+		player_interacting_with_builder_pos[player_name] = pos
+		local layout = digtron.get_layout(digtron_id)
+		local data = layout[digtron_node_id]
+		if data then
+			minetest.show_formspec(player_name, "digtron:builder", get_formspec(data.meta.fields))
+		end
 		return
 	end
 	
 	player_interacting_with_builder_pos[player_name] = pos
-	minetest.show_formspec(player_name,
-		"digtron:builder",
-		get_formspec(pos))
+	minetest.show_formspec(player_name, "digtron:builder", get_formspec(meta:to_table().fields))
 end
 
 minetest.register_on_player_receive_fields(function(sender, formname, fields)
@@ -150,47 +168,62 @@ minetest.register_on_player_receive_fields(function(sender, formname, fields)
 	end
 	
     local meta = minetest.get_meta(pos)
-	
-	local item = meta:get_string("item")
+	local meta_table
+
+	local digtron_id = meta:get_string("digtron_id")
+	local digtron_layout_id = meta:get_int("digtron_layout_node_id")
+
+	local layout
+	if digtron_id ~= "" and digtron_layout_id ~= 0 then
+		-- If this builder is part of an assembled Digtron, then the persisted Digtron
+		-- layout will have primacy over any other metadata this node might have.
+		layout = digtron.get_layout(digtron_id)
+		meta_table = layout[digtron_layout_id].meta
+	else
+		meta_table = meta:to_table()
+	end
+	local meta_fields = meta_table.fields
+
+	local item = meta_fields.item
 	
 	local period = tonumber(fields.period)
 	if period and period > 0 then
-		meta:set_int("period", math.floor(period))
+		meta_fields.period = math.floor(period)
 	else
-		period = meta:get_int("period")
+		period = tonumber(meta_fields.period) or 1
 	end
 	
 	local offset = tonumber(fields.offset)
 	if offset then
-		meta:set_int("offset", math.floor(offset))
+		meta_fields.offset = math.floor(offset)
 	else
-		offset = meta:get_int("offset")
+		offset = tonumber(meta_fields.offset) or 0
 	end
 	
 	local facing = tonumber(fields.facing)
 	if facing and facing >= 0 and facing < 24 then
 		local target_item = ItemStack(item)
 		if target_item:get_definition().paramtype2 == "wallmounted" then
+			-- wallmounted facings only run from 0-5
 			if facing < 6 then
-				meta:set_int("facing", math.floor(facing))
-				-- wallmounted facings only run from 0-5
+				meta_fields.facing = math.floor(facing)
 			end
 		else
-			meta:set_int("facing", math.floor(facing))
+			meta_fields.facing = math.floor(facing)
 		end
 	else
-		facing = meta:get_int("facing")
+		facing = tonumber(meta_fields.facing) or 0
 	end
 	
 	local extrusion = tonumber(fields.extrusion)
 	if extrusion and extrusion > 0 and extrusion <= digtron.config.maximum_extrusion then
-		meta:set_int("extrusion", math.floor(extrusion))
+		meta_fields.extrusion = math.floor(extrusion)
 	else
-		extrusion = meta:get_int("extrusion")
+		extrusion = tonumber(meta_fields.extrusion) or 1
 	end
 	
 	if fields.set then
-		--digtron.show_offset_markers(pos, offset, period)
+		--TODO digtron.show_offset_markers(pos, offset, period)
 	end
 
 	if fields.read then
@@ -202,10 +235,9 @@ minetest.register_on_player_receive_fields(function(sender, formname, fields)
 			target_name = digtron.builder_read_item_substitutions[target_name]
 		end
 		if target_name ~= "air" and is_item_allowed(target_name) then
-			local meta = minetest.get_meta(pos)
 			item = target_name
-			meta:set_string("item", item)
-			meta:set_int("facing", target_node.param2)
+			meta_fields.item = item
+			meta_fields.facing = target_node.param2
 		end
 	end
 	
@@ -214,14 +246,21 @@ minetest.register_on_player_receive_fields(function(sender, formname, fields)
 	end
 	
 	local item_def = minetest.registered_items[item]
-	local item_desc = "Nothing"
+	local item_desc = S("Nothing")
 	if item_def then
 		item_desc = item_def.description
 	end
 	
-	meta:set_string("infotext", S("Builder for @1\nperiod @2, offset @3, extrusion @4", item_desc, period, offset, extrusion))
+	meta_fields.infotext = S("Builder for @1\nperiod @2, offset @3, extrusion @4", item_desc, period, offset, extrusion)
+	if layout then
+		digtron.set_layout(digtron_id, layout)
+	end
+	meta_fields.digtron_id = digtron_id
+	meta_fields.digtron_layout_node_id = digtron_layout_id
+	meta:from_table(meta_table)
+	
 	digtron.update_builder_item(pos)
-	minetest.show_formspec(player_name, "digtron:builder", get_formspec(pos))
+	minetest.show_formspec(player_name, "digtron:builder", get_formspec(meta_fields))
 
 end)
 

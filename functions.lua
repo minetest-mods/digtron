@@ -4,21 +4,36 @@ local cache = {}
 
 local S = digtron.S
 
+local zero_pos = {x=0, y=0, z=0}
 
---minetest.debug(dump(mod_meta:to_table()))
+minetest.register_chatcommand("digtron_dump", {
+    --params = "<name> <privilege>",  -- Short parameter description
+	description = "dump digtron data to debug",  -- Full description
+    privs = {server=true},  -- Require the "privs" privilege to run
+    func = function(name, param)
+		minetest.debug(dump(mod_meta:to_table()))
+	end,        
+})
 
--- Wipes mod_meta
---for field, value in pairs(mod_meta:to_table().fields) do
---	mod_meta:set_string(field, "")
---end
+minetest.register_chatcommand("digtron_wipe", {
+    --params = "<name> <privilege>",  -- Short parameter description
+	description = "dump digtron data to debug",  -- Full description
+    privs = {server=true},  -- Require the "privs" privilege to run
+    func = function(name, param)
+		-- Wipes mod_meta
+		for field, value in pairs(mod_meta:to_table().fields) do
+			mod_meta:set_string(field, "")
+		end
+	end,        
+})
 
 local damage_hp = digtron.config.damage_hp
 -- see predict_dig for how punch_data gets calculated
-local damage_creatures = function(root_pos, punch_data, items_dropped)
+local damage_creatures = function(punch_data, items_dropped)
 	local target_pos = punch_data[2]
 	local objects = minetest.get_objects_inside_radius(target_pos, 1.0)
 	if objects ~= nil then
-		local source_pos = vector.add(minetest.get_position_from_hash(punch_data[1]), root_pos)
+		local source_pos = punch_data[1]
 		for _, obj in ipairs(objects) do
 			local dir = vector.normalize(vector.subtract(obj:get_pos(), source_pos))
 			local armour_multiplier = 1
@@ -195,7 +210,7 @@ local persist_sequence, retrieve_sequence = get_table_functions("sequence")
 -------------------------------------------------------------------------------------------------------
 -- Layout creation helpers
 
-digtron.duplicate = function(digtron_id)
+local duplicate = function(digtron_id)
 	local layout = retrieve_layout(digtron_id)
 	if layout == nil then
 		minetest.log("error", "[Digtron] digtron.duplicate called with non-existent id " .. digtron_id)
@@ -218,6 +233,7 @@ digtron.duplicate = function(digtron_id)
 	local new_controller = ItemStack("digtron:controller")
 	local meta = new_controller:get_meta()
 	meta:set_string("digtron_id", new_id)
+	meta:set_int("digtron_layout_node_id", 1) -- the root node is always in index 1, see "assemble"
 	meta:set_string("description", new_name)
 	return new_controller
 end
@@ -268,10 +284,10 @@ local retrieve_bounding_box = function(digtron_id)
 	
 	local layout = retrieve_layout(digtron_id)
 	if layout == nil then return nil end
-
+	
 	local bbox = {minp = {x=0, y=0, z=0}, maxp = {x=0, y=0, z=0}}
-	for hash, data in pairs(layout) do
-		update_bounding_box(bbox, minetest.get_position_from_hash(hash))
+	for layout_node_id, data in pairs(layout) do
+		update_bounding_box(bbox, data.pos)
 	end
 	cache_bounding_box[digtron_id] = bbox
 	return bbox	
@@ -283,14 +299,24 @@ cache_all_builder_targets = {}
 local refresh_adjacent = function(digtron_id)
 	local layout = retrieve_layout(digtron_id)
 	if layout == nil then return nil end
-	
+
 	local adjacent = {} -- all adjacent nodes. TODO: if implementing traction wheels, won't be needed
 	local adjacent_to_diggers = {}
 	local adjacent_to_builders = {}
-	for hash, data in pairs(layout) do
+
+	local all_digtron_node_hashes = {} -- track the locations of the digtron nodes themselves, these will be omitted from adjacency
+	for layout_node_id, data in pairs(layout) do
+		local hash = minetest.hash_node_position(data.pos)
+		data.hash = hash
+		all_digtron_node_hashes[hash] = true
+	end
+
+	for layout_node_id, data in pairs(layout) do
+		local hash = data.hash
+	
 		for _, dir_hash in ipairs(digtron.cardinal_dirs_hash) do
 			local potential_adjacent = hash + dir_hash
-			if layout[potential_adjacent] == nil then
+			if not all_digtron_node_hashes[potential_adjacent] then
 				adjacent[potential_adjacent] = true
 			end
 		end
@@ -300,19 +326,19 @@ local refresh_adjacent = function(digtron_id)
 		-- Diggers
 		if digtron_group >= 10 and digtron_group <= 13 then
 			-- All diggers target the node directly in front of them
-			local dir_hashes = {}
+			local targets = {}
 			local dir_hash = digtron.facedir_to_dir_hash(data.node.param2)
 			local potential_target = hash + dir_hash -- pointed at this hash
-			if layout[potential_target] == nil then -- not pointed at another Digtron node
-				table.insert(dir_hashes, dir_hash)
+			if not all_digtron_node_hashes[potential_target] then
+				table.insert(targets, minetest.get_position_from_hash(potential_target))
 			end
-			
+
 			-- If it's a dual digger, add a second dir
 			if digtron_group == 11 or digtron_group == 13 then
 				dir_hash = digtron.facedir_to_down_hash(data.node.param2)
 				potential_target = hash + dir_hash -- pointed at this hash
-				if layout[potential_target] == nil then -- not pointed at another Digtron node
-					table.insert(dir_hashes, dir_hash)
+				if not all_digtron_node_hashes[potential_target] then
+					table.insert(targets, minetest.get_position_from_hash(potential_target))
 				end
 			end
 			
@@ -322,35 +348,40 @@ local refresh_adjacent = function(digtron_id)
 				soft = true
 			end
 			
-			if #dir_hashes > 0 then
-				local fields = data.meta.fields
-				adjacent_to_diggers[hash] = {
+			local fields = data.meta.fields
+			if #targets > 0 then
+				table.insert(adjacent_to_diggers, {
+					pos = data.pos,
 					period = tonumber(fields.period) or 1,
 					offset = tonumber(fields.offset) or 0,
-					dir_hashes = dir_hashes,
+					targets = targets,
 					soft = soft,
-				}
-			end			
+				})
+			end
 		end
 		
 		-- Builders
 		if digtron_group == 4 then
 			local dir_hash = digtron.facedir_to_dir_hash(data.node.param2)
 			local potential_target = hash + dir_hash
-			if layout[potential_target] == nil then
+			if not all_digtron_node_hashes[potential_target] then
 				local fields = data.meta.fields
 				-- TODO: trace extrusion and if it intersects Digtron layout cap it there.
-				adjacent_to_builders[hash] = {
+				-- This is getting pretty edge case, though, don't worry about it until you're
+				-- completely bored
+				table.insert(adjacent_to_builders, {
+					pos = data.pos,
 					period = tonumber(fields.period) or 1,
 					offset = tonumber(fields.offset) or 0,
 					item = fields.item,
 					facing = tonumber(fields.facing) or 0, -- facing of built node
 					extrusion = tonumber(fields.extrusion) or 1,
-					dir_hash = dir_hash, -- Record in table form, it'll be more convenient for use later
-				}
+					dir = minetest.facedir_to_dir(data.node.param2),
+				})
 			end
 		end
 	end
+	
 	cache_all_adjacent_pos[digtron_id] = adjacent
 	cache_all_digger_targets[digtron_id] = adjacent_to_diggers
 	cache_all_builder_targets[digtron_id] = adjacent_to_builders	
@@ -423,7 +454,7 @@ local assemble = function(root_pos, player_name)
 	
 	for hash, node in pairs(digtron_nodes) do
 		local pos = minetest.get_position_from_hash(hash)
-		local relative_hash = minetest.hash_node_position(vector.subtract(pos, root_pos))
+		local relative_pos = vector.subtract(pos, root_pos)
 		
 		local current_meta
 		if hash == root_hash then
@@ -455,17 +486,26 @@ local assemble = function(root_pos, player_name)
 			current_meta_table.inventory[listname] = #items
 		end
 		
+		-- If the node being incorporated into the assembled digtron has a "_digtron_assembled_node" property
+		-- defined, then pretend it's that node rather than the actual node.
 		local node_def = minetest.registered_nodes[node.name]
 		if node_def and node_def._digtron_assembled_node then
 			node.name = node_def._digtron_assembled_node
 			minetest.swap_node(minetest.get_position_from_hash(hash), node)
 		end
-			
+
 		node.param1 = nil -- we don't care about param1, wipe it to save space
-		layout[relative_hash] = {meta = current_meta_table, node = node}
+		table.insert(layout, {meta = current_meta_table, node = node, pos = relative_pos})
 		local meta = minetest.get_meta(pos)
-		-- track this so that we can interact with individual node settings in the assembled digtron
-		meta:set_string("digtron_relative_hash", relative_hash)
+	end
+	
+	-- Ensure the root node is in position 1
+	for layout_node_id, data in ipairs(layout) do
+		if vector.equals(data.pos, zero_pos) then
+			layout[layout_node_id] = layout[1]
+			layout[1] = data
+			break
+		end
 	end
 	
 	persist_inventory(digtron_id)
@@ -476,13 +516,14 @@ local assemble = function(root_pos, player_name)
 	persist_sequence(digtron_id, digtron.default_sequence())
 	
 	-- Wipe out the inventories of all in-world nodes, it's stored in the mod_meta now.
-	-- Wait until now to do it in case the above loop fails partway through.
-	for hash, node in pairs(digtron_nodes) do
+	-- Wait until now to do it in case the above loop fails partway through and we need to abort.
+	for layout_node_id, data in ipairs(layout) do
+		local node_pos = vector.add(root_pos, data.pos)
 		local node_meta
-		if hash == root_hash then
+		if vector.equals(root_pos, node_pos) then
 			node_meta = root_meta -- we're processing the controller, we already have a reference to its meta
 		else
-			node_meta = minetest.get_meta(minetest.get_position_from_hash(hash))
+			node_meta = minetest.get_meta(node_pos)
 		end
 		local inv = node_meta:get_inventory()
 		
@@ -492,8 +533,11 @@ local assemble = function(root_pos, player_name)
 			end
 		end
 		
+		-- Set metadata on the nodes to indicate that they've been incorporated into an assembled Digtron
 		node_meta:set_string("digtron_id", digtron_id)
+		node_meta:set_int("digtron_layout_node_id", layout_node_id)
 		node_meta:mark_as_private("digtron_id")
+		node_meta:mark_as_private("digtron_layout_node_id")
 	end
 
 	minetest.log("action", "Digtron " .. digtron_id .. " assembled at " .. minetest.pos_to_string(root_pos)
@@ -503,30 +547,48 @@ local assemble = function(root_pos, player_name)
 	return digtron_id
 end
 
+local function log_prefix(function_name, digtron_id, target_name, target_pos)
+	return "[Digtron] " .. function_name .. " tried interacting with one of ".. digtron_id .. "'s "
+			.. target_name .. "s at " .. minetest.pos_to_string(target_pos)
+end
+
 -- Returns pos, node, and meta for the digtron node provided the in-world node matches the layout
 -- returns nil otherwise
-local get_valid_data = function(digtron_id, root_pos, hash, data, function_name)
-	local node_pos = vector.add(minetest.get_position_from_hash(hash), root_pos)
+local get_valid_data = function(digtron_id, layout_node_id, root_pos, data, function_name)
+	local node_pos = data.pos
+	if not node_pos then
+		minetest.log("error", "[Digtron] " .. function_name .. " tried interacting with " .. digtron_id
+			.. " node id " .. layout_node_id .. " but there was no pos in its data: " .. dump(data))
+		return
+	end
+	node_pos = vector.add(root_pos, node_pos)
+	local data_node_name = data.node.name
 	local node = minetest.get_node(node_pos)
 	local node_meta = minetest.get_meta(node_pos)
 	local target_digtron_id = node_meta:get_string("digtron_id")
-
-	if data.node.name ~= node.name then
-		minetest.log("error", "[Digtron] " .. function_name .. " tried interacting with one of ".. digtron_id .. "'s "
-			.. data.node.name .. "s at " .. minetest.pos_to_string(node_pos) .. " but the node at that location was of type "
-			.. node.name)
+	local target_node_id = node_meta:get_int("digtron_layout_node_id")
+	
+	if target_node_id ~= layout_node_id then
+		-- A recoverable error, but may indicate something's wrong elsewhere.
+		minetest.log("warning", log_prefix(function_name, digtron_id, data_node_name, node_pos)
+			.. " but the node at that location was marked as layout id " .. target_node_id
+			.. " instead of " .. layout_node_id)
+		node_meta:set_int("digtron_layout_node_id", layout_node_id)
+		node_meta:mark_as_private("digtron_layout_node_id")
+	end
+	if data_node_name ~= node.name then
+		minetest.log("error", log_prefix(function_name, digtron_id, data_node_name, node_pos)
+			.. " but the node at that location was of type " .. node.name)
 		return
 	elseif target_digtron_id ~= digtron_id then
 		if target_digtron_id ~= "" then
-			minetest.log("error", "[Digtron] " .. function_name .. " tried interacting with ".. digtron_id .. "'s "
-				.. data.node.name .. " at " .. minetest.pos_to_string(node_pos)
+			minetest.log("error",  log_prefix(function_name, digtron_id, data_node_name, node_pos)
 				.. " but the node at that location had a non-matching digtron_id value of \""
 				.. target_digtron_id .. "\"")
 			return
 		else
 			-- Allow digtron to recover from bad map metadata writes, the bane of Digtron 1.0's existence
-			minetest.log("warning", "[Digtron] " .. function_name .. " tried interacting with ".. digtron_id .. "'s "
-				.. data.node.name .. " at " .. minetest.pos_to_string(node_pos)
+			minetest.log("warning",  log_prefix(function_name, digtron_id, data_node_name, node_pos)
 				.. " but the node at that location had no digtron_id in its metadata. "
 				.. "Since the node type matched the layout, however, it was included anyway. It's possible "
 				.. "its metadata was not written correctly by a previous Digtron activity.")
@@ -558,8 +620,8 @@ local disassemble = function(digtron_id, player_name)
 	end
 	
 	-- Write metadata and inventory to in-world node at this location
-	for hash, data in pairs(layout) do
-		local node_pos, node, node_meta = get_valid_data(digtron_id, root_pos, hash, data, "disassemble")
+	for layout_node_id, data in pairs(layout) do
+		local node_pos, node, node_meta = get_valid_data(digtron_id, layout_node_id, root_pos, data, "disassemble")
 	
 		if node_pos then
 			local node_inv = node_meta:get_inventory()
@@ -640,8 +702,8 @@ local remove_from_world = function(digtron_id, player_name)
 	end
 	
 	local nodes_to_destroy = {}
-	for hash, data in pairs(layout) do
-		local node_pos = get_valid_data(digtron_id, root_pos, hash, data, "remove_from_world")
+	for layout_node_id, data in pairs(layout) do
+		local node_pos = get_valid_data(digtron_id, layout_node_id, root_pos, data, "remove_from_world")
 		if node_pos then
 			table.insert(nodes_to_destroy, node_pos)
 		end
@@ -664,8 +726,8 @@ local is_buildable_to = function(digtron_id, layout, root_pos, player_name, igno
 	
 	local ignore_hashes = {}
 	if old_root_pos then
-		for hash, _ in pairs(old_layout) do
-			local old_hash = minetest.hash_node_position(vector.add(minetest.get_position_from_hash(hash), old_root_pos))		
+		for layout_node_id, data in pairs(old_layout) do
+			local old_hash = minetest.hash_node_position(vector.add(data.pos, old_root_pos))
 			ignore_hashes[old_hash] = true
 		end
 	end
@@ -710,16 +772,20 @@ local build_to_world = function(digtron_id, layout, root_pos, player_name)
 		layout = retrieve_layout(digtron_id)
 	end
 	local built_positions = {}
-	for hash, data in pairs(layout) do
+	for layout_node_id, data in pairs(layout) do
 		-- Don't use get_valid_data, the Digtron isn't in-world yet
-		local node_pos = vector.add(minetest.get_position_from_hash(hash), root_pos)
+		local node_pos = vector.add(data.pos, root_pos)
+		minetest.debug("setting root at " .. minetest.pos_to_string(root_pos))
+		minetest.debug("setting node at " .. minetest.pos_to_string(data.pos))
 		minetest.set_node(node_pos, data.node)
 		local meta = minetest.get_meta(node_pos)
 		for field, value in pairs(data.meta.fields) do
 			meta:set_string(field, value)
 		end
 		meta:set_string("digtron_id", digtron_id)
+		meta:set_int("digtron_layout_node_id", layout_node_id)
 		meta:mark_as_private("digtron_id")
+		meta:mark_as_private("digtron_layout_node_id")
 		table.insert(built_positions, node_pos)
 	end
 	persist_pos(digtron_id, root_pos)
@@ -754,7 +820,7 @@ local rotate_layout = function(digtron_id, axis)
 	local layout = retrieve_layout(digtron_id)
 	local axis_hash = minetest.hash_node_position(axis)
 	local rotated_layout = {}
-	for hash, data in pairs(layout) do
+	for layout_node_id, data in pairs(layout) do
 		local duplicate_data = deep_copy(data)
 		-- Facings
 		local node_name = duplicate_data.node.name
@@ -777,10 +843,9 @@ local rotate_layout = function(digtron_id, axis)
 		end
 		
 		-- Position
-		local pos = minetest.get_position_from_hash(hash)
-		pos = digtron.rotate_pos(axis_hash, pos)
-		local new_hash = minetest.hash_node_position(pos)
-		rotated_layout[new_hash] = duplicate_data
+		local pos = data.pos
+		duplicate_data.pos = digtron.rotate_pos(axis_hash, pos)
+		rotated_layout[layout_node_id] = duplicate_data
 	end
 	
 	return rotated_layout
@@ -865,11 +930,11 @@ local predict_dig = function(digtron_id, player_name, controlling_coordinate)
 		punches_thrown = {}
 	end
 	
-	for digger_hash, digger_data in pairs(retrieve_all_digger_targets(digtron_id)) do
-		for _, dir_hash in ipairs(digger_data.dir_hashes) do
-			local target_hash = digger_hash + dir_hash
+	for _, digger_data in pairs(retrieve_all_digger_targets(digtron_id)) do
+		for _, target in ipairs(digger_data.targets) do
+			local target_pos = vector.add(root_pos, target)
+			local target_hash = minetest.hash_node_position(target_pos)
 			if not dug_hashes[target_hash] then
-				local target_pos = vector.add(minetest.get_position_from_hash(target_hash), root_pos)
 				local target_node = minetest.get_node(target_pos)
 				local target_name = target_node.name
 				local targetdef = minetest.registered_nodes[target_name]
@@ -887,10 +952,7 @@ local predict_dig = function(digtron_id, player_name, controlling_coordinate)
 					and (not digger_data.soft or is_soft_material(target_name))
 				then
 					if punches_thrown then
-						-- storing digger_hash rather than converting it into a vector because
-						-- in most cases there won't be something to punch and that calculation can be skipped
-						-- convert to digger_pos by adding root_pos
-						table.insert(punches_thrown, {digger_hash, target_pos})
+						table.insert(punches_thrown, {vector.add(root_pos, digger_data.pos), target_pos})
 					end				
 					if target_name ~= "air" then -- TODO: generalise this somehow for liquids and other undiggables
 						if digtron.config.uses_resources then
@@ -992,11 +1054,11 @@ local predict_build = function(digtron_id, root_pos, player_name, ignore_nodes, 
 	local built_nodes = {}
 	local cost = 0
 	
-	for target_hash, builder_data in pairs(retrieve_all_builder_targets(digtron_id)) do
-		local dir_hash = builder_data.dir_hash
+	for _, builder_data in pairs(retrieve_all_builder_targets(digtron_id)) do
+		local dir = builder_data.dir
 		local periodicity_permitted = nil
 		for i = 1, builder_data.extrusion do
-			local target_pos = vector.add(minetest.get_position_from_hash(target_hash + i * dir_hash), root_pos)
+			local target_pos = vector.add(vector.add(builder_data.pos, vector.multiply(dir, i)), root_pos)
 			local test_hash = minetest.hash_node_position(target_pos)
 			if periodicity_permitted == nil then
 				-- test periodicity and offset once
@@ -1189,12 +1251,12 @@ local execute_dig_move_build_cycle = function(digtron_id, player_name, dig_down)
 			local items_dropped = {}
 			if punches_thrown then
 				for _, punch_data in ipairs(punches_thrown) do
-					damage_creatures(old_root_pos, punch_data, items_dropped)
+					damage_creatures(punch_data, items_dropped)
 				end
 			end
 			
 			-- Building new Digtron
-			digtron.build_to_world(digtron_id, layout, new_root_pos, player_name)
+			build_to_world(digtron_id, layout, new_root_pos, player_name)
 			minetest.sound_play("digtron_construction", {gain = 0.5, pos=new_root_pos})
 			
 			local build_leftovers, success_count = build_nodes(built_nodes, player_name)
@@ -1360,9 +1422,10 @@ local recover_digtron_id = function(root_pos)
 				.."recover_digtron_id will now attempt to restore the digtron_id metadata key to all "
 				.."nodes in this Digtron's layout.")
 			local layout = retrieve_layout(digtron_id)
-			for hash, data in pairs(layout) do
+			local root_pos = retrieve_pos(digtron_id)
+			for layout_node_id, data in pairs(layout) do
 				-- get_valid_data will attempt to repair node metadata that's missing digtron_id
-				local node_pos, node, node_meta = get_valid_data(digtron_id, root_pos, hash, data, "recover_digtron_id")
+				local node_pos, node, node_meta = get_valid_data(digtron_id, layout_node_id, root_pos, data, "recover_digtron_id")
 			end		
 			return true
 		end
@@ -1388,8 +1451,12 @@ digtron.get_inventory = retrieve_inventory
 digtron.set_sequence = persist_sequence
 digtron.get_sequence = retrieve_sequence
 
--- Used by duplicator
 digtron.get_layout = retrieve_layout
+digtron.set_layout = function(digtron_id, layout)
+	invalidate_layout_cache(digtron_id)
+	persist_layout(digtron_id, layout)
+end
+digtron.duplicate = duplicate
 
 digtron.assemble = assemble
 digtron.disassemble = disassemble

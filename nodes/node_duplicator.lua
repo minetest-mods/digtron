@@ -1,5 +1,6 @@
 local S = digtron.S
 
+-- Determines how many of each type of Digtron node is needed to build another Digtron
 local get_manifest = function(pos)
 	local manifest = {}
 	local meta = minetest.get_meta(pos)
@@ -9,9 +10,11 @@ local get_manifest = function(pos)
 	local digtron_id = stack_meta:get_string("digtron_id")
 	if digtron_id ~= "" then
 		local layout = digtron.get_layout(digtron_id)
-		for hash, data in pairs(layout) do
+		for layout_node_id, data in pairs(layout) do
 			local item = data.node.name
 			local item_def = minetest.registered_items[item]
+			-- Some digtron nodes change into other nodes when they become active.
+			-- This determines what the original node was in those cases
 			if item_def._digtron_disassembled_node then
 				item = item_def._digtron_disassembled_node
 				item_def = minetest.registered_items[item]

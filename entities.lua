@@ -161,7 +161,7 @@ end
 -- Used by unassembled builders
 digtron.update_builder_item = function(pos)
 	local node = minetest.get_node(pos)
-	if minetest.get_node_group(node.name, "digtron") ~= 4 then
+	if minetest.get_item_group(node.name, "digtron") ~= 4 then
 		return
 	end	
 	local target_pos = vector.add(pos, minetest.facedir_to_dir(node.param2))
@@ -179,11 +179,11 @@ digtron.update_builder_items = function(digtron_id)
 	local layout = digtron.get_layout(digtron_id)
 	local root_pos = digtron.get_pos(digtron_id)
 	
-	for hash, data in pairs(layout) do
+	for layout_node_id, data in pairs(layout) do
 		local node = data.node
-		if minetest.get_node_group(node.name, "digtron") == 4 then
+		if minetest.get_item_group(node.name, "digtron") == 4 then
 			local item = data.meta.fields.item
-			local pos = vector.add(minetest.get_position_from_hash(hash), root_pos)
+			local pos = vector.add(data.pos, root_pos)
 			local target_pos = vector.add(pos, minetest.facedir_to_dir(node.param2))
 			digtron.remove_builder_item(target_pos)
 			if item ~= "" then
@@ -210,12 +210,12 @@ minetest.register_entity("digtron:builder_item", {
 	on_activate = function(self, staticdata)
 		local props = self.object:get_properties()
 		if staticdata ~= nil and staticdata ~= "" then
-			local pos = self.object:getpos()
+			local pos = self.object:get_pos()
 			local adjacent_builder = false
 			for _, dir in ipairs(digtron.cardinal_dirs) do
 				local target_pos = vector.add(pos, dir)
 				local node = minetest.get_node(target_pos)
-				if minetest.get_node_group(node.name, "digtron") == 4 then
+				if minetest.get_item_group(node.name, "digtron") == 4 then
 					-- Not checking whether the adjacent builder is aimed right,
 					-- has the right builder_item, etc. This is just a failsafe
 					-- to clean up entities that somehow got left behind when a
