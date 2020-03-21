@@ -256,28 +256,12 @@ digtron.tap_batteries = function(battery_positions, target, test)
 				local power_available = math.floor(meta.charge / digtron.config.power_ratio)
 				if power_available ~= 0 then
 					local actual_burned = power_available -- we just take all we have from the battery, since they aren't stackable
+					-- don't bother recording the items if we're just testing, nothing is actually being removed.
 					if test ~= true then
-						-- don't bother recording the items if we're just testing, nothing is actually being removed.
-						local charge_left = meta.charge - power_available * digtron.config.power_ratio
-						local properties = itemstack:get_tool_capabilities()
-						-- itemstack = technic.set_RE_wear(itemstack, charge_left, properties.groupcaps.fleshy.uses)
-						-- we only need half the function, so why bother using it in the first place
-
-						-- Charge is stored separately, but shown as wear level
-						-- This calls for recalculating the value.
-						local charge_level
-						if charge_left == 0 then
-							charge_level = 0
-						else
-							charge_level = 65536 - math.floor(charge_left / properties.groupcaps.fleshy.uses * 65535)
-							if charge_level > 65535 then charge_level = 65535 end
-							if charge_level < 1 then charge_level = 1 end
-						end
-						itemstack:set_wear(charge_level)
-						
-						meta.charge = charge_left
+						-- since we are taking everything, the wear and charge can both be set to 0
+						itemstack:set_wear(0)
+						meta.charge = 0
 						itemstack:set_metadata(minetest.serialize(meta))
-
 					end
 					current_burned = current_burned + actual_burned
 				end
