@@ -226,6 +226,13 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	local test_fuel_needed = test_build_fuel_cost + digging_fuel_cost - fuel_burning
 	local test_fuel_burned = 0
 
+	-- if fuel_burning is <0, then burn the missing fuel
+	if (fuel_burning<0) then
+		test_fuel_needed = test_fuel_needed - fuel_burning
+		fuel_burning = 0
+	end
+
+
 	local power_from_cables = 0
 	if minetest.get_modpath("technic") then
 		if layout.power_connectors ~= nil then
@@ -247,6 +254,11 @@ digtron.execute_dig_cycle = function(pos, clicker)
 			test_fuel_burned = test_fuel_burned + digtron.tap_batteries(layout.battery_holders, test_fuel_needed, true)
 		end
 	end
+	if (fuel_burning<0) then
+		test_fuel_needed = test_fuel_needed - fuel_burning
+		fuel_burning = 0
+	end	
+
 	if (test_fuel_needed < test_fuel_burned) then
 		exhaust = 0 -- all power needs met by electricity, don't blow smoke
 	else 
