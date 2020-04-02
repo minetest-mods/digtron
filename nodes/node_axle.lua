@@ -35,13 +35,25 @@ minetest.register_node("digtron:axle", {
 			{-0.25, -0.3125, -0.25, 0.25, 0.3125, 0.25}, -- Axle
 		}
 	},
+
+
 	
 	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
 		local meta = minetest.get_meta(pos)
-		if meta:get_string("waiting") == "true" then
+	
+		-- new delay code without nodetimer (lost on crating)
+		local now = minetest.get_gametime()
+		local last_time = tonumber(meta:get_string("last_time")) or 0
+		-- if meta:get_string("waiting") == "true" then
+		if last_time + digtron.config.cycle_time*2 > now then
 			-- Been too soon since last time the digtron rotated.
+
+		        -- added for clarity
+		        meta:set_string("infotext", S("repetition delay"))
+
 			return
 		end
+
 		local image = DigtronLayout.create(pos, clicker)
 		if image:rotate_layout_image(node.param2) == false then
 			-- This should be impossible, but if self-validation fails abort.
@@ -53,7 +65,9 @@ minetest.register_node("digtron:axle", {
 				meta = minetest.get_meta(pos)
 				meta:set_string("waiting", "true")
 				meta:set_string("infotext", nil)
-				minetest.get_node_timer(pos):start(digtron.config.cycle_time*2)
+				-- minetest.get_node_timer(pos):start(digtron.config.cycle_time*2)
+				-- new delay code
+				meta:set_string("last_time",tostring(minetest.get_gametime()))
 			else
 				meta:set_string("infotext", "unrecoverable write_layout_image error")
 			end
