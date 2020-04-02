@@ -52,9 +52,19 @@ minetest.register_node("digtron:controller", {
 	
 	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
 		local meta = minetest.get_meta(pos)
-		if meta:get_string("waiting") == "true" then
-			-- Been too soon since last time the digtron did a cycle.
-			return
+
+		-- new delay code without nodetimer (lost on crating)
+		local now = minetest.get_gametime()
+		local last_time = (tonumber(meta:get_string("last_time")) or 0 )
+
+		-- if meta:get_string("waiting") == "true" then
+		if last_time + digtron.config.cycle_time > now then
+		   -- Been too soon since last time the digtron did a cycle.
+		   
+		   -- added for clarity
+		   meta:set_string("infotext", S("repetition delay"))
+		   
+		   return
 		end
 	
 		local newpos, status, return_code = digtron.execute_dig_cycle(pos, clicker)
@@ -66,7 +76,9 @@ minetest.register_node("digtron:controller", {
 		
 		-- Start the delay before digtron can run again.
 		minetest.get_meta(newpos):set_string("waiting", "true")
-		minetest.get_node_timer(newpos):start(digtron.config.cycle_time)
+		-- minetest.get_node_timer(newpos):start(digtron.config.cycle_time)
+		-- new delay code
+		meta:set_string("last_time",tostring(minetest.get_gametime()))
 	end,
 	
 	on_timer = function(pos, elapsed)
