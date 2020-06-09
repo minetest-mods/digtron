@@ -282,7 +282,7 @@ digtron.tap_batteries = function(battery_positions, target, test)
 end
 
 digtron.remove_builder_item = function(pos)
-	local objects = minetest.env:get_objects_inside_radius(pos, 0.5)
+	local objects = minetest.get_objects_inside_radius(pos, 0.5)
 	if objects ~= nil then
 		for _, obj in ipairs(objects) do
 			if obj and obj:get_luaentity() and obj:get_luaentity().name == "digtron:builder_item" then
