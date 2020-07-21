@@ -457,7 +457,7 @@ function DigtronLayout.write_layout_image(self, player)
 	local oldpos, _ = self.old_pos_pointset:pop()
 	while oldpos ~= nil do
 		local old_node = minetest.get_node(oldpos)
-		local old_meta = minetest.get_meta(oldpos)
+		local old_meta = minetest.get_meta(oldpos):to_table()
 
 		if not set_node_with_retry(oldpos, air_node) then
 			minetest.log("error", "DigtronLayout.write_layout_image failed to destroy old Digtron node, aborting write.")
