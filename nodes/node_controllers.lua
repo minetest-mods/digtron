@@ -270,6 +270,7 @@ minetest.register_node("digtron:auto_controller", {
 			local node = minetest.get_node(pos)
 			local controlling_coordinate = digtron.get_controlling_coordinate(pos, node.param2)
 			
+			offset = offset or 0
 			local newpos = pos
 			local markerpos = {x=newpos.x, y=newpos.y, z=newpos.z}
 			local x_pos = math.floor((newpos[controlling_coordinate]+offset)/slope)*slope - offset
