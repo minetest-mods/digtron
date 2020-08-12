@@ -41,7 +41,7 @@ local function eject_items(pos, node, player, eject_even_without_pipeworks, layo
 	
 	local insert_into_pipe = false
 	local eject_into_world = false
-	if pipeworks_path and minetest.get_node_group(destination_node_name, "tubedevice") > 0 then
+	if pipeworks_path and minetest.get_item_group(destination_node_name, "tubedevice") > 0 then
 		insert_into_pipe = true
 	elseif eject_even_without_pipeworks then
 		if destination_node_def and not destination_node_def.walkable then

@@ -71,7 +71,7 @@ end
 
 -- Checks if a player is within a layout's extents.
 local function move_player_test(layout, player)
-	local player_pos = player:getpos()
+	local player_pos = player:get_pos()
 	if player_pos.x >= layout.extents_min_x - 1 and player_pos.x <= layout.extents_max_x + 1 and
 	   player_pos.y >= layout.extents_min_y - 1 and player_pos.y <= layout.extents_max_y + 1 and
 	   player_pos.z >= layout.extents_min_z - 1 and player_pos.z <= layout.extents_max_z + 1 then
@@ -310,7 +310,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	pos = vector.add(pos, dir)
 	meta = minetest.get_meta(pos)
 	if move_player then
-		clicker:moveto(vector.add(dir, clicker:getpos()), true)
+		clicker:moveto(vector.add(dir, clicker:get_pos()), true)
 	end
 	
 	-- store or drop the products of the digger heads
@@ -449,7 +449,7 @@ digtron.execute_move_cycle = function(pos, clicker)
 	
 	pos = vector.add(pos, dir)
 	if move_player then
-		clicker:moveto(vector.add(clicker:getpos(), dir), true)
+		clicker:moveto(vector.add(clicker:get_pos(), dir), true)
 	end
 	return pos, "", 0
 end
@@ -569,7 +569,7 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 	pos = vector.add(pos, dir)
 	meta = minetest.get_meta(pos)
 	if move_player then
-		clicker:moveto(vector.add(clicker:getpos(), dir), true)
+		clicker:moveto(vector.add(clicker:get_pos(), dir), true)
 	end
 	
 	-- store or drop the products of the digger heads
