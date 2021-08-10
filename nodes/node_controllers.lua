@@ -17,6 +17,8 @@ local controller_nodebox ={
 
 local node_inventory_table = {type="node"} -- a reusable parameter for get_inventory calls, set the pos parameter before using.
 
+local use_texture_alpha = minetest.features.use_texture_alpha_string_modes and "opaque" or nil
+
 -- Master controller. Most complicated part of the whole system. Determines which direction a digtron moves and triggers all of its component parts.
 minetest.register_node("digtron:controller", {
 	description = S("Digtron Control Module"),
@@ -184,6 +186,7 @@ minetest.register_node("digtron:auto_controller", {
 	groups = {cracky = 3, oddly_breakable_by_hand = 3, digtron = 1},
 	drop = "digtron:auto_controller",
 	sounds = digtron.metal_sounds,
+	use_texture_alpha = use_texture_alpha,
 	paramtype = "light",
 	paramtype2= "facedir",
 	is_ground_content = false,
@@ -310,6 +313,7 @@ minetest.register_node("digtron:pusher", {
 	groups = {cracky = 3, oddly_breakable_by_hand=3, digtron = 1},
 	drop = "digtron:pusher",
 	sounds = digtron.metal_sounds,
+	use_texture_alpha = use_texture_alpha,
 	paramtype = "light",
 	paramtype2= "facedir",
 	is_ground_content = false,
