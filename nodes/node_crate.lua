@@ -88,6 +88,8 @@ local store_digtron = function(pos, clicker, loaded_node_name, protected)
 	meta:set_string("infotext", titlestring .. "\n" .. protection_suffix)
 end
 
+local use_texture_alpha = minetest.features.use_texture_alpha_string_modes and "opaque" or nil
+
 minetest.register_node("digtron:empty_crate", {
 	description = S("Digtron Crate (Empty)"),
 	_doc_items_longdesc = digtron.doc.empty_crate_longdesc,
@@ -95,6 +97,7 @@ minetest.register_node("digtron:empty_crate", {
 	groups = {cracky = 3, oddly_breakable_by_hand=3},
 	sounds = default.node_sound_wood_defaults(),
 	tiles = {"digtron_crate.png"},
+	use_texture_alpha = use_texture_alpha,
 	is_ground_content = false,
 	drawtype = "nodebox",
 	node_box = {
@@ -121,6 +124,7 @@ minetest.register_node("digtron:empty_locked_crate", {
 	groups = {cracky = 3, oddly_breakable_by_hand=3},
 	sounds = default.node_sound_wood_defaults(),
 	tiles = {"digtron_crate.png","digtron_crate.png","digtron_crate.png^digtron_lock.png","digtron_crate.png^digtron_lock.png","digtron_crate.png^digtron_lock.png","digtron_crate.png^digtron_lock.png"},
+	use_texture_alpha = use_texture_alpha,
 	is_ground_content = false,
 	drawtype = "nodebox",
 	node_box = {

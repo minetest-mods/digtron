@@ -75,6 +75,8 @@ local intermittent_on_rightclick = function(pos, node, clicker, itemstack, point
 		intermittent_formspec(pos, meta))
 end
 
+local use_texture_alpha = minetest.features.use_texture_alpha_string_modes and "opaque" or nil
+
 minetest.register_on_player_receive_fields(function(player, formname, fields)
 	if formname:sub(1, 27) == "digtron:intermittent_digger" then
 		local pos = minetest.string_to_pos(formname:sub(28, -1))
@@ -231,6 +233,7 @@ minetest.register_node("digtron:soft_digger", {
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 3},
 	drop = "digtron:soft_digger",
 	sounds = digtron.metal_sounds,
+	use_texture_alpha = use_texture_alpha,
 	paramtype = "light",
 	paramtype2= "facedir",
 	is_ground_content = false,
@@ -287,6 +290,7 @@ minetest.register_node("digtron:intermittent_soft_digger", {
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 3},
 	drop = "digtron:intermittent_soft_digger",
 	sounds = digtron.metal_sounds,
+	use_texture_alpha = use_texture_alpha,
 	paramtype = "light",
 	paramtype2= "facedir",
 	is_ground_content = false,
@@ -441,6 +445,7 @@ minetest.register_node("digtron:dual_soft_digger", {
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 3},
 	drop = "digtron:dual_soft_digger",
 	sounds = digtron.metal_sounds,
+	use_texture_alpha = use_texture_alpha,
 	paramtype = "light",
 	paramtype2= "facedir",
 	is_ground_content = false,	
