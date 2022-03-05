@@ -97,9 +97,9 @@ minetest.register_node("digtron:duplicator", {
 			local target_node = minetest.get_node(target_pos)
 			local target_name
 
-			if "digtron:empty_crate" == target_node.name then
+			if target_node.name == "digtron:empty_crate" then
 				target_name = "digtron:loaded_crate"
-			elseif "digtron:empty_locked_crate" == target_node.name then
+			elseif target_node.name == "digtron:empty_locked_crate" then
 				if minetest.get_meta(target_pos):get_string("owner") ~= player_name then
 					minetest.sound_play("buzzer", {gain=0.5, pos=pos})
 					meta:set_string("infotext", S("The empty locked crate needs to be owned by you."))
@@ -194,7 +194,7 @@ minetest.register_node("digtron:duplicator", {
 
 			local titlestring = S("Crated @1-block Digtron", tostring(#layout.all-1))
 			target_meta:set_string("title", titlestring)
-			if "digtron:loaded_locked_crate" == target_name then
+			if target_name == "digtron:loaded_locked_crate" then
 				target_meta:set_string("owner", player_name)
 				target_meta:set_string("infotext", titlestring .. "\n" .. S("Owned by @1", player_name))
 			else
