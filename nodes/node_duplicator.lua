@@ -2,7 +2,7 @@
 local MP = minetest.get_modpath(minetest.get_current_modname())
 local S, NS = dofile(MP.."/intllib.lua")
 
-local inventory_formspec_string = 
+local inventory_formspec_string =
 	"size[9,9.3]" ..
 	default.gui_bg ..
 	default.gui_bg_img ..
@@ -22,7 +22,7 @@ if minetest.get_modpath("doc") then
 		"button_exit[8,4.5;1,1;help;"..S("Help").."]" ..
 		"tooltip[help;" .. S("Show documentation about this block") .. "]"
 end
-	
+
 minetest.register_node("digtron:duplicator", {
 	description = S("Digtron Duplicator"),
 	_doc_items_longdesc = digtron.doc.duplicator_longdesc,
@@ -38,7 +38,7 @@ minetest.register_node("digtron:duplicator", {
 	},
 	paramtype = "light",
 	paramtype2= "facedir",
-	is_ground_content = false,	
+	is_ground_content = false,
 	drawtype="nodebox",
 	node_box = {
 		type = "fixed",
@@ -60,20 +60,20 @@ minetest.register_node("digtron:duplicator", {
 	selection_box = {
 	    type = "regular"
 	},
-	
+
 	on_construct = function(pos)
 		local meta = minetest.get_meta(pos)
 		meta:set_string("formspec", inventory_formspec_string)
 		local inv = meta:get_inventory()
 		inv:set_size("main", 8*4)
 	end,
-	
+
 	can_dig = function(pos,player)
 		local meta = minetest.get_meta(pos)
 		local inv = meta:get_inventory()
 		return inv:is_empty("main")
 	end,
-	
+
 	allow_metadata_inventory_put = function(pos, listname, index, stack, player)
 		if minetest.get_item_group(stack:get_name(), "digtron") > 0 then
 			return stack:get_count()
@@ -81,69 +81,82 @@ minetest.register_node("digtron:duplicator", {
 			return 0
 		end
 	end,
-	
+
 	on_receive_fields = function(pos, formname, fields, sender)
+		local player_name = sender:get_player_name()
 		if fields.help then
-			minetest.after(0.5, doc.show_entry, sender:get_player_name(), "nodes", "digtron:duplicator", true)
+			minetest.after(0.5, doc.show_entry, player_name, "nodes", "digtron:duplicator", true)
+			return
 		end
-	
+
 		if fields.duplicate then
 			local node = minetest.get_node(pos)
 			local meta = minetest.get_meta(pos)
 			local inv = meta:get_inventory()
 			local target_pos = vector.add(pos, minetest.facedir_to_dir(node.param2))
 			local target_node = minetest.get_node(target_pos)
+			local target_name
 
-			if target_node.name ~= "digtron:empty_crate" then
+			if target_node.name == "digtron:empty_crate" then
+				target_name = "digtron:loaded_crate"
+			elseif target_node.name == "digtron:empty_locked_crate" then
+				if minetest.get_meta(target_pos):get_string("owner") ~= player_name then
+					minetest.sound_play("buzzer", {gain=0.5, pos=pos})
+					meta:set_string("infotext", S("The empty locked crate needs to be owned by you."))
+					return
+				end
+				target_name = "digtron:loaded_locked_crate"
+			end
+			if not target_name then
 				minetest.sound_play("buzzer", {gain=0.5, pos=pos})
 				meta:set_string("infotext", S("Needs an empty crate in output position to store duplicate"))
 				return
 			end
-			
+
 			local layout = DigtronLayout.create(pos, sender)
-			
+
 			if layout.contains_protected_node then
 				minetest.sound_play("buzzer", {gain=0.5, pos=pos})
 				meta:set_string("infotext", S("Digtron can't be duplicated, it contains protected blocks"))
 				return
 			end
-			
+
 			if #layout.all == 1 then
 				minetest.sound_play("buzzer", {gain=0.5, pos=pos})
 				meta:set_string("infotext", S("No Digtron components adjacent to duplicate"))
 				return
 			end
-			
-			layout.all[1] = {node={name="digtron:empty_crate"}, meta={fields = {}, inventory = {}}, pos={x=pos.x, y=pos.y, z=pos.z}} -- replace the duplicator's image with the empty crate image
-			
+
+			layout.all[1] = {node={name=target_node.name}, meta={fields = {}, inventory = {}}, pos={x=pos.x, y=pos.y, z=pos.z}} -- replace the duplicator's image with the empty crate image
+
 			-- count required nodes, skipping node 1 since it's the crate and we already know it's present in-world
 			local required_count = {}
 			for i = 2, #layout.all do
 				local nodename = layout.all[i].node.name
 				required_count[nodename] = (required_count[nodename] or 0) + 1
 			end
-						
+
 			-- check that there's enough in the duplicator's inventory
 			local unsatisfied = {}
 			for name, count in pairs(required_count) do
 				if not inv:contains_item("main", ItemStack({name=name, count=count})) then
 					table.insert(unsatisfied, tostring(count) .. " " .. minetest.registered_nodes[name].description)
 				end
-			end			
+			end
 			if #unsatisfied > 0 then
 				minetest.sound_play("dingding", {gain=1.0, pos=pos}) -- Insufficient inventory
 				meta:set_string("infotext", S("Duplicator requires:\n@1", table.concat(unsatisfied, "\n")))
 				return
 			end
-			
+
 			meta:set_string("infotext", "") -- clear infotext, we're good to go.
-		
+
 			-- deduct nodes from duplicator inventory
 			for name, count in pairs(required_count) do
 				inv:remove_item("main", ItemStack({name=name, count=count}))
 			end
 
-			-- clear inventories of image's nodes		
+			-- clear inventories of image's nodes
 			if layout.inventories ~= nil then
 				for _, node_image in pairs(layout.inventories) do
 					local main_inventory = node_image.meta.inventory.main
@@ -174,14 +187,19 @@ minetest.register_node("digtron:duplicator", {
 
 			-- replace empty crate with loaded crate and write image to its metadata
 			local layout_string = layout:serialize()
-			
-			minetest.set_node(target_pos, {name="digtron:loaded_crate", param1=node.param1, param2=node.param2})
+
+			minetest.set_node(target_pos, {name=target_name, param1=node.param1, param2=node.param2})
 			local target_meta = minetest.get_meta(target_pos)
 			target_meta:set_string("crated_layout", layout_string)
-			
+
 			local titlestring = S("Crated @1-block Digtron", tostring(#layout.all-1))
 			target_meta:set_string("title", titlestring)
-			target_meta:set_string("infotext", titlestring)
+			if target_name == "digtron:loaded_locked_crate" then
+				target_meta:set_string("owner", player_name)
+				target_meta:set_string("infotext", titlestring .. "\n" .. S("Owned by @1", player_name))
+			else
+				target_meta:set_string("infotext", titlestring)
+			end
 			minetest.sound_play("machine1", {gain=1.0, pos=pos})
 		end
 	end,
