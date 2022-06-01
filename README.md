@@ -31,8 +31,8 @@ Other specialized Digtron blocks include:
 
 The Digtron mod only depends on the default mod, but includes optional support for several other mods:
 
-* [https://forum.minetest.net/viewtopic.php?t=15912](doc), an in-game documentation mod. Detailed documentation for all of the Digtron's individual blocks are included as well as pages of general concepts and design tips.
-* [https://forum.minetest.net/viewtopic.php?id=2155](pipeworks), a set of pneumatic tubes that allows inventory items to be extracted from or inserted into Digtron inventories.
-* [https://forum.minetest.net/viewtopic.php?&t=12379](hopper), a different mod for inserting into and extracting from Digtron inventories. Note that only [https://github.com/minetest-mods/hopper](the most recent version of hopper is Digtron-capable,) earlier versions lack a suitable API.
-* [https://forum.minetest.net/viewtopic.php?&t=4870](awards), a mod that adds achievements to the game. Over thirty Digtron-specific achievements are included.
-* [https://forum.minetest.net/viewtopic.php?f=11&t=2538](technic), which adds rechargeable batteries and power cables to the game that Digtron can use instead of fuel.
+* [doc](https://forum.minetest.net/viewtopic.php?t=15912), an in-game documentation mod. Detailed documentation for all of the Digtron's individual blocks are included as well as pages of general concepts and design tips.
+* [pipeworks](https://forum.minetest.net/viewtopic.php?id=2155), a set of pneumatic tubes that allows inventory items to be extracted from or inserted into Digtron inventories.
+* [hopper](https://forum.minetest.net/viewtopic.php?&t=12379), a different mod for inserting into and extracting from Digtron inventories. Note that only [the most recent version of hopper is Digtron-capable,](https://github.com/minetest-mods/hopper) earlier versions lack a suitable API.
+* [awards](https://forum.minetest.net/viewtopic.php?&t=4870), a mod that adds achievements to the game. Over thirty Digtron-specific achievements are included.
+* [technic](https://forum.minetest.net/viewtopic.php?f=11&t=2538), which adds rechargeable batteries and power cables to the game that Digtron can use instead of fuel.
