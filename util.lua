@@ -312,7 +312,7 @@ digtron.damage_creatures = function(player, source_pos, target_pos, amount, item
 	if type(player) ~= 'userdata' then
 		return
 	end
-	local objects = minetest.env:get_objects_inside_radius(target_pos, 1.0)
+	local objects = minetest.get_objects_inside_radius(target_pos, 1.0)
 	if objects ~= nil then
 		damage_def.damage_groups.fleshy = amount
 		local velocity = {
@@ -352,7 +352,7 @@ digtron.damage_creatures = function(player, source_pos, target_pos, amount, item
 		end
 	end
 	-- If we killed any mobs they might have dropped some stuff, vacuum that up now too.
-	objects = minetest.env:get_objects_inside_radius(target_pos, 1.0)
+	objects = minetest.get_objects_inside_radius(target_pos, 1.0)
 	if objects ~= nil then
 		for _, obj in ipairs(objects) do
 			if not obj:is_player() then
