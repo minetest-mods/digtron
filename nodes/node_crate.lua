@@ -88,7 +88,7 @@ local store_digtron = function(pos, clicker, loaded_node_name, protected)
 	meta:set_string("infotext", titlestring .. "\n" .. protection_suffix)
 end
 
-local use_texture_alpha = minetest.features.use_texture_alpha_string_modes and "opaque" or nil
+local use_texture_alpha = minetest.features.use_texture_alpha_string_modes and "blend" or nil
 
 minetest.register_node("digtron:empty_crate", {
 	description = S("Digtron Crate (Empty)"),
