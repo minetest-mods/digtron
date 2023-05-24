@@ -73,8 +73,8 @@ minetest.register_on_player_receive_fields(function(sender, formname, fields)
 		return
 	end
 	local pos = minetest.string_to_pos(formname:sub(16, -1))
-
-    local meta = minetest.get_meta(pos)
+	
+	local meta = minetest.get_meta(pos)
 	local period = tonumber(fields.period)
 	local offset = tonumber(fields.offset)
 	local build_facing = tonumber(fields.build_facing)
@@ -108,20 +108,86 @@ minetest.register_on_player_receive_fields(function(sender, formname, fields)
 		extrusion = meta:get_int("extrusion")
 	end
 	
-	if fields.set then
-		digtron.show_offset_markers(pos, offset, period)
+	local nodename = minetest.get_node_or_nil(pos).name
+		
+	-- Master builder: bulk operations on all builders, layout cycling
+	if nodename == "digtron:master_builder" then
+	
+		if fields.set then
+			-- copy current settings to all builders
+			local layout = DigtronLayout.create(pos, sender)
+			
+			if layout.builders ~= nil then
+				
+				local inv = meta:get_inventory()
+				local target_item = inv:get_stack("main",1)
+				local target_item_name = target_item:get_name()
+				
+				if target_item_name ~= "air" and minetest.get_item_group(target_item_name, "digtron") == 0 then
+				
+					for k, location in pairs(layout.builders) do
 
-	elseif fields.read then
-		local facing = minetest.get_node(pos).param2
-		local buildpos = digtron.find_new_pos(pos, facing)
-		local target_node = minetest.get_node(buildpos)
-		if target_node.name ~= "air" and minetest.get_item_group(target_node.name, "digtron") == 0 then
-			local meta = minetest.get_meta(pos)
-			local inv = meta:get_inventory()
-			local target_name = digtron.builder_read_item_substitutions[target_node.name] or target_node.name
-			inv:set_stack("main", 1, target_name)
-			meta:set_int("build_facing", target_node.param2)
+						local target = minetest.get_node(location.pos)
+						local target_meta = minetest.get_meta(location.pos)
+						target_meta:set_int("period", meta:get_int("period"))
+						target_meta:set_int("offset", meta:get_int("offset"))
+						target_meta:set_int("build_facing", meta:get_int("build_facing"))
+						target_meta:set_int("extrusion", meta:get_int("extrusion"))
+					
+						local target_inv = target_meta:get_inventory()
+						target_inv:set_stack("main", 1, target_item_name)
+						
+						digtron.update_builder_item(location.pos)
+					end
+				end
+			end
+			
+		elseif fields.read then
+
+			-- make all builders perform read&save
+			local layout = DigtronLayout.create(pos, sender)
+		
+			if layout.builders ~= nil then
+				for k, location in pairs(layout.builders) do
+				
+					local target = minetest.get_node(location.pos)
+					local facing = minetest.get_node(location.pos).param2
+					local buildpos = digtron.find_new_pos(location.pos, facing)
+					local target_node = minetest.get_node(buildpos)
+					if target_node.name ~= "air" and minetest.get_item_group(target_node.name, "digtron") == 0 then
+						local meta = minetest.get_meta(location.pos)
+						local inv = meta:get_inventory()
+						local target_name = digtron.builder_read_item_substitutions[target_node.name] or target_node.name
+						inv:set_stack("main", 1, target_name)
+						meta:set_int("build_facing", target_node.param2)
+						digtron.update_builder_item(location.pos)
+					end
+					
+				end
+
+			end
 		end
+	
+		
+	-- regular builder: changes apply only to itself
+	else
+	
+		if fields.set then
+			digtron.show_offset_markers(pos, offset, period)
+
+		elseif fields.read then
+			local facing = minetest.get_node(pos).param2
+			local buildpos = digtron.find_new_pos(pos, facing)
+			local target_node = minetest.get_node(buildpos)
+			if target_node.name ~= "air" and minetest.get_item_group(target_node.name, "digtron") == 0 then
+				local meta = minetest.get_meta(pos)
+				local inv = meta:get_inventory()
+				local target_name = digtron.builder_read_item_substitutions[target_node.name] or target_node.name
+				inv:set_stack("main", 1, target_name)
+				meta:set_int("build_facing", target_node.param2)
+			end
+		end
+	
 	end
 	
 	if fields.help and minetest.get_modpath("doc") then --check for mod in case someone disabled it after this digger was built
@@ -136,14 +202,14 @@ end)
 minetest.register_node("digtron:builder", {
 	description = S("Digtron Builder Module"),
 	_doc_items_longdesc = digtron.doc.builder_longdesc,
-    _doc_items_usagehelp = digtron.doc.builder_usagehelp,
+	_doc_items_usagehelp = digtron.doc.builder_usagehelp,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3, digtron = 4},
 	drop = "digtron:builder",
 	sounds = digtron.metal_sounds,
 	paramtype = "light",
 	paramtype2= "facedir",
 	is_ground_content = false,
-	tiles = {
+	tiles = { 
 		"digtron_plate.png^[transformR90",
 		"digtron_plate.png^[transformR270",
 		"digtron_plate.png",
@@ -354,4 +420,106 @@ minetest.register_node("digtron:builder", {
 		end
 		return built_count
 	end,
+})
+
+-- Master builder node
+-- Does not build anything, but can set all other builders to a certain item 
+-- OR make all other builders perform read & save operation.
+-- First function is handy e.g. for farming combines, the second is handy for templates.
+-- The formspec is reused, but the buttons are behaving differently from regular builder:
+-- Save and show -> propagate settings from master builder to all builders
+-- Read and save -> perform read&save on all builders
+
+minetest.register_node("digtron:master_builder", {
+	description = S("Digtron Master Builder Module"),
+	_doc_items_longdesc = digtron.doc.builder_longdesc,
+	_doc_items_usagehelp = digtron.doc.builder_usagehelp,
+	groups = {cracky = 3,  oddly_breakable_by_hand = 3, digtron = 1},
+	drop = "digtron:master_builder",
+	sounds = digtron.metal_sounds,
+	paramtype = "light",
+	paramtype2= "facedir",
+	is_ground_content = false,
+	tiles = {
+		"digtron_plate.png^[transformR90^digtron_master_builder.png^[colorize:" .. digtron.auto_controller_colorize,
+		"digtron_plate.png^[transformR270^digtron_master_builder.png^[colorize:" .. digtron.auto_controller_colorize,
+		"digtron_plate.png^digtron_master_builder.png^[colorize:" .. digtron.auto_controller_colorize,
+		"digtron_plate.png^[transformR180^digtron_master_builder.png^[colorize:" .. digtron.auto_controller_colorize,
+		"digtron_plate.png^digtron_master_builder.png^[colorize:" .. digtron.auto_controller_colorize,
+		"digtron_plate.png^digtron_master_builder.png^[colorize:" .. digtron.auto_controller_colorize,
+	},
+	
+	drawtype = "nodebox",
+	node_box = {
+		type = "fixed",
+		fixed = {
+			{0.3125, 0.3125, -0.5, 0.5, 0.5, 0.5},
+			{0.3125, -0.5, -0.5, 0.5, -0.3125, 0.5},
+			{-0.5, 0.3125, -0.5, -0.3125, 0.5, 0.5},
+			{-0.5, -0.5, -0.5, -0.3125, -0.3125, 0.5},
+			{-0.3125, 0.3125, 0.3125, 0.3125, 0.5, 0.5},
+			{-0.3125, -0.5, 0.3125, 0.3125, -0.3125, 0.5},
+			{-0.5, -0.3125, 0.3125, -0.3125, 0.3125, 0.5},
+			{0.3125, -0.3125, 0.3125, 0.5, 0.3125, 0.5},
+			{-0.5, -0.3125, -0.5, -0.3125, 0.3125, -0.3125},
+			{0.3125, -0.3125, -0.5, 0.5, 0.3125, -0.3125},
+			{-0.3125, 0.3125, -0.5, 0.3125, 0.5, -0.3125},
+			{-0.3125, -0.5, -0.5, 0.3125, -0.3125, -0.3125},
+		}
+	},
+	
+	on_construct = function(pos)
+        local meta = minetest.get_meta(pos)
+		meta:set_int("period", 1) 
+		meta:set_int("offset", 0) 
+		meta:set_int("build_facing", 0)
+		meta:set_int("extrusion", 1)
+				
+		local inv = meta:get_inventory()
+		inv:set_size("main", 1)
+	end,
+	
+	on_rightclick = builder_on_rightclick,
+	
+	on_destruct = function(pos)
+		digtron.remove_builder_item(pos)
+	end,
+	
+	after_place_node = function(pos)
+		digtron.update_builder_item(pos)
+	end,
+
+	allow_metadata_inventory_put = function(pos, listname, index, stack, player)
+		local stack_name = stack:get_name()
+	
+		if minetest.get_item_group(stack_name, "digtron") ~= 0 then
+			return 0 -- don't allow builders to be set to build Digtron nodes, they'll just clog the output.
+		end	
+		
+		local stack_def = minetest.registered_nodes[stack_name]
+		if not stack_def and not digtron.whitelisted_on_place(stack_name) then
+			return 0 -- don't allow craft items unless their on_place is whitelisted.
+		end
+		
+		node_inventory_table.pos = pos
+		local inv = minetest.get_inventory(node_inventory_table)
+		inv:set_stack(listname, index, stack:take_item(1))
+		
+		-- If we're adding a wallmounted item and the build facing is greater than 5, reset it to 0
+		local meta = minetest.get_meta(pos)
+		if stack_def ~= nil and stack_def.paramtype2 == "wallmounted" and tonumber(meta:get_int("build_facing")) > 5 then
+			meta:set_int("build_facing", 0)
+		end
+		
+		return 0
+	end,
+	
+	allow_metadata_inventory_take = function(pos, listname, index, stack, player)
+		node_inventory_table.pos = pos
+		local inv = minetest.get_inventory(node_inventory_table)
+		inv:set_stack(listname, index, ItemStack(""))
+		return 0
+	end,
+	
+
 })
