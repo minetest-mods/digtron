@@ -18,5 +18,5 @@ read_globals = {
 	"dump", "VoxelArea",
 
 	-- Deps
-	"default"
+	"default", "awards"
 }

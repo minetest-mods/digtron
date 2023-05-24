@@ -55,7 +55,7 @@ local function eject_items(pos, node, player, eject_even_without_pipeworks, layo
 	end	
 
 	if layout == nil then
-		layout = DigtronLayout.create(pos, player)
+		layout = digtron.DigtronLayout.create(pos, player)
 	end
 
 	-- Build a list of all the items that builder nodes want to use.

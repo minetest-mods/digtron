@@ -113,7 +113,7 @@ minetest.register_node("digtron:duplicator", {
 				return
 			end
 
-			local layout = DigtronLayout.create(pos, sender)
+			local layout = digtron.DigtronLayout.create(pos, sender)
 
 			if layout.contains_protected_node then
 				minetest.sound_play("buzzer", {gain=0.5, pos=pos})

@@ -54,7 +54,7 @@ minetest.register_node("digtron:axle", {
 			return
 		end
 
-		local image = DigtronLayout.create(pos, clicker)
+		local image = digtron.DigtronLayout.create(pos, clicker)
 		if image:rotate_layout_image(node.param2) == false then
 			-- This should be impossible, but if self-validation fails abort.
 			return

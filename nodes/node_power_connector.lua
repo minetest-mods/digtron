@@ -67,7 +67,7 @@ minetest.register_node("digtron:power_connector", {
 	end,
 	
 	on_receive_fields = function(pos, formname, fields, sender)
-		local layout = DigtronLayout.create(pos, sender)
+		local layout = digtron.DigtronLayout.create(pos, sender)
 		local max_cost = 0
 		if layout.builders ~= nil then
 			for _, node_image in pairs(layout.builders) do

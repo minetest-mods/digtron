@@ -115,7 +115,7 @@ minetest.register_on_player_receive_fields(function(sender, formname, fields)
 	
 		if fields.set then
 			-- copy current settings to all builders
-			local layout = DigtronLayout.create(pos, sender)
+			local layout = digtron.DigtronLayout.create(pos, sender)
 			
 			if layout.builders ~= nil then
 				
@@ -145,7 +145,7 @@ minetest.register_on_player_receive_fields(function(sender, formname, fields)
 		elseif fields.read then
 
 			-- make all builders perform read&save
-			local layout = DigtronLayout.create(pos, sender)
+			local layout = digtron.DigtronLayout.create(pos, sender)
 		
 			if layout.builders ~= nil then
 				for k, location in pairs(layout.builders) do

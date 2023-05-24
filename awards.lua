@@ -1,8 +1,8 @@
 if not minetest.get_modpath("awards") then
-	digtron.award_item_dug = function (items, name, count) end
-	digtron.award_layout = function (layout, name) end
-	digtron.award_item_built = function(item_name, name) end
-	digtron.award_crate = function (layout, name) end
+	digtron.award_item_dug = function() end
+	digtron.award_layout = function() end
+	digtron.award_item_built = function() end
+	digtron.award_crate = function() end
 	return
 end
 
@@ -10,14 +10,14 @@ end
 
 -- internationalization boilerplate
 local MP = minetest.get_modpath(minetest.get_current_modname())
-local S, NS = dofile(MP.."/intllib.lua")
+local S = dofile(MP.."/intllib.lua")
 
 awards.register_trigger("digtron_dig", {
 	type = "counted_key",
 	progress = "@1/@2 excavated",
 	auto_description = {"Excavate 1 @2 using a Digtron.", "Excavate @1 @2 using a Digtron."},
 	auto_description_total = {"Excavate @1 block using a Digtron.", "Excavate @1 blocks using a Digtron."},
-	get_key = function(self, def)
+	get_key = function(_, def)
 		return minetest.registered_aliases[def.trigger.node] or def.trigger.node
 	end,
 	key_is_item = true,
@@ -37,7 +37,7 @@ awards.register_trigger("digtron_build", {
 	progress = "@1/@2 built",
 	auto_description = {"Build 1 @2 using a Digtron.", "Build @1 @2 using a Digtron."},
 	auto_description_total = {"Build @1 block using a Digtron.", "Build @1 blocks using a Digtron."},
-	get_key = function(self, def)
+	get_key = function(_, def)
 		return minetest.registered_aliases[def.trigger.node] or def.trigger.node
 	end,
 	key_is_item = true,
@@ -75,7 +75,7 @@ digtron.award_layout = function(layout, player)
 	if layout.builders ~= nil and table.getn(layout.builders) > 24 then
 		awards.unlock(name, "digtron_builder25")
 	end
-	
+
 	if layout.controller.y > 100 then
 		awards.unlock(name, "digtron_height100")
 		if layout.controller.y > 1000 then

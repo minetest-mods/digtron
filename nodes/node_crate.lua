@@ -23,7 +23,7 @@ local player_permitted = function(pos, player)
 end
 
 local store_digtron = function(pos, clicker, loaded_node_name, protected)
-	local layout = DigtronLayout.create(pos, clicker)
+	local layout = digtron.DigtronLayout.create(pos, clicker)
 	local protection_prefix = ""
 	local protection_suffix = ""
 	if protected then
@@ -215,7 +215,7 @@ local loaded_on_recieve = function(pos, fields, sender, protected)
 	end
 	
 	local layout_string = meta:get_string("crated_layout")
-	local layout = DigtronLayout.deserialize(layout_string)
+	local layout = digtron.DigtronLayout.deserialize(layout_string)
 
 	if layout == nil then
 		meta:set_string("infotext", infotext .. "\n" .. S("Unable to read layout from crate metadata, regrettably this Digtron may be corrupted."))

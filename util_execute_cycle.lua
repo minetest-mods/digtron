@@ -119,7 +119,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	local status_text = S("Heat remaining in controller furnace: @1", math.floor(math.max(0, fuel_burning)))
 	local exhaust = meta:get_int("on_coal")
 	
-	local layout = DigtronLayout.create(pos, clicker)
+	local layout = digtron.DigtronLayout.create(pos, clicker)
 
 	local status_text, return_code = neighbour_test(layout, status_text, dir)
 	if return_code ~= 0 then
@@ -421,7 +421,7 @@ end
 -- Simplified version of the above method that only moves, and doesn't execute diggers or builders.
 digtron.execute_move_cycle = function(pos, clicker)
 	local meta = minetest.get_meta(pos)
-	local layout = DigtronLayout.create(pos, clicker)
+	local layout = digtron.DigtronLayout.create(pos, clicker)
 
 	local status_text = ""
 	local status_text, return_code = neighbour_test(layout, status_text, nil) -- skip traction check for pusher by passing nil for direction
@@ -482,7 +482,7 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 	local status_text = S("Heat remaining in controller furnace: @1", math.floor(math.max(0, fuel_burning)))
 	local exhaust = meta:get_int("on_coal")
 	                                        
-	local layout = DigtronLayout.create(pos, clicker)
+	local layout = digtron.DigtronLayout.create(pos, clicker)
 
 	local status_text, return_code = neighbour_test(layout, status_text, dir)
 	if return_code ~= 0 then
