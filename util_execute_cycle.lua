@@ -198,7 +198,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	local can_build = true
 	local test_items = {}
 	local test_build_fuel_cost = 0
-	local test_build_return_code, test_build_return_items
+	local test_build_return_code, test_build_return_items, failed_to_find
 
 	if layout.builders ~= nil then
 		for _, location in pairs(layout.builders) do
@@ -206,7 +206,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 			local targetdef = minetest.registered_nodes[target.name]
 			local test_location = vector.add(location.pos, dir)
 			if targetdef.test_build ~= nil then
-				test_build_return_code, test_build_return_items = targetdef.test_build(
+				test_build_return_code, test_build_return_items, failed_to_find = targetdef.test_build(
 					location.pos, test_location, layout.inventories, layout.protected, layout.nodes_dug, controlling_coordinate, layout.controller
 				)
 				for _, return_item in pairs(test_build_return_items) do
@@ -336,7 +336,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	local strange_failure = false
 	-- execute_build on all digtron components that have one
 	if layout.builders ~= nil then
-		for k, location in pairs(layout.builders) do
+		for _, location in pairs(layout.builders) do
 			local target = minetest.get_node(location.pos)
 			local targetdef = minetest.registered_nodes[target.name]
 			if targetdef.execute_build ~= nil then
@@ -357,7 +357,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	end
 
 	if layout.auto_ejectors ~= nil then
-		for k, location in pairs(layout.auto_ejectors) do
+		for _, location in pairs(layout.auto_ejectors) do
 			local target = minetest.get_node(location.pos)
 			local targetdef = minetest.registered_nodes[target.name]
 			if targetdef.execute_eject ~= nil then
@@ -406,7 +406,9 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	local node_to_dig, whether_to_dig = layout.nodes_dug:pop()
 	while node_to_dig ~= nil do
 		if whether_to_dig == true then
-			minetest.log("action", string.format("%s uses Digtron to dig %s at (%d, %d, %d)", clicker:get_player_name(), minetest.get_node(node_to_dig).name, node_to_dig.x, node_to_dig.y, node_to_dig.z))
+			minetest.log("action", string.format(
+				"%s uses Digtron to dig %s at (%d, %d, %d)", clicker:get_player_name(), minetest.get_node(node_to_dig).name, node_to_dig.x, node_to_dig.y, node_to_dig.z)
+			)
 			minetest.remove_node(node_to_dig)
 		end
 		-- all of the digtron's nodes wind up in nodes_dug, so this is an ideal place to stick
@@ -507,7 +509,7 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 	-- but doesn't actually dig the nodes yet. That comes later.
 	-- If we dug them now, sand would fall and some digtron nodes would die.
 	if layout.diggers ~= nil then
-		for k, location in pairs(layout.diggers) do
+		for _, location in pairs(layout.diggers) do
 			local target = minetest.get_node(location.pos)
 			local targetdef = minetest.registered_nodes[target.name]
 			if targetdef.execute_dig ~= nil then
@@ -562,7 +564,7 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 
 	-- damage the weak flesh
 	if digtron.config.damage_hp > 0 and layout.diggers ~= nil then
-		for k, location in pairs(layout.diggers) do
+		for _, location in pairs(layout.diggers) do
 			local target = minetest.get_node(location.pos)
 			local targetdef = minetest.registered_nodes[target.name]
 			if targetdef.damage_creatures ~= nil then
@@ -619,7 +621,9 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 	local node_to_dig, whether_to_dig = layout.nodes_dug:pop()
 	while node_to_dig ~= nil do
 		if whether_to_dig == true then
-			minetest.log("action", string.format("%s uses Digtron to dig %s at (%d, %d, %d)", clicker:get_player_name(), minetest.get_node(node_to_dig).name, node_to_dig.x, node_to_dig.y, node_to_dig.z))
+			minetest.log("action", string.format(
+				"%s uses Digtron to dig %s at (%d, %d, %d)", clicker:get_player_name(), minetest.get_node(node_to_dig).name, node_to_dig.x, node_to_dig.y, node_to_dig.z)
+			)
 			minetest.remove_node(node_to_dig)
 		end
 		node_to_dig, whether_to_dig = layout.nodes_dug:pop()
