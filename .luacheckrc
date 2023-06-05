@@ -1,7 +1,8 @@
 max_line_length = 180
 
 globals = {
-	"digtron"
+	"digtron",
+	"catacomb"
 }
 
 read_globals = {
@@ -16,5 +17,5 @@ read_globals = {
 	"dump", "VoxelArea",
 
 	-- Deps
-	"default", "awards"
+	"default", "awards", "pipeworks", "hopper", "technic"
 }
