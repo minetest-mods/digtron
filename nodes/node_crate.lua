@@ -30,7 +30,7 @@ local store_digtron = function(pos, clicker, loaded_node_name, protected)
 		protection_prefix = S("Digtron Crate") .. "\n" .. S("Owned by @1", clicker:get_player_name() or "")
 		protection_suffix = S("Owned by @1", clicker:get_player_name() or "")
 	end
-	
+
 	if layout.contains_protected_node then
 		local meta = minetest.get_meta(pos)
 		minetest.sound_play("buzzer", {gain=0.5, pos=pos})
@@ -38,7 +38,7 @@ local store_digtron = function(pos, clicker, loaded_node_name, protected)
 		-- no stealing other peoples' digtrons
 		return
 	end
-	
+
 	if #layout.all == 1 then
 		local meta = minetest.get_meta(pos)
 		minetest.sound_play("buzzer", {gain=0.5, pos=pos})
@@ -47,22 +47,22 @@ local store_digtron = function(pos, clicker, loaded_node_name, protected)
 	end
 
 	digtron.award_crate(layout, clicker:get_player_name())
-	
+
 	local layout_string = layout:serialize()
-	
+
 	-- destroy everything. Note that this includes the empty crate, which will be bundled up with the layout.
 	for _, node_image in pairs(layout.all) do
 		local old_pos = node_image.pos
 		local old_node = node_image.node
 		minetest.remove_node(old_pos)
-		
+
 		if modpath_awards then
 			-- We're about to tell the awards mod that we're digging a node, but we
 			-- don't want it to count toward any actual awards. Pre-decrement.
 			local data = awards.player(clicker:get_player_name())
 			awards.increment_item_counter(data, "dig", old_node.name, -1)
 		end
-		
+
 		for _, callback in ipairs(minetest.registered_on_dignodes) do
 			-- Copy pos and node because callback can modify them
 			local pos_copy = {x=old_pos.x, y=old_pos.y, z=old_pos.z}
@@ -70,11 +70,11 @@ local store_digtron = function(pos, clicker, loaded_node_name, protected)
 			callback(pos_copy, oldnode_copy, clicker)
 		end			
 	end
-	
+
 	-- Create the loaded crate node
 	minetest.set_node(pos, {name=loaded_node_name})
 	minetest.sound_play("machine1", {gain=1.0, pos=pos})
-	
+
 	local meta = minetest.get_meta(pos)
 	meta:set_string("crated_layout", layout_string)
 
@@ -107,7 +107,7 @@ minetest.register_node("digtron:empty_crate", {
         },
     },
 	paramtype = "light",
-	
+
 	can_dig = function(pos, player)
 		return player and not minetest.is_protected(pos, player:get_player_name())
 	end,
@@ -198,14 +198,14 @@ local loaded_on_recieve = function(pos, fields, sender, protected)
 	end
 	local title = meta:get_string("title")
 	local infotext
-	
+
 	if protected then
 		infotext = title .. "\n" .. S("Owned by @1", sender:get_player_name())
 	else
 		infotext = title
 	end
 	meta:set_string("infotext", infotext)
-	
+
 	if fields.help and minetest.get_modpath("doc") then --check for mod in case someone disabled it after this digger was built
 		minetest.after(0.5, doc.show_entry, sender:get_player_name(), "nodes", "digtron:loaded_crate", true)
 	end
@@ -213,7 +213,7 @@ local loaded_on_recieve = function(pos, fields, sender, protected)
 	if not (fields.unpack or fields.show) then
 		return
 	end
-	
+
 	local layout_string = meta:get_string("crated_layout")
 	local layout = digtron.DigtronLayout.deserialize(layout_string)
 
@@ -223,10 +223,10 @@ local loaded_on_recieve = function(pos, fields, sender, protected)
 		-- Something went horribly wrong
 		return
 	end
-	
+
 	local protected_node = false
 	local obstructed_node = false
-	
+
 	local pos_diff = vector.subtract(pos, layout.controller)
 	layout.controller = pos
 	for _, node_image in pairs(layout.all) do
@@ -243,23 +243,23 @@ local loaded_on_recieve = function(pos, fields, sender, protected)
 			end
 		end
 	end
-	
+
 	if not fields.unpack then
 		return
 	end
-	
+
 	if protected_node then
 		meta:set_string("infotext", infotext .. "\n" .. S("Unable to deploy Digtron due to protected blocks in target area"))
 		minetest.sound_play("buzzer", {gain=0.5, pos=pos})
 		return
 	end
-	
+
 	if obstructed_node then
 		meta:set_string("infotext", infotext .. "\n" .. S("Unable to deploy Digtron due to obstruction in target area"))
 		minetest.sound_play("buzzer", {gain=0.5, pos=pos})
 		return
 	end
-	
+
 	-- build digtron. Since the empty crate was included in the layout, that will overwrite this loaded crate and destroy it.
 	minetest.sound_play("machine2", {gain=1.0, pos=pos})
 	layout:write_layout_image(sender)
@@ -267,7 +267,7 @@ end
 
 local loaded_on_dig = function(pos, player, loaded_node_name)
 	local meta = minetest.get_meta(pos)
-	
+
 	local stack = ItemStack({name=loaded_node_name, count=1, wear=0})
 	local stack_meta = stack:get_meta()
 	stack_meta:set_string("crated_layout", meta:get_string("crated_layout"))
@@ -302,7 +302,7 @@ local loaded_after_place = function(pos, itemstack)
 	local title = stack_meta:get_string("description")
 	if layout ~= "" then
 		local meta = minetest.get_meta(pos)
-			
+
 		meta:set_string("crated_layout", layout)
 		meta:set_string("title", title)
 		meta:set_string("infotext", title)
@@ -320,12 +320,12 @@ minetest.register_node("digtron:loaded_crate", {
 	sounds = default.node_sound_wood_defaults(),
 	tiles = {"digtron_plate.png^digtron_crate.png"},
 	is_ground_content = false,
-	
+
 	on_construct = function(pos)
 		local meta = minetest.get_meta(pos)
 		meta:set_string("formspec", loaded_formspec(pos, meta))
 	end,
-	
+
 	on_receive_fields = function(pos, formname, fields, sender)
 		return loaded_on_recieve(pos, fields, sender)
 	end,
@@ -335,7 +335,7 @@ minetest.register_node("digtron:loaded_crate", {
 			return loaded_on_dig(pos, player, "digtron:loaded_crate")
 		end
 	end,
-	
+
 	after_place_node = function(pos, placer, itemstack, pointed_thing)
 		loaded_after_place(pos, itemstack)
 	end,
@@ -351,7 +351,7 @@ minetest.register_node("digtron:loaded_locked_crate", {
 	sounds = default.node_sound_wood_defaults(),
 	tiles = {"digtron_plate.png^digtron_crate.png","digtron_plate.png^digtron_crate.png","digtron_plate.png^digtron_crate.png^digtron_lock.png","digtron_plate.png^digtron_crate.png^digtron_lock.png","digtron_plate.png^digtron_crate.png^digtron_lock.png","digtron_plate.png^digtron_crate.png^digtron_lock.png"},
 	is_ground_content = false,
-	
+
 	on_construct = function(pos)
 		local meta = minetest.get_meta(pos)
 		meta:set_string("owner", "")
@@ -366,14 +366,14 @@ minetest.register_node("digtron:loaded_locked_crate", {
 			return false
 		end
 	end,
-	
+
 	after_place_node = function(pos, placer, itemstack, pointed_thing)
 		local meta = minetest.get_meta(pos)
 		meta:set_string("owner", placer:get_player_name() or "")
 		loaded_after_place(pos, itemstack)
 		meta:set_string("infotext", meta:get_string("infotext") .. "\n" .. S("Owned by @1", meta:get_string("owner")))
 	end,
-	
+
 	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
 		if player_permitted(pos,clicker) then
 			local meta = minetest.get_meta(pos)

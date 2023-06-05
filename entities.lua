@@ -14,11 +14,11 @@ minetest.register_entity("digtron:marker", {
 			end,
 			self)
 	end,
-	
+
 	on_rightclick=function(self, clicker)
 		self.object:remove()
 	end,
-	
+
 	on_punch = function(self, hitter)
 		self.object:remove()
 	end,
@@ -40,11 +40,11 @@ minetest.register_entity("digtron:marker_vertical", {
 			end,
 			self)
 	end,
-	
+
 	on_rightclick=function(self, clicker)
 		self.object:remove()
 	end,
-	
+
 	on_punch = function(self, hitter)
 		self.object:remove()
 	end,
@@ -66,11 +66,11 @@ minetest.register_entity("digtron:marker_crate_good", {
 			end,
 			self)
 	end,
-	
+
 	on_rightclick=function(self, clicker)
 		self.object:remove()
 	end,
-	
+
 	on_punch = function(self, hitter)
 		self.object:remove()
 	end,
@@ -92,11 +92,11 @@ minetest.register_entity("digtron:marker_crate_bad", {
 			end,
 			self)
 	end,
-	
+
 	on_rightclick=function(self, clicker)
 		self.object:remove()
 	end,
-	
+
 	on_punch = function(self, hitter)
 		self.object:remove()
 	end,
@@ -114,7 +114,7 @@ minetest.register_entity("digtron:builder_item", {
 		textures = {""},
 		automatic_rotate = math.pi * 0.25,
 	},
-	
+
 	on_activate = function(self, staticdata)
 		local props = self.object:get_properties()
 		if staticdata ~= nil and staticdata ~= "" then
@@ -135,7 +135,7 @@ minetest.register_entity("digtron:builder_item", {
 			self.object:remove()
 		end		
 	end,
-	
+
 	get_staticdata = function(self)
 		local props = self.object:get_properties()
 		if props ~= nil and props.textures ~= nil and props.textures[1] ~= nil then

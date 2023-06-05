@@ -28,7 +28,7 @@ if not minetest.get_modpath("technic") then
 	-- leave them registered, though, in case technic is being removed from an existing server.
 	holder_groups.not_in_creative_inventory = 1
 end
-	
+
 minetest.register_node("digtron:battery_holder", {
 	description = S("Digtron Battery Holder"),
 	_doc_items_longdesc = digtron.doc.battery_holder_longdesc,
@@ -62,7 +62,7 @@ minetest.register_node("digtron:battery_holder", {
 		local inv = meta:get_inventory()
 		inv:set_size("batteries", 8*4)
 	end,
-	
+
 	-- Allow all items with energy storage to be placed in the inventory
 	allow_metadata_inventory_put = function(pos, listname, index, stack, player)
 		if listname == "batteries" then
@@ -93,7 +93,7 @@ minetest.register_node("digtron:battery_holder", {
 		local inv = meta:get_inventory()
 		return inv:is_empty("batteries")
 	end,
-		
+
 	-- Pipeworks compatibility
 	-- Because who wouldn't send batteries through pipes if he could?
 	-----------------------------------------------------------------
@@ -119,7 +119,7 @@ minetest.register_node("digtron:battery_holder", {
 		input_inventory = "batteries",
 		connect_sides = {left = 1, right = 1, back = 1, front = 1, bottom = 1, top = 1}
 	} end end)(),
-	
+
 	after_place_node = (function() if minetest.get_modpath("pipeworks") then return pipeworks.after_place end end)(),
 	after_dig_node = (function() if minetest.get_modpath("pipeworks")then return pipeworks.after_dig end end)()
 })

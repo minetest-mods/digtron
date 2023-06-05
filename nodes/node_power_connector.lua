@@ -38,7 +38,7 @@ minetest.register_node("digtron:power_connector", {
 	paramtype = "light",
 	paramtype2 = "facedir",
 	is_ground_content = false,
-	
+
 	connects_to = {"group:technic_hv_cable"},
 	node_box = {
 		type = "connected",
@@ -53,7 +53,7 @@ minetest.register_node("digtron:power_connector", {
 		connect_left   = {-0.5,  -size, -size, size,  size, size}, -- x-
 		connect_right  = {-size, -size, -size, 0.5,   size, size}, -- x+
 	},
-	
+
 	on_construct = function(pos)
 		local meta = minetest.get_meta(pos)
 		meta:set_string("formspec", get_formspec_string(0,0))
@@ -65,7 +65,7 @@ minetest.register_node("digtron:power_connector", {
 		local demand = meta:get_int("HV_EU_demand")
 		meta:set_string("infotext", S("Digtron Power @1/@2", eu_input, demand))
 	end,
-	
+
 	on_receive_fields = function(pos, formname, fields, sender)
 		local layout = digtron.DigtronLayout.create(pos, sender)
 		local max_cost = 0
@@ -80,9 +80,9 @@ minetest.register_node("digtron:power_connector", {
 			end
 		end
 		local current_max = max_cost * digtron.config.power_ratio
-	
+
 		local meta = minetest.get_meta(pos)
-		
+
 		if fields.maximize then
 			meta:set_int("HV_EU_demand", current_max)
 		elseif fields.value ~= nil then
@@ -90,7 +90,7 @@ minetest.register_node("digtron:power_connector", {
 			local number = math.min(math.max(number, 0), current_max)
 			meta:set_int("HV_EU_demand", number)
 		end
-	
+
 		meta:set_string("formspec", get_formspec_string(meta:get_int("HV_EU_demand"), current_max))	
 	end,
 })

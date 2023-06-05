@@ -21,7 +21,7 @@ minetest.register_node("digtron:axle", {
 		"digtron_plate.png^digtron_axel_side.png",
 		"digtron_plate.png^digtron_axel_side.png",
 	},
-	
+
 	drawtype = "nodebox",
 	node_box = {
 		type = "fixed",
@@ -37,10 +37,10 @@ minetest.register_node("digtron:axle", {
 	},
 
 
-	
+
 	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
 		local meta = minetest.get_meta(pos)
-	
+
 		-- new delay code without nodetimer (lost on crating)
 		local now = minetest.get_gametime()
 		local last_time = tonumber(meta:get_string("last_time")) or 0
@@ -76,7 +76,7 @@ minetest.register_node("digtron:axle", {
 			meta:set_string("infotext", S("Digtron is obstructed."))
 		end
 	end,
-	
+
 	on_timer = function(pos, elapsed)
 		minetest.get_meta(pos):set_string("waiting", nil)
 	end,

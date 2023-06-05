@@ -117,7 +117,7 @@ minetest.register_node("digtron:digger", {
 		type = "fixed",
 		fixed = digger_nodebox,
 	},
-	
+
 	-- Aims in the +Z direction by default
 	tiles = {
 		"digtron_plate.png^[transformR90",
@@ -144,10 +144,10 @@ minetest.register_node("digtron:digger", {
 		if protected_nodes:get(digpos.x, digpos.y, digpos.z) then
 			return 0
 		end
-		
+
 		return digtron.mark_diggable(digpos, nodes_dug, player)
 	end,
-	
+
 	damage_creatures = function(player, pos, controlling_coordinate, items_dropped)
 		local facing = minetest.get_node(pos).param2
 		digtron.damage_creatures(player, pos, digtron.find_new_pos(pos, facing), damage_hp, items_dropped)
@@ -171,7 +171,7 @@ minetest.register_node("digtron:intermittent_digger", {
 		type = "fixed",
 		fixed = digger_nodebox,
 	},
-	
+
 	-- Aims in the +Z direction by default
 	tiles = {
 		"digtron_plate.png^[transformR90",
@@ -189,9 +189,9 @@ minetest.register_node("digtron:intermittent_digger", {
 		},
 		"digtron_plate.png^digtron_intermittent.png^digtron_motor.png",
 	},
-	
+
 	on_construct = intermittent_on_construct,
-	
+
 	on_rightclick = intermittent_on_rightclick,
 
 	-- returns fuel_cost, item_produced (a table or nil)
@@ -206,15 +206,15 @@ minetest.register_node("digtron:intermittent_digger", {
 		if protected_nodes:get(digpos.x, digpos.y, digpos.z) then
 			return 0
 		end
-		
+
 		local meta = minetest.get_meta(pos)
 		if (digpos[controlling_coordinate] + meta:get_int("offset")) % meta:get_int("period") ~= 0 then
 			return 0
 		end
-		
+
 		return digtron.mark_diggable(digpos, nodes_dug, player)
 	end,
-	
+
 	damage_creatures = function(player, pos, controlling_coordinate, items_dropped)
 		local facing = minetest.get_node(pos).param2
 		local targetpos = digtron.find_new_pos(pos, facing)
@@ -242,7 +242,7 @@ minetest.register_node("digtron:soft_digger", {
 		type = "fixed",
 		fixed = digger_nodebox,
 	},
-	
+
 	-- Aims in the +Z direction by default
 	tiles = {
 		"digtron_plate.png^[transformR90^[colorize:" .. digtron.soft_digger_colorize,
@@ -260,19 +260,19 @@ minetest.register_node("digtron:soft_digger", {
 		},
 		"digtron_plate.png^digtron_motor.png^[colorize:" .. digtron.soft_digger_colorize,
 	},
-	
+
 	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate, lateral_dig, player)
 		local facing = minetest.get_node(pos).param2
 		local digpos = digtron.find_new_pos(pos, facing)
-		
+
 		if protected_nodes:get(digpos.x, digpos.y, digpos.z) then
 			return 0
 		end
-			
+
 		if digtron.is_soft_material(digpos) then
 			return digtron.mark_diggable(digpos, nodes_dug, player)
 		end
-		
+
 		return 0
 	end,
 
@@ -299,7 +299,7 @@ minetest.register_node("digtron:intermittent_soft_digger", {
 		type = "fixed",
 		fixed = digger_nodebox,
 	},
-	
+
 	-- Aims in the +Z direction by default
 	tiles = {
 		"digtron_plate.png^[transformR90^[colorize:" .. digtron.soft_digger_colorize,
@@ -317,11 +317,11 @@ minetest.register_node("digtron:intermittent_soft_digger", {
 		},
 		"digtron_plate.png^digtron_intermittent.png^digtron_motor.png^[colorize:" .. digtron.soft_digger_colorize,
 	},
-	
+
 	on_construct = intermittent_on_construct,
-	
+
 	on_rightclick = intermittent_on_rightclick,
-		
+
 	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate, lateral_dig, player)
 		if lateral_dig == true then
 			return 0
@@ -329,20 +329,20 @@ minetest.register_node("digtron:intermittent_soft_digger", {
 
 		local facing = minetest.get_node(pos).param2
 		local digpos = digtron.find_new_pos(pos, facing)
-		
+
 		if protected_nodes:get(digpos.x, digpos.y, digpos.z) then
 			return 0
 		end
-		
+
 		local meta = minetest.get_meta(pos)
 		if (digpos[controlling_coordinate] + meta:get_int("offset")) % meta:get_int("period") ~= 0 then
 			return 0
 		end
-		
+
 		if digtron.is_soft_material(digpos) then
 			return digtron.mark_diggable(digpos, nodes_dug, player)
 		end
-		
+
 		return 0
 	end,
 
@@ -372,7 +372,7 @@ minetest.register_node("digtron:dual_digger", {
 		type = "fixed",
 		fixed = dual_digger_nodebox,
 	},
-	
+
 	-- Aims in the +Z and -Y direction by default
 	tiles = {
 		"digtron_plate.png^digtron_motor.png",
@@ -407,7 +407,7 @@ minetest.register_node("digtron:dual_digger", {
 
 		local items = {}
 		local cost = 0
-		
+
 		if protected_nodes:get(digpos.x, digpos.y, digpos.z) ~= true then
 			local forward_cost, forward_items = digtron.mark_diggable(digpos, nodes_dug, player)
 			if forward_items ~= nil then
@@ -426,10 +426,10 @@ minetest.register_node("digtron:dual_digger", {
 			end
 			cost = cost + down_cost
 		end
-		
+
 		return cost, items
 	end,
-	
+
 	damage_creatures = function(player, pos, controlling_coordinate, items_dropped)
 		local facing = minetest.get_node(pos).param2
 		digtron.damage_creatures(player, pos, digtron.find_new_pos(pos, facing), damage_hp, items_dropped)
@@ -454,7 +454,7 @@ minetest.register_node("digtron:dual_soft_digger", {
 		type = "fixed",
 		fixed = dual_digger_nodebox,
 	},
-	
+
 	-- Aims in the +Z and -Y direction by default
 	tiles = {
 		"digtron_plate.png^digtron_motor.png^[colorize:" .. digtron.soft_digger_colorize,
@@ -489,7 +489,7 @@ minetest.register_node("digtron:dual_soft_digger", {
 
 		local items = {}
 		local cost = 0
-		
+
 		if protected_nodes:get(digpos.x, digpos.y, digpos.z) ~= true and digtron.is_soft_material(digpos) then
 			local forward_cost, forward_items = digtron.mark_diggable(digpos, nodes_dug, player)
 			if forward_items ~= nil then
@@ -508,10 +508,10 @@ minetest.register_node("digtron:dual_soft_digger", {
 			end
 			cost = cost + down_cost
 		end
-		
+
 		return cost, items
 	end,
-	
+
 	damage_creatures = function(player, pos, controlling_coordinate, items_dropped)
 		local facing = minetest.get_node(pos).param2
 		digtron.damage_creatures(player, pos, digtron.find_new_pos(pos, facing), damage_hp_half, items_dropped)

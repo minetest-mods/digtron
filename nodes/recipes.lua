@@ -120,7 +120,7 @@ if minetest.get_modpath("technic") then
 				{"","default:steel_ingot",""}
 				}
 	})
-	
+
 	minetest.register_craft({
 		output = "digtron:power_connector",
 		recipe = {

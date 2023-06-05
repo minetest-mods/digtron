@@ -36,9 +36,9 @@ local function eject_items(pos, node, player, eject_even_without_pipeworks, layo
 	local destination_pos = vector.add(pos, dir)
 	local destination_node_name = minetest.get_node(destination_pos).name
 	local destination_node_def = minetest.registered_nodes[destination_node_name]
-	
+
 	if not pipeworks_path then eject_even_without_pipeworks = true end -- if pipeworks is not installed, always eject into world (there's no other option)
-	
+
 	local insert_into_pipe = false
 	local eject_into_world = false
 	if pipeworks_path and minetest.get_item_group(destination_node_name, "tubedevice") > 0 then
@@ -65,7 +65,7 @@ local function eject_items(pos, node, player, eject_even_without_pipeworks, layo
 			filter_items[node_image.meta.inventory.main[1]:get_name()] = true
 		end
 	end
-	
+
 	-- Look through the inventories and find an item that's not on that list.
 	local source_node = nil
 	local source_index = nil
@@ -85,11 +85,11 @@ local function eject_items(pos, node, player, eject_even_without_pipeworks, layo
 		end
 		if source_node then break end
 	end
-	
+
 	if source_node then
 		local meta = minetest.get_meta(source_node.pos)
 		local inv = meta:get_inventory()
-		
+
 		if insert_into_pipe then
 			local from_pos = vector.add(pos, vector.multiply(dir, 0.5))
 			local start_pos = pos
@@ -129,46 +129,46 @@ minetest.register_node("digtron:inventory_ejector", {
 			{-0.1875, -0.1875, 0.3125, 0.1875, 0.1875, 0.5}, -- NodeBox3
 		}
 	},
-	
+
 	on_construct = function(pos)
 		local meta = minetest.get_meta(pos)
 		meta:set_string("autoeject", "true")
 		meta:set_string("formspec", ejector_formspec(pos, meta))
 	end,
-	
+
 	tube = (function() if pipeworks_path then return {
 		connect_sides = {back = 1}
 	} end end)(),
-	
+
 	on_punch = function(pos, node, player)
 		eject_items(pos, node, player, true)
 	end,
-	
+
 	execute_eject = function(pos, node, player, layout)
 		local meta = minetest.get_meta(pos)
 		eject_items(pos, node, player, meta:get_string("nonpipe") == "true", layout)
 	end,
-	
+
 	on_receive_fields = function(pos, formname, fields, sender)
 		local meta = minetest.get_meta(pos)
-		
+
 		if fields.help and minetest.get_modpath("doc") then --check for mod in case someone disabled it after this digger was built
 			local node_name = minetest.get_node(pos).name
 			minetest.after(0.5, doc.show_entry, sender:get_player_name(), "nodes", node_name, true)
 		end
-		
+
 		if fields.nonpipe then
 			meta:set_string("nonpipe", fields.nonpipe)
 		end
-		
+
 		if fields.autoeject then
 			meta:set_string("autoeject", fields.autoeject)
 		end
-		
+
 		meta:set_string("formspec", ejector_formspec(pos, meta))
-		
+
 	end,
-	
+
 	after_place_node = (function() if pipeworks_path then return pipeworks.after_place end end)(),
 	after_dig_node = (function() if pipeworks_path then return pipeworks.after_dig end end)()
 })
