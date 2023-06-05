@@ -56,8 +56,8 @@ local intermittent_formspec = function(pos, meta)
 
 local intermittent_on_construct = function(pos)
     local meta = minetest.get_meta(pos)
-	meta:set_int("period", 1) 
-	meta:set_int("offset", 0) 
+	meta:set_int("period", 1)
+	meta:set_int("offset", 0)
 end
 
 local intermittent_on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)

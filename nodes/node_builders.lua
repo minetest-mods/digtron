@@ -209,7 +209,7 @@ minetest.register_node("digtron:builder", {
 	paramtype = "light",
 	paramtype2= "facedir",
 	is_ground_content = false,
-	tiles = { 
+	tiles = {
 		"digtron_plate.png^[transformR90",
 		"digtron_plate.png^[transformR270",
 		"digtron_plate.png",
@@ -241,8 +241,8 @@ minetest.register_node("digtron:builder", {
 
 	on_construct = function(pos)
         local meta = minetest.get_meta(pos)
-		meta:set_int("period", 1) 
-		meta:set_int("offset", 0) 
+		meta:set_int("period", 1)
+		meta:set_int("offset", 0)
 		meta:set_int("build_facing", 0)
 		meta:set_int("extrusion", 1)
 
@@ -423,7 +423,7 @@ minetest.register_node("digtron:builder", {
 })
 
 -- Master builder node
--- Does not build anything, but can set all other builders to a certain item 
+-- Does not build anything, but can set all other builders to a certain item
 -- OR make all other builders perform read & save operation.
 -- First function is handy e.g. for farming combines, the second is handy for templates.
 -- The formspec is reused, but the buttons are behaving differently from regular builder:
@@ -470,8 +470,8 @@ minetest.register_node("digtron:master_builder", {
 
 	on_construct = function(pos)
         local meta = minetest.get_meta(pos)
-		meta:set_int("period", 1) 
-		meta:set_int("offset", 0) 
+		meta:set_int("period", 1)
+		meta:set_int("offset", 0)
 		meta:set_int("build_facing", 0)
 		meta:set_int("extrusion", 1)
 

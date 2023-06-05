@@ -72,7 +72,7 @@ minetest.register_node("digtron:power_connector", {
 		if layout.builders ~= nil then
 			for _, node_image in pairs(layout.builders) do
 				max_cost = max_cost + (digtron.config.build_cost * (node_image.meta.fields.extrusion or 1))
-			end 
+			end
 		end
 		if layout.diggers ~= nil then
 			for _, node_image in pairs(layout.diggers) do
@@ -91,7 +91,7 @@ minetest.register_node("digtron:power_connector", {
 			meta:set_int("HV_EU_demand", number)
 		end
 
-		meta:set_string("formspec", get_formspec_string(meta:get_int("HV_EU_demand"), current_max))	
+		meta:set_string("formspec", get_formspec_string(meta:get_int("HV_EU_demand"), current_max))
 	end,
 })
 

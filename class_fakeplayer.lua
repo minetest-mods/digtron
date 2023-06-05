@@ -2,7 +2,7 @@
 -- demand a "Player" object as a parameter and hopefully prevent the mods that have
 -- registered with those callbacks from crashing on a nil dereference or bad function
 -- call. This is not supposed to be a remotely functional thing, it's just supposed
--- to provide dummy methods and return values of the correct data type for anything that 
+-- to provide dummy methods and return values of the correct data type for anything that
 -- might ignore the false "is_player()" return and go ahead and try to use this thing
 -- anyway.
 

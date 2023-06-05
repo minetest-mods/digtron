@@ -7,7 +7,7 @@ local pipeworks_path = minetest.get_modpath("pipeworks")
 local doc_path = minetest.get_modpath("doc")
 local formspec_width = 1.5
 
-local ejector_formspec_string = 
+local ejector_formspec_string =
 	default.gui_bg ..
 	default.gui_bg_img ..
 	default.gui_slots

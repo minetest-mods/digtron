@@ -67,27 +67,27 @@ minetest.register_node("digtron:battery_holder", {
 	allow_metadata_inventory_put = function(pos, listname, index, stack, player)
 		if listname == "batteries" then
 			local node_name = stack:get_name()
-                                                 
+
 			-- Allow all items with energy storage from technic mod
-			if technic.power_tools[node_name] ~= nil then                            
+			if technic.power_tools[node_name] ~= nil then
 				local meta = stack:get_metadata()
 				local md = minetest.deserialize(meta)
 				-- And specifically if they hold any charge
 				-- Disregard empty batteries, the player should know better
 				if md and md.charge > 0 then
-					return stack:get_count()    
+					return stack:get_count()
 				else
 					return 0
 				end
-                                                 
+
 			else
 				return 0
 			end
 		end
 		return 0
 	end,
-                                                  
-                                                 
+
+
 	can_dig = function(pos,player)
 		local meta = minetest.get_meta(pos)
 		local inv = meta:get_inventory()

@@ -4,7 +4,7 @@ local S, NS = dofile(MP.."/intllib.lua")
 
 local pipeworks_path = minetest.get_modpath("pipeworks")
 
-local inventory_formspec_string = 
+local inventory_formspec_string =
 	"size[8,9.3]" ..
 	default.gui_bg ..
 	default.gui_bg_img ..
@@ -85,7 +85,7 @@ minetest.register_node("digtron:inventory", {
 	after_dig_node = (function() if pipeworks_path then return pipeworks.after_dig end end)()
 })
 
-local fuelstore_formspec_string = 
+local fuelstore_formspec_string =
 	"size[8,9.3]" ..
 	default.gui_bg ..
 	default.gui_bg_img ..

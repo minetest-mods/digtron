@@ -8,8 +8,8 @@ minetest.register_entity("digtron:marker", {
 	},
 
 	on_activate = function(self, staticdata)
-		minetest.after(5.0, 
-			function(self) 
+		minetest.after(5.0,
+			function(self)
 				self.object:remove()
 			end,
 			self)
@@ -34,8 +34,8 @@ minetest.register_entity("digtron:marker_vertical", {
 	},
 
 	on_activate = function(self, staticdata)
-		minetest.after(5.0, 
-			function(self) 
+		minetest.after(5.0,
+			function(self)
 				self.object:remove()
 			end,
 			self)
@@ -60,8 +60,8 @@ minetest.register_entity("digtron:marker_crate_good", {
 	},
 
 	on_activate = function(self, staticdata)
-		minetest.after(digtron.config.marker_crate_good_duration, 
-			function(self) 
+		minetest.after(digtron.config.marker_crate_good_duration,
+			function(self)
 				self.object:remove()
 			end,
 			self)
@@ -86,8 +86,8 @@ minetest.register_entity("digtron:marker_crate_bad", {
 	},
 
 	on_activate = function(self, staticdata)
-		minetest.after(digtron.config.marker_crate_bad_duration, 
-			function(self) 
+		minetest.after(digtron.config.marker_crate_bad_duration,
+			function(self)
 				self.object:remove()
 			end,
 			self)

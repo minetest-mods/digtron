@@ -62,10 +62,10 @@ minetest.register_node("digtron:controller", {
 		-- if meta:get_string("waiting") == "true" then
 		if last_time + digtron.config.cycle_time > now then
 		   -- Been too soon since last time the digtron did a cycle.
-		   
+		
 		   -- added for clarity
 		   meta:set_string("infotext", S("repetition delay"))
-		   
+		
 		   return
 		end
 
