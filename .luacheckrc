@@ -19,3 +19,9 @@ read_globals = {
 	-- Deps
 	"default", "awards", "pipeworks", "hopper", "technic"
 }
+
+files = {
+	["doc.lua"] = {
+		max_line_length = 1000
+	}
+}
