@@ -1,4 +1,4 @@
-max_line_length = 180
+max_line_length = 200
 
 globals = {
 	"digtron",
@@ -17,7 +17,7 @@ read_globals = {
 	"dump", "VoxelArea",
 
 	-- Deps
-	"default", "awards", "pipeworks", "hopper", "technic"
+	"default", "awards", "pipeworks", "hopper", "technic", "doc", "intllib"
 }
 
 files = {

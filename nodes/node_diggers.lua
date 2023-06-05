@@ -1,6 +1,6 @@
 -- internationalization boilerplate
 local MP = minetest.get_modpath(minetest.get_current_modname())
-local S, NS = dofile(MP.."/intllib.lua")
+local S = dofile(MP.."/intllib.lua")
 
 -- Note: diggers go in group 3 and have an execute_dig method.
 
@@ -36,7 +36,8 @@ local intermittent_formspec_string = default.gui_bg ..
 	"field[0.5,0.8;1,0.1;period;" .. S("Periodicity") .. ";${period}]" ..
 	"tooltip[period;" .. S("Digger will dig once every n steps.\nThese steps are globally aligned, all diggers with\nthe same period and offset will dig on the same location.") .. "]" ..
 	"field[1.5,0.8;1,0.1;offset;" .. S("Offset") .. ";${offset}]" ..
-	"tooltip[offset;" .. S("Offsets the start of periodicity counting by this amount.\nFor example, a digger with period 2 and offset 0 digs\nevery even-numbered block and one with period 2 and\noffset 1 digs every odd-numbered block.") .. "]" ..
+	"tooltip[offset;" .. S("Offsets the start of periodicity counting by this amount.\nFor example, a digger with period 2 and offset 0 digs\nevery even-numbered block and one with period 2 and\n" ..
+		"offset 1 digs every odd-numbered block.") .. "]" ..
 	"button_exit[2.2,0.5;1,0.1;set;" .. S("Save &\nShow") .. "]" ..
 	"tooltip[set;" .. S("Saves settings") .. "]"
 
@@ -48,7 +49,7 @@ if modpath_doc then
 		intermittent_formspec_string = "size[3.5,1]" .. intermittent_formspec_string
 	end
 
-local intermittent_formspec = function(pos, meta)
+local intermittent_formspec = function(_, meta)
 	return intermittent_formspec_string
 		:gsub("${period}", meta:get_int("period"), 1)
 		:gsub("${offset}", meta:get_int("offset"), 1)
@@ -60,7 +61,7 @@ local intermittent_on_construct = function(pos)
 	meta:set_int("offset", 0)
 end
 
-local intermittent_on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
+local intermittent_on_rightclick = function(pos, _, clicker, itemstack, pointed_thing)
 	local item_def = itemstack:get_definition()
 	if item_def.type == "node" and minetest.get_item_group(itemstack:get_name(), "digtron") > 0 then
 		local returnstack, success = minetest.item_place_node(itemstack, clicker, pointed_thing)
@@ -69,7 +70,7 @@ local intermittent_on_rightclick = function(pos, node, clicker, itemstack, point
 		end
 		return returnstack, success
 	end
-	local meta = minetest.get_meta(pos)	
+	local meta = minetest.get_meta(pos)
 	minetest.show_formspec(clicker:get_player_name(),
 		"digtron:intermittent_digger"..minetest.pos_to_string(pos),
 		intermittent_formspec(pos, meta))
@@ -111,7 +112,7 @@ minetest.register_node("digtron:digger", {
 	sounds = digtron.metal_sounds,
 	paramtype = "light",
 	paramtype2= "facedir",
-	is_ground_content = false,	
+	is_ground_content = false,
 	drawtype="nodebox",
 	node_box = {
 		type = "fixed",
@@ -137,7 +138,7 @@ minetest.register_node("digtron:digger", {
 	},
 
 	-- returns fuel_cost, item_produced
-	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate, lateral_dig, player)
+	execute_dig = function(pos, protected_nodes, nodes_dug, _, _, player)
 		local facing = minetest.get_node(pos).param2
 		local digpos = digtron.find_new_pos(pos, facing)
 
@@ -148,7 +149,7 @@ minetest.register_node("digtron:digger", {
 		return digtron.mark_diggable(digpos, nodes_dug, player)
 	end,
 
-	damage_creatures = function(player, pos, controlling_coordinate, items_dropped)
+	damage_creatures = function(player, pos, _, items_dropped)
 		local facing = minetest.get_node(pos).param2
 		digtron.damage_creatures(player, pos, digtron.find_new_pos(pos, facing), damage_hp, items_dropped)
 	end,
@@ -165,7 +166,7 @@ minetest.register_node("digtron:intermittent_digger", {
 	sounds = digtron.metal_sounds,
 	paramtype = "light",
 	paramtype2= "facedir",
-	is_ground_content = false,	
+	is_ground_content = false,
 	drawtype="nodebox",
 	node_box = {
 		type = "fixed",
@@ -261,7 +262,7 @@ minetest.register_node("digtron:soft_digger", {
 		"digtron_plate.png^digtron_motor.png^[colorize:" .. digtron.soft_digger_colorize,
 	},
 
-	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate, lateral_dig, player)
+	execute_dig = function(pos, protected_nodes, nodes_dug, _, _, player)
 		local facing = minetest.get_node(pos).param2
 		local digpos = digtron.find_new_pos(pos, facing)
 
@@ -276,7 +277,7 @@ minetest.register_node("digtron:soft_digger", {
 		return 0
 	end,
 
-	damage_creatures = function(player, pos, controlling_coordinate, items_dropped)
+	damage_creatures = function(player, pos, _, items_dropped)
 		local facing = minetest.get_node(pos).param2
 		digtron.damage_creatures(player, pos, digtron.find_new_pos(pos, facing), damage_hp_half, items_dropped)
 	end,
@@ -349,7 +350,7 @@ minetest.register_node("digtron:intermittent_soft_digger", {
 	damage_creatures = function(player, pos, controlling_coordinate, items_dropped)
 		local meta = minetest.get_meta(pos)
 		local facing = minetest.get_node(pos).param2
-		local targetpos = digtron.find_new_pos(pos, facing)		
+		local targetpos = digtron.find_new_pos(pos, facing)
 		if (targetpos[controlling_coordinate] + meta:get_int("offset")) % meta:get_int("period") == 0 then
 			digtron.damage_creatures(player, pos, targetpos, damage_hp_half, items_dropped)
 		end
@@ -366,7 +367,7 @@ minetest.register_node("digtron:dual_digger", {
 	sounds = digtron.metal_sounds,
 	paramtype = "light",
 	paramtype2= "facedir",
-	is_ground_content = false,	
+	is_ground_content = false,
 	drawtype="nodebox",
 	node_box = {
 		type = "fixed",
@@ -400,7 +401,7 @@ minetest.register_node("digtron:dual_digger", {
 	},
 
 	-- returns fuel_cost, items_produced
-	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate, lateral_dig, player)
+	execute_dig = function(pos, protected_nodes, nodes_dug, _, _, player)
 		local facing = minetest.get_node(pos).param2
 		local digpos = digtron.find_new_pos(pos, facing)
 		local digdown = digtron.find_new_pos_downward(pos, facing)
@@ -430,7 +431,7 @@ minetest.register_node("digtron:dual_digger", {
 		return cost, items
 	end,
 
-	damage_creatures = function(player, pos, controlling_coordinate, items_dropped)
+	damage_creatures = function(player, pos, _, items_dropped)
 		local facing = minetest.get_node(pos).param2
 		digtron.damage_creatures(player, pos, digtron.find_new_pos(pos, facing), damage_hp, items_dropped)
 		digtron.damage_creatures(player, pos, digtron.find_new_pos_downward(pos, facing), damage_hp, items_dropped)
@@ -448,7 +449,7 @@ minetest.register_node("digtron:dual_soft_digger", {
 	use_texture_alpha = use_texture_alpha,
 	paramtype = "light",
 	paramtype2= "facedir",
-	is_ground_content = false,	
+	is_ground_content = false,
 	drawtype="nodebox",
 	node_box = {
 		type = "fixed",
@@ -482,7 +483,7 @@ minetest.register_node("digtron:dual_soft_digger", {
 	},
 
 	-- returns fuel_cost, items_produced
-	execute_dig = function(pos, protected_nodes, nodes_dug, controlling_coordinate, lateral_dig, player)
+	execute_dig = function(pos, protected_nodes, nodes_dug, _, _, player)
 		local facing = minetest.get_node(pos).param2
 		local digpos = digtron.find_new_pos(pos, facing)
 		local digdown = digtron.find_new_pos_downward(pos, facing)
@@ -512,7 +513,7 @@ minetest.register_node("digtron:dual_soft_digger", {
 		return cost, items
 	end,
 
-	damage_creatures = function(player, pos, controlling_coordinate, items_dropped)
+	damage_creatures = function(player, pos, _, items_dropped)
 		local facing = minetest.get_node(pos).param2
 		digtron.damage_creatures(player, pos, digtron.find_new_pos(pos, facing), damage_hp_half, items_dropped)
 		digtron.damage_creatures(player, pos, digtron.find_new_pos_downward(pos, facing), damage_hp_half, items_dropped)

@@ -1,6 +1,6 @@
 -- internationalization boilerplate
 local MP = minetest.get_modpath(minetest.get_current_modname())
-local S, NS = dofile(MP.."/intllib.lua")
+local S = dofile(MP.."/intllib.lua")
 
 minetest.register_node("digtron:axle", {
 	description = S("Digtron Rotation Axle"),
@@ -38,7 +38,7 @@ minetest.register_node("digtron:axle", {
 
 
 
-	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
+	on_rightclick = function(pos, node, clicker)
 		local meta = minetest.get_meta(pos)
 
 		-- new delay code without nodetimer (lost on crating)
@@ -77,7 +77,7 @@ minetest.register_node("digtron:axle", {
 		end
 	end,
 
-	on_timer = function(pos, elapsed)
+	on_timer = function(pos)
 		minetest.get_meta(pos):set_string("waiting", nil)
 	end,
 })

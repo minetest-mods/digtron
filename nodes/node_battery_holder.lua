@@ -1,6 +1,6 @@
 -- internationalization boilerplate
 local MP = minetest.get_modpath(minetest.get_current_modname())
-local S, NS = dofile(MP.."/intllib.lua")
+local S = dofile(MP.."/intllib.lua")
 
 
 -- Battery storage. Controller node draws electrical power from here.
@@ -18,7 +18,7 @@ local battery_holder_formspec_string = "size[8,9.3]" ..
 	"listring[current_player;main]" ..
 	default.get_hotbar_bg(0,5.15)
 
-local battery_holder_formspec = function(pos, meta)
+local battery_holder_formspec = function()
 	return battery_holder_formspec_string
 end
 
@@ -64,7 +64,7 @@ minetest.register_node("digtron:battery_holder", {
 	end,
 
 	-- Allow all items with energy storage to be placed in the inventory
-	allow_metadata_inventory_put = function(pos, listname, index, stack, player)
+	allow_metadata_inventory_put = function(_, listname, _, stack)
 		if listname == "batteries" then
 			local node_name = stack:get_name()
 
@@ -88,7 +88,7 @@ minetest.register_node("digtron:battery_holder", {
 	end,
 
 
-	can_dig = function(pos,player)
+	can_dig = function(pos)
 		local meta = minetest.get_meta(pos)
 		local inv = meta:get_inventory()
 		return inv:is_empty("batteries")
@@ -99,18 +99,18 @@ minetest.register_node("digtron:battery_holder", {
 	-----------------------------------------------------------------
 
 	tube = (function() if minetest.get_modpath("pipeworks") then return {
-		insert_object = function(pos, node, stack, direction)
+		insert_object = function(pos, _, stack)
 			local meta = minetest.get_meta(pos)
 			local inv = meta:get_inventory()
 			return inv:add_item("batteries", stack)
 		end,
-		can_insert = function(pos, node, stack, direction)
+		can_insert = function(pos, _, stack)
 			local meta = stack:get_metadata()
 			local md = minetest.deserialize(meta)
 			-- And specifically if they hold any charge
 			-- Disregard empty batteries, the player should know better
 			if md and md.charge > 0 then
-				local meta = minetest.get_meta(pos)
+				meta = minetest.get_meta(pos)
 				local inv = meta:get_inventory()
 				return inv:room_for_item("batteries", stack)
 			end

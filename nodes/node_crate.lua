@@ -1,6 +1,6 @@
 -- internationalization boilerplate
 local MP = minetest.get_modpath(minetest.get_current_modname())
-local S, NS = dofile(MP.."/intllib.lua")
+local S = dofile(MP.."/intllib.lua")
 
 local modpath_awards = minetest.get_modpath("awards")
 
@@ -68,7 +68,7 @@ local store_digtron = function(pos, clicker, loaded_node_name, protected)
 			local pos_copy = {x=old_pos.x, y=old_pos.y, z=old_pos.z}
 			local oldnode_copy = {name=old_node.name, param1=old_node.param1, param2=old_node.param2}
 			callback(pos_copy, oldnode_copy, clicker)
-		end			
+		end
 	end
 
 	-- Create the loaded crate node
@@ -112,7 +112,7 @@ minetest.register_node("digtron:empty_crate", {
 		return player and not minetest.is_protected(pos, player:get_player_name())
 	end,
 
-	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
+	on_rightclick = function(pos, _, clicker)
 		store_digtron(pos, clicker, "digtron:loaded_crate")
 	end
 })
@@ -147,7 +147,7 @@ minetest.register_node("digtron:empty_locked_crate", {
 	can_dig = function(pos,player)
 		return player and not minetest.is_protected(pos, player:get_player_name()) and player_permitted(pos, player)
 	end,
-	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
+	on_rightclick = function(pos, _, clicker)
 		if player_permitted(pos,clicker) then
 			store_digtron(pos, clicker, "digtron:loaded_locked_crate", true)
 		end
@@ -186,7 +186,7 @@ else
 	"tooltip[unpack;" .. S("Attempts to unpack the Digtron on this location") .. "]"
 end
 
-local loaded_formspec = function(pos, meta)
+local loaded_formspec = function()
 	return loaded_formspec_string
 end
 
@@ -219,7 +219,7 @@ local loaded_on_recieve = function(pos, fields, sender, protected)
 
 	if layout == nil then
 		meta:set_string("infotext", infotext .. "\n" .. S("Unable to read layout from crate metadata, regrettably this Digtron may be corrupted."))
-		minetest.sound_play("buzzer", {gain=0.5, pos=pos})			
+		minetest.sound_play("buzzer", {gain=0.5, pos=pos})
 		-- Something went horribly wrong
 		return
 	end
@@ -273,12 +273,12 @@ local loaded_on_dig = function(pos, player, loaded_node_name)
 	stack_meta:set_string("crated_layout", meta:get_string("crated_layout"))
 	stack_meta:set_string("description", meta:get_string("title"))
 	local inv = player:get_inventory()
-	local stack = inv:add_item("main", stack)
+	stack = inv:add_item("main", stack)
 	if stack:get_count() > 0 then
 		-- prevent crash by not dropping loaded crate (see #44)
 		-- minetest.add_item(pos, stack)
 		return false
-	end		
+	end
 	-- call on_dignodes callback
 	minetest.remove_node(pos)
 end
@@ -326,20 +326,20 @@ minetest.register_node("digtron:loaded_crate", {
 		meta:set_string("formspec", loaded_formspec(pos, meta))
 	end,
 
-	on_receive_fields = function(pos, formname, fields, sender)
+	on_receive_fields = function(pos, _, fields, sender)
 		return loaded_on_recieve(pos, fields, sender)
 	end,
 
-	on_dig = function(pos, node, player)
+	on_dig = function(pos, _, player)
 		if player and not minetest.is_protected(pos, player:get_player_name()) then
 			return loaded_on_dig(pos, player, "digtron:loaded_crate")
 		end
 	end,
 
-	after_place_node = function(pos, placer, itemstack, pointed_thing)
+	after_place_node = function(pos, _, itemstack)
 		loaded_after_place(pos, itemstack)
 	end,
-	on_drop = function(a, b, c) end -- prevent dropping loaded digtrons, causing server to crash (see #44)
+	on_drop = function() end -- prevent dropping loaded digtrons, causing server to crash (see #44)
 })
 
 minetest.register_node("digtron:loaded_locked_crate", {
@@ -349,17 +349,21 @@ minetest.register_node("digtron:loaded_locked_crate", {
 	groups = {cracky = 3, oddly_breakable_by_hand=3, not_in_creative_inventory=1, digtron_protected=1},
 	stack_max = 1,
 	sounds = default.node_sound_wood_defaults(),
-	tiles = {"digtron_plate.png^digtron_crate.png","digtron_plate.png^digtron_crate.png","digtron_plate.png^digtron_crate.png^digtron_lock.png","digtron_plate.png^digtron_crate.png^digtron_lock.png","digtron_plate.png^digtron_crate.png^digtron_lock.png","digtron_plate.png^digtron_crate.png^digtron_lock.png"},
+	tiles = {
+		"digtron_plate.png^digtron_crate.png",
+		"digtron_plate.png^digtron_crate.png",
+		"digtron_plate.png^digtron_crate.png^digtron_lock.png",
+		"digtron_plate.png^digtron_crate.png^digtron_lock.png",
+		"digtron_plate.png^digtron_crate.png^digtron_lock.png",
+		"digtron_plate.png^digtron_crate.png^digtron_lock.png"
+	},
 	is_ground_content = false,
 
 	on_construct = function(pos)
 		local meta = minetest.get_meta(pos)
 		meta:set_string("owner", "")
 	end,
---	can_dig = function(pos,node,player)
---		return player and not minetest.is_protected(pos, player:get_player_name()) and player_permitted(pos,player)
---	end,
-	on_dig = function(pos, node, player)
+	on_dig = function(pos, _, player)
 		if player and not minetest.is_protected(pos, player:get_player_name()) and player_permitted(pos,player) then
 			return loaded_on_dig(pos, player, "digtron:loaded_locked_crate")
 		else
@@ -367,14 +371,14 @@ minetest.register_node("digtron:loaded_locked_crate", {
 		end
 	end,
 
-	after_place_node = function(pos, placer, itemstack, pointed_thing)
+	after_place_node = function(pos, placer, itemstack)
 		local meta = minetest.get_meta(pos)
 		meta:set_string("owner", placer:get_player_name() or "")
 		loaded_after_place(pos, itemstack)
 		meta:set_string("infotext", meta:get_string("infotext") .. "\n" .. S("Owned by @1", meta:get_string("owner")))
 	end,
 
-	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
+	on_rightclick = function(pos, _, clicker)
 		if player_permitted(pos,clicker) then
 			local meta = minetest.get_meta(pos)
 			minetest.show_formspec(
@@ -383,7 +387,7 @@ minetest.register_node("digtron:loaded_locked_crate", {
 				loaded_formspec_string:gsub("${title}", meta:get_string("title"), 1))
 		end
 	end,
-	on_drop = function(a, b, c) end -- prevent dropping loaded digtrons, causing server to crash
+	on_drop = function() end -- prevent dropping loaded digtrons, causing server to crash
 })
 
 minetest.register_on_player_receive_fields(function(player, formname, fields)

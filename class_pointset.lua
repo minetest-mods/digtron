@@ -19,7 +19,7 @@ end
 
 function digtron.Pointset:clear()
 	local points = self.points
-	for k, v in pairs(points) do
+	for k in pairs(points) do
 		points[k] = nil
 	end
 end
@@ -59,7 +59,7 @@ function digtron.Pointset:pop()
 	local hash, value = next(self.points)
 	if hash == nil then return nil end
 	local pos = minetest.get_position_from_hash(hash)
-	self.points[hash] = nil	
+	self.points[hash] = nil
 	return pos, value
 end
 

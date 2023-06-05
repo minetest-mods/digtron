@@ -1,6 +1,6 @@
 -- internationalization boilerplate
 local MP = minetest.get_modpath(minetest.get_current_modname())
-local S, NS = dofile(MP.."/intllib.lua")
+local S = dofile(MP.."/intllib.lua")
 
 --Build up the formspec, somewhat complicated due to multiple mod options
 local pipeworks_path = minetest.get_modpath("pipeworks")
@@ -19,9 +19,9 @@ if doc_path then
 	formspec_width = formspec_width + 1.5
 end
 
-local ejector_formspec_string = "size[".. formspec_width .. ",1]" .. ejector_formspec_string
+ejector_formspec_string = "size[".. formspec_width .. ",1]" .. ejector_formspec_string
 
-local ejector_formspec = function(pos, meta)
+local ejector_formspec = function(_, meta)
 	local return_string = ejector_formspec_string
 	if pipeworks_path then
 		return_string = return_string .. "checkbox[0,0.5;nonpipe;"..S("Eject into world")..";"..meta:get_string("nonpipe").."]" ..
@@ -52,7 +52,7 @@ local function eject_items(pos, node, player, eject_even_without_pipeworks, layo
 		end
 	else
 		return false
-	end	
+	end
 
 	if layout == nil then
 		layout = digtron.DigtronLayout.create(pos, player)
@@ -149,7 +149,7 @@ minetest.register_node("digtron:inventory_ejector", {
 		eject_items(pos, node, player, meta:get_string("nonpipe") == "true", layout)
 	end,
 
-	on_receive_fields = function(pos, formname, fields, sender)
+	on_receive_fields = function(pos, _, fields, sender)
 		local meta = minetest.get_meta(pos)
 
 		if fields.help and minetest.get_modpath("doc") then --check for mod in case someone disabled it after this digger was built

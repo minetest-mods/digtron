@@ -1,6 +1,6 @@
 -- internationalization boilerplate
 local MP = minetest.get_modpath(minetest.get_current_modname())
-local S, NS = dofile(MP.."/intllib.lua")
+local S = dofile(MP.."/intllib.lua")
 
 -- Note: builders go in group 4 and have both test_build and execute_build methods.
 
@@ -19,15 +19,18 @@ local builder_formspec_string =
 	"list[current_name;main;".. tostring(displace_due_to_help_button/2) ..",0;1,1;]" ..
 	"label[" .. tostring(displace_due_to_help_button/2).. ",0.8;" .. S("Block to build") .. "]" ..
 	"field[" .. tostring(displace_due_to_help_button + 1.3) ..",0.8;1,0.1;extrusion;" .. S("Extrusion") .. ";${extrusion}]" ..
-	"tooltip[extrusion;" .. S("Builder will extrude this many blocks in the direction it is facing.\nCan be set from 1 to @1.\nNote that Digtron won't build into unloaded map regions.", digtron.config.maximum_extrusion) .. "]" ..
+	"tooltip[extrusion;" .. S("Builder will extrude this many blocks in the direction it is facing.\nCan be set from 1 to @1.\nNote that Digtron won't build into unloaded map regions.",
+		digtron.config.maximum_extrusion) .. "]" ..
 	"field[" .. tostring(displace_due_to_help_button + 2.3) ..",0.8;1,0.1;period;" .. S("Periodicity") .. ";${period}]" ..
 	"tooltip[period;" .. S("Builder will build once every n steps.\nThese steps are globally aligned, so all builders with the\nsame period and offset will build on the same location.") .. "]" ..
 	"field[" .. tostring(displace_due_to_help_button + 3.3) ..",0.8;1,0.1;offset;" .. S("Offset") .. ";${offset}]" ..
-	"tooltip[offset;" .. S("Offsets the start of periodicity counting by this amount.\nFor example, a builder with period 2 and offset 0 builds\nevery even-numbered block and one with period 2 and\noffset 1 builds every odd-numbered block.") .. "]" ..
+	"tooltip[offset;" .. S("Offsets the start of periodicity counting by this amount.\nFor example, a builder with period 2 and offset 0 builds\nevery even-numbered block and one with period 2 and\n" ..
+		"offset 1 builds every odd-numbered block.") .. "]" ..
 	"button_exit[" .. tostring(displace_due_to_help_button + 4.0) ..",0.5;1,0.1;set;" .. S("Save &\nShow") .. "]" ..
 	"tooltip[set;" .. S("Saves settings") .. "]" ..
 	"field[" .. tostring(displace_due_to_help_button + 5.3) .. ",0.8;1,0.1;build_facing;" .. S("Facing") .. ";${build_facing}]" ..
-	"tooltip[build_facing;" .. S("Value from 0-23. Not all block types make use of this.\nUse the 'Read & Save' button to copy the facing of the block\ncurrently in the builder output location.") .. "]" ..
+	"tooltip[build_facing;" .. S("Value from 0-23. Not all block types make use of this.\nUse the 'Read & Save' button to copy the facing of the block\n" ..
+		"currently in the builder output location.") .. "]" ..
 	"button_exit[" .. tostring(displace_due_to_help_button + 6.0) ..",0.5;1,0.1;read;" .. S("Read &\nSave") .. "]" ..
 	"tooltip[read;" .. S("Reads the facing of the block currently in the build location,\nthen saves all settings.") .. "]" ..
 	"list[current_player;main;0,1.3;8,1;]" ..
@@ -43,7 +46,6 @@ if minetest.get_modpath("doc") then
 end
 
 local builder_formspec = function(pos, meta)
-	local nodemeta = "nodemeta:"..pos.x .. "," .. pos.y .. "," ..pos.z
 	return builder_formspec_string
 		:gsub("${extrusion}", meta:get_int("extrusion"), 1)
 		:gsub("${period}", meta:get_int("period"), 1)
@@ -52,7 +54,7 @@ local builder_formspec = function(pos, meta)
 		:gsub("current_name", "nodemeta:"..pos.x .. "," .. pos.y .. "," ..pos.z, 2)
 end
 
-local builder_on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
+local builder_on_rightclick = function(pos, _, clicker, itemstack, pointed_thing)
 	local item_def = itemstack:get_definition()
 	if item_def.type == "node" and minetest.get_item_group(itemstack:get_name(), "digtron") > 0 then
 		local returnstack, success = minetest.item_place_node(itemstack, clicker, pointed_thing)
@@ -61,7 +63,7 @@ local builder_on_rightclick = function(pos, node, clicker, itemstack, pointed_th
 		end
 		return returnstack, success
 	end
-	local meta = minetest.get_meta(pos)	
+	local meta = minetest.get_meta(pos)
 	minetest.show_formspec(clicker:get_player_name(),
 		"digtron:builder"..minetest.pos_to_string(pos),
 		builder_formspec(pos, meta))
@@ -104,8 +106,6 @@ minetest.register_on_player_receive_fields(function(sender, formname, fields)
 	end
 	if extrusion and extrusion > 0 and extrusion <= digtron.config.maximum_extrusion then
 		meta:set_int("extrusion", math.floor(tonumber(fields.extrusion)))
-	else
-		extrusion = meta:get_int("extrusion")
 	end
 
 	local nodename = minetest.get_node_or_nil(pos).name
@@ -125,9 +125,8 @@ minetest.register_on_player_receive_fields(function(sender, formname, fields)
 
 				if target_item_name ~= "air" and minetest.get_item_group(target_item_name, "digtron") == 0 then
 
-					for k, location in pairs(layout.builders) do
+					for _, location in pairs(layout.builders) do
 
-						local target = minetest.get_node(location.pos)
 						local target_meta = minetest.get_meta(location.pos)
 						target_meta:set_int("period", meta:get_int("period"))
 						target_meta:set_int("offset", meta:get_int("offset"))
@@ -148,14 +147,13 @@ minetest.register_on_player_receive_fields(function(sender, formname, fields)
 			local layout = digtron.DigtronLayout.create(pos, sender)
 
 			if layout.builders ~= nil then
-				for k, location in pairs(layout.builders) do
+				for _, location in pairs(layout.builders) do
 
-					local target = minetest.get_node(location.pos)
 					local facing = minetest.get_node(location.pos).param2
 					local buildpos = digtron.find_new_pos(location.pos, facing)
 					local target_node = minetest.get_node(buildpos)
 					if target_node.name ~= "air" and minetest.get_item_group(target_node.name, "digtron") == 0 then
-						local meta = minetest.get_meta(location.pos)
+						meta = minetest.get_meta(location.pos)
 						local inv = meta:get_inventory()
 						local target_name = digtron.builder_read_item_substitutions[target_node.name] or target_node.name
 						inv:set_stack("main", 1, target_name)
@@ -180,7 +178,7 @@ minetest.register_on_player_receive_fields(function(sender, formname, fields)
 			local buildpos = digtron.find_new_pos(pos, facing)
 			local target_node = minetest.get_node(buildpos)
 			if target_node.name ~= "air" and minetest.get_item_group(target_node.name, "digtron") == 0 then
-				local meta = minetest.get_meta(pos)
+				meta = minetest.get_meta(pos)
 				local inv = meta:get_inventory()
 				local target_name = digtron.builder_read_item_substitutions[target_node.name] or target_node.name
 				inv:set_stack("main", 1, target_name)
@@ -260,12 +258,12 @@ minetest.register_node("digtron:builder", {
 		digtron.update_builder_item(pos)
 	end,
 
-	allow_metadata_inventory_put = function(pos, listname, index, stack, player)
+	allow_metadata_inventory_put = function(pos, listname, index, stack)
 		local stack_name = stack:get_name()
 
 		if minetest.get_item_group(stack_name, "digtron") ~= 0 then
 			return 0 -- don't allow builders to be set to build Digtron nodes, they'll just clog the output.
-		end	
+		end
 
 		local stack_def = minetest.registered_nodes[stack_name]
 		if not stack_def and not digtron.whitelisted_on_place(stack_name) then
@@ -285,7 +283,7 @@ minetest.register_node("digtron:builder", {
 		return 0
 	end,
 
-	allow_metadata_inventory_take = function(pos, listname, index, stack, player)
+	allow_metadata_inventory_take = function(pos, listname, index)
 		node_inventory_table.pos = pos
 		local inv = minetest.get_inventory(node_inventory_table)
 		inv:set_stack(listname, index, ItemStack(""))
@@ -302,7 +300,7 @@ minetest.register_node("digtron:builder", {
 	-- 1, {{itemstack, source inventory pos}, ...} -- can build, took items from inventory
 	-- 2, {{itemstack, source inventory pos}, ...}, itemstack	-- was supposed to build, but couldn't get the item from inventory
 	-- 3, {}								-- builder configuration error
-	test_build = function(pos, test_pos, inventory_positions, protected_nodes, nodes_dug, controlling_coordinate, controller_pos)
+	test_build = function(pos, test_pos, inventory_positions, protected_nodes, nodes_dug, controlling_coordinate)
 		local meta = minetest.get_meta(pos)
 		local facing = minetest.get_node(pos).param2
 		local buildpos = digtron.find_new_pos(test_pos, facing)
@@ -386,9 +384,10 @@ minetest.register_node("digtron:builder", {
 			local oldnode = minetest.get_node(buildpos)
 
 			if not digtron.config.uses_resources then
-				local returned_stack, success = digtron.item_place_node(item_stack, player, buildpos, build_facing)
+				local _, success = digtron.item_place_node(item_stack, player, buildpos, build_facing)
 				if success == true then
-					minetest.log("action", string.format("%s uses Digtron to build %s at (%d, %d, %d), displacing %s", player:get_player_name(), item_stack:get_name(), buildpos.x, buildpos.y, buildpos.z, oldnode.name))
+					minetest.log("action",
+						string.format("%s uses Digtron to build %s at (%d, %d, %d), displacing %s", player:get_player_name(), item_stack:get_name(), buildpos.x, buildpos.y, buildpos.z, oldnode.name))
 					nodes_dug:set(buildpos.x, buildpos.y, buildpos.z, false)
 					built_count = built_count + 1
 				else
@@ -401,9 +400,10 @@ minetest.register_node("digtron:builder", {
 				-- item not in inventory! Need to sound the angry buzzer to let the player know, so return a negative number.
 				return (built_count + 1) * -1
 			end
-			local returned_stack, success = digtron.item_place_node(ItemStack(item_stack), player, buildpos, build_facing)
+			local _, success = digtron.item_place_node(ItemStack(item_stack), player, buildpos, build_facing)
 			if success == true then
-				minetest.log("action", string.format("%s uses Digtron to build %s at (%d, %d, %d), displacing %s", player:get_player_name(), item_stack:get_name(), buildpos.x, buildpos.y, buildpos.z, oldnode.name))
+				minetest.log("action",
+					string.format("%s uses Digtron to build %s at (%d, %d, %d), displacing %s", player:get_player_name(), item_stack:get_name(), buildpos.x, buildpos.y, buildpos.z, oldnode.name))
 				--flag this node as *not* to be dug.
 				nodes_dug:set(buildpos.x, buildpos.y, buildpos.z, false)
 				digtron.award_item_built(item_stack:get_name(), player)
@@ -489,12 +489,12 @@ minetest.register_node("digtron:master_builder", {
 		digtron.update_builder_item(pos)
 	end,
 
-	allow_metadata_inventory_put = function(pos, listname, index, stack, player)
+	allow_metadata_inventory_put = function(pos, listname, index, stack)
 		local stack_name = stack:get_name()
 
 		if minetest.get_item_group(stack_name, "digtron") ~= 0 then
 			return 0 -- don't allow builders to be set to build Digtron nodes, they'll just clog the output.
-		end	
+		end
 
 		local stack_def = minetest.registered_nodes[stack_name]
 		if not stack_def and not digtron.whitelisted_on_place(stack_name) then
@@ -514,7 +514,7 @@ minetest.register_node("digtron:master_builder", {
 		return 0
 	end,
 
-	allow_metadata_inventory_take = function(pos, listname, index, stack, player)
+	allow_metadata_inventory_take = function(pos, listname, index)
 		node_inventory_table.pos = pos
 		local inv = minetest.get_inventory(node_inventory_table)
 		inv:set_stack(listname, index, ItemStack(""))

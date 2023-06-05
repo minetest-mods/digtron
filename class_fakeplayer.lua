@@ -116,7 +116,7 @@ function digtron.DigtronFakePlayer.create(pos, player_name)
 	self.hud_remove = return_nil
 	self.hud_change = return_nil
 	self.hud_get = return_nil -- possibly important return value?
-	self.hud_set_flags = return_nil	
+	self.hud_set_flags = return_nil
 	self.hud_get_flags = return_value({ hotbar=true, healthbar=true, crosshair=true, wielditem=true, breathbar=true, minimap=true })
 	self.hud_set_hotbar_itemcount = return_nil
 	self.hud_get_hotbar_itemcount = return_zero

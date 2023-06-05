@@ -28,19 +28,19 @@ minetest.register_lbm({
 minetest.register_lbm({
 	name = "digtron:fuelstore_upgrade",
 	nodenames = {"digtron:fuelstore"},
-	action = function(pos, node)
+	action = function(pos)
 		local meta = minetest.get_meta(pos)
 		local inv = meta:get_inventory()
 		local list = inv:get_list("main")
 		inv:set_list("main", {})
-		inv:set_list("fuel", list)		
+		inv:set_list("fuel", list)
 	end
 })
 
 minetest.register_lbm({
 	name = "digtron:autocontroller_lateral_upgrade",
 	nodenames = {"digtron:auto_controller"},
-	action = function(pos, node)
+	action = function(pos)
 		local meta = minetest.get_meta(pos)
 		local cycles = meta:get_int("offset")
 		meta:set_int("cycles", cycles)
@@ -52,7 +52,7 @@ minetest.register_lbm({
 minetest.register_lbm({
 	name = "digtron:builder_extrusion_upgrade",
 	nodenames = {"digtron:builder"},
-	action = function(pos, node)
+	action = function(pos)
 		local meta = minetest.get_meta(pos)
 		meta:set_int("extrusion", 1)
 	end

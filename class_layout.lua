@@ -61,7 +61,9 @@ function digtron.DigtronLayout.create(pos, player)
 	self.contains_protected_node = false -- used to indicate if at least one node in this digtron array is protected from the player.
 	self.controller = {x=pos.x, y=pos.y, z=pos.z} 	--Make a deep copy of the pos parameter just in case the calling code wants to play silly buggers with it
 
-	table.insert(self.all, get_node_image(pos, minetest.get_node(pos))) -- We never visit the source node, so insert it into the all table a priori. Revisit this design decision if a controller node is created that contains fuel or inventory or whatever.
+	-- We never visit the source node, so insert it into the all table a priori.
+	-- Revisit this design decision if a controller node is created that contains fuel or inventory or whatever.
+	table.insert(self.all, get_node_image(pos, minetest.get_node(pos)))
 
 	self.extents_max_x = pos.x
 	self.extents_min_x = pos.x
@@ -354,7 +356,7 @@ end
 -- Writing to world
 
 function digtron.DigtronLayout.can_write_layout_image(self)
-	for k, node_image in pairs(self.all) do
+	for _, node_image in pairs(self.all) do
 		--check if we're moving into a protected node
 		if self.protected:get(node_image.pos.x, node_image.pos.y, node_image.pos.z) then
 			return false
@@ -470,7 +472,7 @@ function digtron.DigtronLayout.write_layout_image(self, player)
 	end
 
 	-- create the new one
-	for k, node_image in pairs(self.all) do
+	for _, node_image in pairs(self.all) do
 		local new_pos = node_image.pos
 		local new_node = node_image.node
 		local old_node = minetest.get_node(new_pos)
@@ -503,7 +505,7 @@ end
 function digtron.DigtronLayout.serialize(self)
 	-- serialize can't handle ItemStack objects, convert them to strings.
 	for _, node_image in pairs(self.all) do
-		for k, inv in pairs(node_image.meta.inventory) do
+		for _, inv in pairs(node_image.meta.inventory) do
 			for index, item in pairs(inv) do
 				inv[index] = item:to_string()
 			end
