@@ -1,7 +1,5 @@
-DigtronLayout = {}
-DigtronLayout.__index = DigtronLayout
-
-local modpath_awards = minetest.get_modpath("awards")
+digtron.DigtronLayout = {}
+digtron.DigtronLayout.__index = digtron.DigtronLayout
 
 -------------------------------------------------------------------------
 -- Creation
@@ -15,7 +13,7 @@ local get_node_image = function(pos, node)
 	if node_image.meta ~= nil and node_def._digtron_formspec ~= nil then
 		node_image.meta.fields.formspec = node_def._digtron_formspec(pos, meta) -- causes formspec to be automatically upgraded whenever Digtron moves
 	end
-	
+
 	local group = minetest.get_item_group(node.name, "digtron")
 	-- group 1 has no special metadata
 	if group > 1 and group < 10 then
@@ -27,7 +25,7 @@ local get_node_image = function(pos, node)
 			.. tostring(group) .. ". This error should not be possible. Please see https://github.com/minetest/minetest/issues/8067")
 		end
 	end
-	
+
 	-- Record what kind of thing we've got in a builder node so its facing can be rotated properly
 	if group == 4 then
 		local build_item = ""
@@ -45,25 +43,27 @@ local get_node_image = function(pos, node)
 end
 
 -- temporary pointsets used while searching
-local to_test = Pointset.create()
-local tested = Pointset.create()
+local to_test = digtron.Pointset.create()
+local tested = digtron.Pointset.create()
 
-function DigtronLayout.create(pos, player)
+function digtron.DigtronLayout.create(pos, player)
 	local self = {}
-	setmetatable(self, DigtronLayout)
+	setmetatable(self, digtron.DigtronLayout)
 
 	--initialize. We're assuming that the start position is a controller digtron, should be a safe assumption since only the controller node should call this
 	self.traction = 0
 	self.all = {}
 	self.water_touching = false
 	self.lava_touching = false
-	self.protected = Pointset.create() -- if any nodes we look at are protected, make note of that. That way we don't need to keep re-testing protection state later.
-	self.old_pos_pointset = Pointset.create() -- For tracking original location of nodes if we do transformations on the Digtron
-	self.nodes_dug = Pointset.create() -- For tracking adjacent nodes that will have been dug by digger heads in future
+	self.protected = digtron.Pointset.create() -- if any nodes we look at are protected, make note of that. That way we don't need to keep re-testing protection state later.
+	self.old_pos_pointset = digtron.Pointset.create() -- For tracking original location of nodes if we do transformations on the Digtron
+	self.nodes_dug = digtron.Pointset.create() -- For tracking adjacent nodes that will have been dug by digger heads in future
 	self.contains_protected_node = false -- used to indicate if at least one node in this digtron array is protected from the player.
 	self.controller = {x=pos.x, y=pos.y, z=pos.z} 	--Make a deep copy of the pos parameter just in case the calling code wants to play silly buggers with it
 
-	table.insert(self.all, get_node_image(pos, minetest.get_node(pos))) -- We never visit the source node, so insert it into the all table a priori. Revisit this design decision if a controller node is created that contains fuel or inventory or whatever.
+	-- We never visit the source node, so insert it into the all table a priori.
+	-- Revisit this design decision if a controller node is created that contains fuel or inventory or whatever.
+	table.insert(self.all, get_node_image(pos, minetest.get_node(pos)))
 
 	self.extents_max_x = pos.x
 	self.extents_min_x = pos.x
@@ -79,12 +79,12 @@ function DigtronLayout.create(pos, player)
 	to_test:set(pos.x, pos.y - 1, pos.z, true)
 	to_test:set(pos.x, pos.y, pos.z + 1, true)
 	to_test:set(pos.x, pos.y, pos.z - 1, true)
-	
+
 	if minetest.is_protected(pos, player:get_player_name()) and not minetest.check_player_privs(player, "protection_bypass") then
 		self.protected:set(pos.x, pos.y, pos.z, true)
 		self.contains_protected_node = true
 	end
-	
+
 	-- Do a loop on to_test positions, adding new to_test positions as we find digtron nodes. This is a flood fill operation
 	-- that follows node faces (no diagonals)
 	local testpos, _ = to_test:pop()
@@ -96,7 +96,7 @@ function DigtronLayout.create(pos, player)
 			--digtron array is next to unloaded nodes, too dangerous to do anything. Abort.
 			self.ignore_touching = true
 		end
-		
+
 		if minetest.get_item_group(node.name, "water") ~= 0 then
 			self.water_touching = true
 		elseif minetest.get_item_group(node.name, "lava") ~= 0 then
@@ -111,12 +111,12 @@ function DigtronLayout.create(pos, player)
 			self.protected:set(testpos.x, testpos.y, testpos.z, true)
 			is_protected = true
 		end
-		
+
 		local group_number = minetest.get_item_group(node.name, "digtron")
 		if group_number > 0 then
 			--found one. Add it to the digtrons output
 			local node_image = get_node_image(testpos, node)
-			
+
 			table.insert(self.all, node_image)
 
 			-- add a reference to this node's position to special node lists
@@ -147,11 +147,11 @@ function DigtronLayout.create(pos, player)
 				self.auto_ejectors = self.auto_ejectors or {}
 				table.insert(self.auto_ejectors, node_image)
 			end
-			
+
 			if is_protected then
 				self.contains_protected_node = true
 			end
-			
+
 			-- update extents
 			self.extents_max_x = math.max(self.extents_max_x, testpos.x)
 			self.extents_min_x = math.min(self.extents_min_x, testpos.x)
@@ -159,7 +159,7 @@ function DigtronLayout.create(pos, player)
 			self.extents_min_y = math.min(self.extents_min_y, testpos.y)
 			self.extents_max_z = math.max(self.extents_max_z, testpos.z)
 			self.extents_min_z = math.min(self.extents_min_z, testpos.z)
-			
+
 			--queue up potential new test points adjacent to this digtron node
 			to_test:set_if_not_in(tested, testpos.x + 1, testpos.y, testpos.z, true)
 			to_test:set_if_not_in(tested, testpos.x - 1, testpos.y, testpos.z, true)
@@ -172,15 +172,15 @@ function DigtronLayout.create(pos, player)
 			-- Allowing unknown nodes to provide traction, since they're not buildable_to either
 			self.traction = self.traction + 1
 		end
-		
+
 		testpos, _ = to_test:pop()
 	end
-	
+
 	digtron.award_layout(self, player) -- hook for achievements mod
-	
+
 	to_test:clear()
 	tested:clear()
-	
+
 	return self
 end
 
@@ -245,7 +245,7 @@ local rotate_pos = function(axis, direction, pos)
 			pos.x = pos.z
 			pos.z = -temp_x
 		end
-	else	
+	else
 		if direction < 0 then
 			local temp_x = pos.x
 			pos.x = -pos.y
@@ -280,25 +280,25 @@ local rotate_node_image = function(node_image, origin, axis, direction, old_pos_
 	elseif node_image.paramtype2 == "facedir" then
 		node_image.node.param2 = facedir_rotate[axis][direction][node_image.node.param2]
 	end
-	
+
 	if node_image.build_item_paramtype2 == "wallmounted" then
 		node_image.meta.fields.build_facing = wallmounted_rotate[axis][direction][tonumber(node_image.meta.fields.build_facing)]
 	elseif node_image.build_item_paramtype2 == "facedir" then
 		node_image.meta.fields.build_facing = facedir_rotate[axis][direction][tonumber(node_image.meta.fields.build_facing)]
 	end
-	
+
 	node_image.meta.fields.waiting = nil -- If we're rotating a controller that's in the "waiting" state, clear it. Otherwise it may stick like that.
 
 	-- record the old location so we can destroy the old node if the rotation operation is possible
 	old_pos_pointset:set(node_image.pos.x, node_image.pos.y, node_image.pos.z, true)
-	
+
 	-- position in space relative to origin
 	local pos = subtract_in_place(node_image.pos, origin)
 	pos = rotate_pos(axis, direction, pos)
 	-- Move back to original reference frame
 	node_image.pos = add_in_place(pos, origin)
-	
-	return node_image	
+
+	return node_image
 end
 
 
@@ -311,7 +311,7 @@ local top = {
 	{axis="y", dir=1},
 }
 -- Rotates 90 degrees widdershins around the axis defined by facedir (which in this case is pointing out the front of the node, so it needs to be converted into an upward-pointing axis internally)
-function DigtronLayout.rotate_layout_image(self, facedir)
+function digtron.DigtronLayout.rotate_layout_image(self, facedir)
 
 	if self == nil or self.all == nil or self.controller == nil or self.old_pos_pointset == nil then
 		-- this should not be possible, but if it is then abort.
@@ -325,10 +325,10 @@ function DigtronLayout.rotate_layout_image(self, facedir)
 	-- 12, 13, 14, 15 == (1,0,0)
 	-- 16, 17, 18, 19 == (-1,0,0)
 	-- 20, 21, 22, 23== (0,-1,0)
-	
+
 	local params = top[math.floor(facedir/4)]
-	
-	for k, node_image in pairs(self.all) do
+
+	for _, node_image in pairs(self.all) do
 		rotate_node_image(node_image, self.controller, params.axis, params.dir, self.old_pos_pointset)
 	end
 	return self
@@ -337,15 +337,15 @@ end
 -----------------------------------------------------------------------------------------------
 -- Translation
 
-function DigtronLayout.move_layout_image(self, dir)
+function digtron.DigtronLayout.move_layout_image(self, dir)
 	self.extents_max_x = self.extents_max_x + dir.x
 	self.extents_min_x = self.extents_min_x + dir.x
 	self.extents_max_y = self.extents_max_y + dir.y
 	self.extents_min_y = self.extents_min_y + dir.y
 	self.extents_max_z = self.extents_max_z + dir.z
 	self.extents_min_z = self.extents_min_z + dir.z
-	
-	for k, node_image in pairs(self.all) do
+
+	for _, node_image in pairs(self.all) do
 		self.old_pos_pointset:set(node_image.pos.x, node_image.pos.y, node_image.pos.z, true)
 		node_image.pos = add_in_place(node_image.pos, dir)
 		self.nodes_dug:set(node_image.pos.x, node_image.pos.y, node_image.pos.z, false) -- we've moved a digtron node into this space, mark it so that we don't dig it.
@@ -355,8 +355,8 @@ end
 -----------------------------------------------------------------------------------------------
 -- Writing to world
 
-function DigtronLayout.can_write_layout_image(self)
-	for k, node_image in pairs(self.all) do
+function digtron.DigtronLayout.can_write_layout_image(self)
+	for _, node_image in pairs(self.all) do
 		--check if we're moving into a protected node
 		if self.protected:get(node_image.pos.x, node_image.pos.y, node_image.pos.z) then
 			return false
@@ -394,14 +394,14 @@ local node_callbacks = function(player)
 			local old_pos = dug_node_pos[i]
 			local old_node = dug_node[i]
 			local old_meta = dug_node_meta[i]
-	
+
 			for _, callback in ipairs(minetest.registered_on_dignodes) do
 				-- Copy pos and node because callback can modify them
 				local pos_copy = {x=old_pos.x, y=old_pos.y, z=old_pos.z}
 				local oldnode_copy = {name=old_node.name, param1=old_node.param1, param2=old_node.param2}
 				callback(pos_copy, oldnode_copy, digtron.fake_player)
 			end
-	
+
 			local old_def = minetest.registered_nodes[old_node.name]
 			if old_def ~= nil and old_def.after_dig_node ~= nil then
 				old_def.after_dig_node(old_pos, old_node, old_meta, player)
@@ -414,7 +414,7 @@ local node_callbacks = function(player)
 			local new_pos = placed_node_pos[i]
 			local new_node = placed_new_node[i]
 			local old_node = placed_old_node[i]
-	
+
 			for _, callback in ipairs(minetest.registered_on_placenodes) do
 				-- Copy pos and node because callback can modify them
 				local pos_copy = {x=new_pos.x, y=new_pos.y, z=new_pos.z}
@@ -422,7 +422,7 @@ local node_callbacks = function(player)
 				local newnode_copy = {name=new_node.name, param1=new_node.param1, param2=new_node.param2}
 				callback(pos_copy, newnode_copy, digtron.fake_player, oldnode_copy)
 			end
-	
+
 			local new_def = minetest.registered_nodes[new_node.name]
 			if new_def ~= nil and new_def.after_place_node ~= nil then
 				new_def.after_place_node(new_pos, player)
@@ -452,7 +452,7 @@ local set_meta_with_retry = function(meta, meta_table)
 end
 
 local air_node = {name="air"}
-function DigtronLayout.write_layout_image(self, player)
+function digtron.DigtronLayout.write_layout_image(self, player)
 	-- destroy the old digtron
 	local oldpos, _ = self.old_pos_pointset:pop()
 	while oldpos ~= nil do
@@ -472,7 +472,7 @@ function DigtronLayout.write_layout_image(self, player)
 	end
 
 	-- create the new one
-	for k, node_image in pairs(self.all) do
+	for _, node_image in pairs(self.all) do
 		local new_pos = node_image.pos
 		local new_node = node_image.node
 		local old_node = minetest.get_node(new_pos)
@@ -481,13 +481,13 @@ function DigtronLayout.write_layout_image(self, player)
 			minetest.log("error", "DigtronLayout.write_layout_image failed to write a Digtron node, aborting write.")
 			return false
 		end
-		
+
 		placed_nodes_count = placed_nodes_count + 1
 		placed_node_pos[placed_nodes_count] = new_pos
 		placed_new_node[placed_nodes_count] = new_node
 		placed_old_node[placed_nodes_count] = old_node
 	end
-	
+
 	-- fake_player will be passed to callbacks to prevent actual player from "taking the blame" for this action.
 	-- For example, the hunger mod shouldn't be making the player hungry when he moves Digtron.
 	digtron.fake_player:update(self.controller, player:get_player_name())
@@ -502,10 +502,10 @@ end
 ---------------------------------------------------------------------------------------------
 -- Serialization. Currently only serializes the data that is needed by the crate, upgrade this function if more is needed
 
-function DigtronLayout.serialize(self)
+function digtron.DigtronLayout.serialize(self)
 	-- serialize can't handle ItemStack objects, convert them to strings.
 	for _, node_image in pairs(self.all) do
-		for k, inv in pairs(node_image.meta.inventory) do
+		for _, inv in pairs(node_image.meta.inventory) do
 			for index, item in pairs(inv) do
 				inv[index] = item:to_string()
 			end
@@ -515,10 +515,10 @@ function DigtronLayout.serialize(self)
 	return minetest.serialize({controller=self.controller, all=self.all})
 end
 
-function DigtronLayout.deserialize(layout_string)
+function digtron.DigtronLayout.deserialize(layout_string)
 	local self = {}
-	setmetatable(self, DigtronLayout)
-	
+	setmetatable(self, digtron.DigtronLayout)
+
 	if not layout_string or layout_string == "" then
 		return nil
 	end
@@ -526,7 +526,7 @@ function DigtronLayout.deserialize(layout_string)
 
 	self.all = deserialized_layout.all
 	self.controller = deserialized_layout.controller
-	self.old_pos_pointset = Pointset.create() -- needed by the write_layout method, leave empty
+	self.old_pos_pointset = digtron.Pointset.create() -- needed by the write_layout method, leave empty
 
 	return self
 end

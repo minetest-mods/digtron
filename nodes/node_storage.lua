@@ -1,10 +1,10 @@
 -- internationalization boilerplate
 local MP = minetest.get_modpath(minetest.get_current_modname())
-local S, NS = dofile(MP.."/intllib.lua")
+local S = dofile(MP.."/intllib.lua")
 
 local pipeworks_path = minetest.get_modpath("pipeworks")
 
-local inventory_formspec_string = 
+local inventory_formspec_string =
 	"size[8,9.3]" ..
 	default.gui_bg ..
 	default.gui_bg_img ..
@@ -17,7 +17,7 @@ local inventory_formspec_string =
 	"listring[current_player;main]" ..
 	default.get_hotbar_bg(0,5.15)
 
-local inventory_formspec = function(pos, meta)
+local inventory_formspec = function()
 	return inventory_formspec_string
 end
 
@@ -56,23 +56,23 @@ minetest.register_node("digtron:inventory", {
 		local inv = meta:get_inventory()
 		inv:set_size("main", 8*4)
 	end,
-	
-	can_dig = function(pos,player)
+
+	can_dig = function(pos)
 		local meta = minetest.get_meta(pos)
 		local inv = meta:get_inventory()
 		return inv:is_empty("main")
 	end,
-		
+
 	-- Pipeworks compatibility
 	----------------------------------------------------------------
 
 	tube = (function() if pipeworks_path then return {
-		insert_object = function(pos, node, stack, direction)
+		insert_object = function(pos, _, stack)
 			local meta = minetest.get_meta(pos)
 			local inv = meta:get_inventory()
 			return inv:add_item("main", stack)
 		end,
-		can_insert = function(pos, node, stack, direction)
+		can_insert = function(pos, _, stack)
 			local meta = minetest.get_meta(pos)
 			local inv = meta:get_inventory()
 			return inv:room_for_item("main", stack)
@@ -80,12 +80,12 @@ minetest.register_node("digtron:inventory", {
 		input_inventory = "main",
 		connect_sides = {left = 1, right = 1, back = 1, front = 1, bottom = 1, top = 1}
 	} end end)(),
-	
+
 	after_place_node = (function() if pipeworks_path then return pipeworks.after_place end end)(),
 	after_dig_node = (function() if pipeworks_path then return pipeworks.after_dig end end)()
 })
 
-local fuelstore_formspec_string = 
+local fuelstore_formspec_string =
 	"size[8,9.3]" ..
 	default.gui_bg ..
 	default.gui_bg_img ..
@@ -98,10 +98,10 @@ local fuelstore_formspec_string =
 	"listring[current_player;main]" ..
 	default.get_hotbar_bg(0,5.15)
 
-local fuelstore_formspec = function(pos, meta)
+local fuelstore_formspec = function()
 	return fuelstore_formspec_string
 end
-	
+
 -- Fuel storage. Controller node draws fuel from here.
 -- Note that fuel stores are digtron group 5.
 minetest.register_node("digtron:fuelstore", {
@@ -137,9 +137,9 @@ minetest.register_node("digtron:fuelstore", {
 		local inv = meta:get_inventory()
 		inv:set_size("fuel", 8*4)
 	end,
-	
+
 	-- Only allow fuel items to be placed in fuel
-	allow_metadata_inventory_put = function(pos, listname, index, stack, player)
+	allow_metadata_inventory_put = function(_, listname, _, stack)
 		if listname == "fuel" then
 			if minetest.get_craft_result({method="fuel", width=1, items={stack}}).time ~= 0 then
 				return stack:get_count()
@@ -149,18 +149,18 @@ minetest.register_node("digtron:fuelstore", {
 		end
 		return 0
 	end,
-	
-	can_dig = function(pos,player)
+
+	can_dig = function(pos)
 		local meta = minetest.get_meta(pos)
 		local inv = meta:get_inventory()
 		return inv:is_empty("fuel")
 	end,
-		
+
 	-- Pipeworks compatibility
 	----------------------------------------------------------------
 
 	tube = (function() if pipeworks_path then return {
-		insert_object = function(pos, node, stack, direction)
+		insert_object = function(pos, _, stack)
 			if minetest.get_craft_result({method="fuel", width=1, items={stack}}).time ~= 0 then
 				local meta = minetest.get_meta(pos)
 				local inv = meta:get_inventory()
@@ -168,7 +168,7 @@ minetest.register_node("digtron:fuelstore", {
 			end
 			return stack
 		end,
-		can_insert = function(pos, node, stack, direction)
+		can_insert = function(pos, _, stack)
 			if minetest.get_craft_result({method="fuel", width=1, items={stack}}).time ~= 0 then
 				local meta = minetest.get_meta(pos)
 				local inv = meta:get_inventory()
@@ -179,7 +179,7 @@ minetest.register_node("digtron:fuelstore", {
 		input_inventory = "fuel",
 		connect_sides = {left = 1, right = 1, back = 1, front = 1, bottom = 1, top = 1}
 	} end end)(),
-	
+
 	after_place_node = (function() if pipeworks_path then return pipeworks.after_place end end)(),
 	after_dig_node = (function() if pipeworks_path then return pipeworks.after_dig end end)()
 })
@@ -199,7 +199,7 @@ local combined_storage_formspec_string =
 	"listring[current_player;main]" ..
 	default.get_hotbar_bg(0,5.75)
 
-local combined_storage_formspec = function(pos, meta)
+local combined_storage_formspec = function()
 	return combined_storage_formspec_string
 end
 
@@ -224,7 +224,8 @@ minetest.register_node("digtron:combined_storage", {
 	is_ground_content = false,
 	tiles = {
 		"digtron_plate.png^digtron_crossbrace.png^digtron_flammable_small.png^[transformR180^digtron_flammable_small.png",
-		"digtron_plate.png^digtron_crossbrace.png^digtron_flammable_small.png^[transformR180^digtron_flammable_small.png",		"digtron_plate.png^digtron_crossbrace.png^digtron_flammable_small.png^digtron_storage.png",
+		"digtron_plate.png^digtron_crossbrace.png^digtron_flammable_small.png^[transformR180^digtron_flammable_small.png",
+		"digtron_plate.png^digtron_crossbrace.png^digtron_flammable_small.png^digtron_storage.png",
 		"digtron_plate.png^digtron_crossbrace.png^digtron_flammable_small.png^digtron_storage.png",
 		"digtron_plate.png^digtron_crossbrace.png^digtron_flammable_small.png^digtron_storage.png",
 		"digtron_plate.png^digtron_crossbrace.png^digtron_flammable_small.png^digtron_storage.png",
@@ -236,9 +237,9 @@ minetest.register_node("digtron:combined_storage", {
 		inv:set_size("main", 8*3)
 		inv:set_size("fuel", 8*1)
 	end,
-	
+
 	-- Only allow fuel items to be placed in fuel
-	allow_metadata_inventory_put = function(pos, listname, index, stack, player)
+	allow_metadata_inventory_put = function(_, listname, _, stack)
 		if listname == "fuel" then
 			if minetest.get_craft_result({method="fuel", width=1, items={stack}}).time ~= 0 then
 				return stack:get_count()
@@ -248,12 +249,12 @@ minetest.register_node("digtron:combined_storage", {
 		end
 		return stack:get_count() -- otherwise, allow all drops
 	end,
-	
-	allow_metadata_inventory_move = function(pos, from_list, from_index, to_list, to_index, count, player)
+
+	allow_metadata_inventory_move = function(pos, from_list, from_index, to_list, _, count)
 		if to_list == "main" then
 			return count
 		end
-		
+
 		local meta = minetest.get_meta(pos)
 		local inv = meta:get_inventory()
 		local stack = inv:get_stack(from_list, from_index)
@@ -262,17 +263,17 @@ minetest.register_node("digtron:combined_storage", {
 		end
 		return 0
 	end,
-	
-	can_dig = function(pos,player)
+
+	can_dig = function(pos)
 		local meta = minetest.get_meta(pos)
 		local inv = meta:get_inventory()
 		return inv:is_empty("fuel") and inv:is_empty("main")
 	end,
-		
+
 	-- Pipeworks compatibility
 	----------------------------------------------------------------
 	tube = (function() if pipeworks_path then return {
-		insert_object = function(pos, node, stack, direction)
+		insert_object = function(pos, _, stack, direction)
 			local meta = minetest.get_meta(pos)
 			local inv = meta:get_inventory()
 			if minetest.get_craft_result({method="fuel", width=1, items={stack}}).time ~= 0 and direction.y == 1 then
@@ -280,7 +281,7 @@ minetest.register_node("digtron:combined_storage", {
 			end
 			return inv:add_item("main", stack)
 		end,
-		can_insert = function(pos, node, stack, direction)
+		can_insert = function(pos, _, stack, direction)
 			local meta = minetest.get_meta(pos)
 			local inv = meta:get_inventory()
 			if minetest.get_craft_result({method="fuel", width=1, items={stack}}).time ~= 0 and direction.y == 1 then
@@ -291,7 +292,7 @@ minetest.register_node("digtron:combined_storage", {
 		input_inventory = "main",
 		connect_sides = {left = 1, right = 1, back = 1, front = 1, bottom = 1, top = 1}
 	} end end)(),
-	
+
 	after_place_node = (function() if pipeworks_path then return pipeworks.after_place end end)(),
 	after_dig_node = (function() if pipeworks_path then return pipeworks.after_dig end end)()
 })
@@ -306,7 +307,7 @@ if minetest.get_modpath("hopper") and hopper ~= nil and hopper.add_container ~= 
 		{"top", "digtron:fuelstore", "fuel"},
 		{"bottom", "digtron:fuelstore", "fuel"},
 		{"side", "digtron:fuelstore", "fuel"},
-	
+
 		{"top", "digtron:combined_storage", "main"},
 		{"bottom", "digtron:combined_storage", "main"},
 		{"side", "digtron:combined_storage", "fuel"},

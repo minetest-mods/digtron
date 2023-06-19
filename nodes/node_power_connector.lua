@@ -1,6 +1,6 @@
 -- internationalization boilerplate
 local MP = minetest.get_modpath(minetest.get_current_modname())
-local S, NS = dofile(MP.."/intllib.lua")
+local S = dofile(MP.."/intllib.lua")
 
 local size = 3/16
 
@@ -28,17 +28,21 @@ minetest.register_node("digtron:power_connector", {
 	_doc_items_longdesc = digtron.doc.power_connector_longdesc,
     _doc_items_usagehelp = digtron.doc.power_connector_usagehelp,
 	groups = connector_groups,
-	tiles = {"digtron_plate.png^digtron_power_connector_top.png^digtron_digger_yb_frame.png", "digtron_plate.png^digtron_digger_yb_frame.png",
-		"digtron_plate.png^digtron_digger_yb_frame.png^digtron_power_connector_side.png", "digtron_plate.png^digtron_digger_yb_frame.png^digtron_power_connector_side.png",
-		"digtron_plate.png^digtron_digger_yb_frame.png^digtron_power_connector_side.png", "digtron_plate.png^digtron_digger_yb_frame.png^digtron_power_connector_side.png",
-		},
+	tiles = {
+		"digtron_plate.png^digtron_power_connector_top.png^digtron_digger_yb_frame.png",
+		"digtron_plate.png^digtron_digger_yb_frame.png",
+		"digtron_plate.png^digtron_digger_yb_frame.png^digtron_power_connector_side.png",
+		"digtron_plate.png^digtron_digger_yb_frame.png^digtron_power_connector_side.png",
+		"digtron_plate.png^digtron_digger_yb_frame.png^digtron_power_connector_side.png",
+		"digtron_plate.png^digtron_digger_yb_frame.png^digtron_power_connector_side.png",
+	},
 	connect_sides = {"bottom", "top", "left", "right", "front", "back"},
 	drawtype = "nodebox",
 	sounds = digtron.metal_sounds,
 	paramtype = "light",
 	paramtype2 = "facedir",
 	is_ground_content = false,
-	
+
 	connects_to = {"group:technic_hv_cable"},
 	node_box = {
 		type = "connected",
@@ -53,45 +57,45 @@ minetest.register_node("digtron:power_connector", {
 		connect_left   = {-0.5,  -size, -size, size,  size, size}, -- x-
 		connect_right  = {-size, -size, -size, 0.5,   size, size}, -- x+
 	},
-	
+
 	on_construct = function(pos)
 		local meta = minetest.get_meta(pos)
 		meta:set_string("formspec", get_formspec_string(0,0))
 	end,
 
-	technic_run = function(pos, node)
+	technic_run = function(pos)
 		local meta = minetest.get_meta(pos)
 		local eu_input = meta:get_int("HV_EU_input")
 		local demand = meta:get_int("HV_EU_demand")
 		meta:set_string("infotext", S("Digtron Power @1/@2", eu_input, demand))
 	end,
-	
-	on_receive_fields = function(pos, formname, fields, sender)
-		local layout = DigtronLayout.create(pos, sender)
+
+	on_receive_fields = function(pos, _, fields, sender)
+		local layout = digtron.DigtronLayout.create(pos, sender)
 		local max_cost = 0
 		if layout.builders ~= nil then
 			for _, node_image in pairs(layout.builders) do
 				max_cost = max_cost + (digtron.config.build_cost * (node_image.meta.fields.extrusion or 1))
-			end 
+			end
 		end
 		if layout.diggers ~= nil then
-			for _, node_image in pairs(layout.diggers) do
+			for _ in pairs(layout.diggers) do
 				max_cost = max_cost + max_dig_cost
 			end
 		end
 		local current_max = max_cost * digtron.config.power_ratio
-	
+
 		local meta = minetest.get_meta(pos)
-		
+
 		if fields.maximize then
 			meta:set_int("HV_EU_demand", current_max)
 		elseif fields.value ~= nil then
 			local number = tonumber(fields.value) or 0
-			local number = math.min(math.max(number, 0), current_max)
+			number = math.min(math.max(number, 0), current_max)
 			meta:set_int("HV_EU_demand", number)
 		end
-	
-		meta:set_string("formspec", get_formspec_string(meta:get_int("HV_EU_demand"), current_max))	
+
+		meta:set_string("formspec", get_formspec_string(meta:get_int("HV_EU_demand"), current_max))
 	end,
 })
 

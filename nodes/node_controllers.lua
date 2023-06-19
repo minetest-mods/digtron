@@ -1,6 +1,6 @@
 -- internationalization boilerplate
 local MP = minetest.get_modpath(minetest.get_current_modname())
-local S, NS = dofile(MP.."/intllib.lua")
+local S = dofile(MP.."/intllib.lua")
 
 local controller_nodebox ={
 	{-0.3125, -0.3125, -0.3125, 0.3125, 0.3125, 0.3125}, -- Core
@@ -39,20 +39,20 @@ minetest.register_node("digtron:controller", {
 		"digtron_plate.png",
 		"digtron_plate.png^digtron_control.png",
 	},
-	
+
 	drawtype = "nodebox",
 	node_box = {
 		type = "fixed",
 		fixed = controller_nodebox,
 	},
-	
+
 	on_construct = function(pos)
         local meta = minetest.get_meta(pos)
 		meta:set_float("fuel_burning", 0.0)
 		meta:set_string("infotext", S("Heat remaining in controller furnace: @1", 0))
 	end,
-	
-	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
+
+	on_rightclick = function(pos, _, clicker)
 		local meta = minetest.get_meta(pos)
 
 		-- new delay code without nodetimer (lost on crating)
@@ -62,28 +62,28 @@ minetest.register_node("digtron:controller", {
 		-- if meta:get_string("waiting") == "true" then
 		if last_time + digtron.config.cycle_time > now then
 		   -- Been too soon since last time the digtron did a cycle.
-		   
+
 		   -- added for clarity
 		   meta:set_string("infotext", S("repetition delay"))
-		   
+
 		   return
 		end
-	
-		local newpos, status, return_code = digtron.execute_dig_cycle(pos, clicker)
-		
+
+		local newpos, status = digtron.execute_dig_cycle(pos, clicker)
+
 		meta = minetest.get_meta(newpos)
 		if status ~= nil then
 			meta:set_string("infotext", status)
 		end
-		
+
 		-- Start the delay before digtron can run again.
 		minetest.get_meta(newpos):set_string("waiting", "true")
 		-- minetest.get_node_timer(newpos):start(digtron.config.cycle_time)
 		-- new delay code
 		meta:set_string("last_time",tostring(minetest.get_gametime()))
 	end,
-	
-	on_timer = function(pos, elapsed)
+
+	on_timer = function(pos)
 		minetest.get_meta(pos):set_string("waiting", nil)
 	end,
 })
@@ -97,15 +97,18 @@ local auto_formspec = "size[8,6.2]" ..
 	default.gui_slots ..
 	"container[2.0,0]" ..
 	"field[0.0,0.8;1,0.1;cycles;" .. S("Cycles").. ";${cycles}]" ..
-	"tooltip[cycles;" .. S("When triggered, this controller will try to run for the given number of cycles.\nThe cycle count will decrement as it runs, so if it gets halted by a problem\nyou can fix the problem and restart.").. "]" ..
+	"tooltip[cycles;" .. S("When triggered, this controller will try to run for the given number of cycles.\nThe cycle count will decrement as it runs, so if it gets halted by a problem\n" ..
+		"you can fix the problem and restart.").. "]" ..
 	"button_exit[0.7,0.5;1,0.1;set;" .. S("Set").. "]" ..
 	"tooltip[set;" .. S("Saves the cycle setting without starting the controller running").. "]" ..
 	"button_exit[1.7,0.5;1,0.1;execute;" .. S("Set &\nExecute").. "]" ..
 	"tooltip[execute;" .. S("Begins executing the given number of cycles").. "]" ..
 	"field[0.0,2.0;1,0.1;slope;" .. S("Slope").. ";${slope}]" ..
-	"tooltip[slope;" .. S("For diagonal digging. After moving forward this number of nodes the auto controller\nwill add an additional cycle moving the digtron laterally in the\ndirection of the arrows on the side of this controller.\nSet to 0 for no lateral digging.").. "]" ..
+	"tooltip[slope;" .. S("For diagonal digging. After moving forward this number of nodes the auto controller\nwill add an additional cycle moving the digtron laterally in the\n" ..
+		"direction of the arrows on the side of this controller.\nSet to 0 for no lateral digging.").. "]" ..
 	"field[1.0,2.0;1,0.1;offset;" .. S("Offset").. ";${offset}]" ..
-	"tooltip[offset;" .. S("Sets the offset of the lateral motion defined in the Slope field.\nNote: this offset is relative to the controller's location.\nThe controller will move laterally when it reaches the indicated point.").. "]" ..
+	"tooltip[offset;" .. S("Sets the offset of the lateral motion defined in the Slope field.\nNote: this offset is relative to the controller's location.\n" ..
+		"The controller will move laterally when it reaches the indicated point.").. "]" ..
 	"field[2.0,2.0;1,0.1;period;" .. S("Delay").. ";${period}]" ..
 	"tooltip[period;" .. S("Number of seconds to wait between each cycle").. "]" ..
 	"list[current_name;stop;3.0,0.7;1,1;]" ..
@@ -121,7 +124,7 @@ if minetest.get_modpath("doc") then
 	auto_formspec = auto_formspec ..
 	"button_exit[7.0,0.5;1,0.1;help;" .. S("Help") .. "]" ..
 	"tooltip[help;" .. S("Show documentation about this block").. "]"
-end	
+end
 
 local function auto_cycle(pos)
 	local node = minetest.get_node(pos)
@@ -134,11 +137,11 @@ local function auto_cycle(pos)
 
 	local cycle = meta:get_int("cycles")
 	local slope = meta:get_int("slope")
-	
+
 	if meta:get_string("lateral_done") ~= "true" and slope ~= 0 and (pos[controlling_coordinate] + meta:get_int("offset")) % slope == 0 then
 		--Do a downward dig cycle. Don't update the "cycles" count, these don't count towards that.
 		local newpos, status, return_code = digtron.execute_downward_dig_cycle(pos, player)
-		
+
 		if vector.equals(pos, newpos) then
 			status = status .. "\n" .. S("Cycles remaining: @1", cycle) .. "\n" .. S("Halted!")
 			meta:set_string("infotext", status)
@@ -174,14 +177,14 @@ local function auto_cycle(pos)
 		end
 		return
 	end
-	
+
 	meta = minetest.get_meta(newpos)
 	cycle = meta:get_int("cycles") - 1
 	meta:set_int("cycles", cycle)
 	status = status .. "\n" .. S("Cycles remaining: @1", cycle)
 	meta:set_string("infotext", status)
 	meta:set_string("lateral_done", nil)
-	
+
 	if cycle > 0 then
 		minetest.after(meta:get_int("period"), auto_cycle, newpos)
 	else
@@ -211,13 +214,13 @@ minetest.register_node("digtron:auto_controller", {
 		"digtron_plate.png^[colorize:" .. digtron.auto_controller_colorize,
 		"digtron_plate.png^digtron_control.png^[colorize:" .. digtron.auto_controller_colorize,
 	},
-	
+
 	drawtype = "nodebox",
 	node_box = {
 		type = "fixed",
 		fixed = controller_nodebox,
 	},
-	
+
 	on_construct = function(pos)
         local meta = minetest.get_meta(pos)
 		meta:set_float("fuel_burning", 0.0)
@@ -228,35 +231,35 @@ minetest.register_node("digtron:auto_controller", {
 		meta:set_int("offset", 0)
 		meta:set_int("cycles", 0)
 		meta:set_int("slope", 0)
-		
+
 		local inv = meta:get_inventory()
 		inv:set_size("stop", 1)
 	end,
 
-	allow_metadata_inventory_put = function(pos, listname, index, stack, player)
+	allow_metadata_inventory_put = function(pos, listname, index, stack)
 		if minetest.get_item_group(stack:get_name(), "digtron") ~= 0 then
 			return 0 -- pointless setting a Digtron node as a stop block
-		end	
+		end
 		node_inventory_table.pos = pos
 		local inv = minetest.get_inventory(node_inventory_table)
 		inv:set_stack(listname, index, stack:take_item(1))
 		return 0
 	end,
-	
-	allow_metadata_inventory_take = function(pos, listname, index, stack, player)
+
+	allow_metadata_inventory_take = function(pos, listname, index)
 		node_inventory_table.pos = pos
 		local inv = minetest.get_inventory(node_inventory_table)
 		inv:set_stack(listname, index, ItemStack(""))
 		return 0
 	end,
-	
-	on_receive_fields = function(pos, formname, fields, sender)
+
+	on_receive_fields = function(pos, _, fields, sender)
         local meta = minetest.get_meta(pos)
 		local offset = tonumber(fields.offset)
 		local period = tonumber(fields.period)
 		local slope = tonumber(fields.slope)
 		local cycles = tonumber(fields.cycles)
-		
+
 		if period and period > 0 then
 			meta:set_int("period", math.max(digtron.config.cycle_time, math.floor(period)))
 		end
@@ -264,11 +267,11 @@ minetest.register_node("digtron:auto_controller", {
 		if offset then
 			meta:set_int("offset", offset)
 		end
-		
+
 		if slope and slope >= 0 then
 			meta:set_int("slope", slope)
 		end
-		
+
 		if cycles and cycles >= 0 then
 			meta:set_int("cycles", math.floor(cycles))
 			if sender:is_player() and cycles > 0 then
@@ -284,7 +287,7 @@ minetest.register_node("digtron:auto_controller", {
 		if fields.set and slope and slope > 0 then
 			local node = minetest.get_node(pos)
 			local controlling_coordinate = digtron.get_controlling_coordinate(pos, node.param2)
-			
+
 			offset = offset or 0
 			local newpos = pos
 			local markerpos = {x=newpos.x, y=newpos.y, z=newpos.z}
@@ -299,14 +302,14 @@ minetest.register_node("digtron:auto_controller", {
 				markerpos[controlling_coordinate] = x_pos + slope
 				minetest.add_entity(markerpos, "digtron:marker_vertical")
 			end
-		end	
-		
+		end
+
 		if fields.help and minetest.get_modpath("doc") then --check for mod in case someone disabled it after this digger was built
 			minetest.after(0.5, doc.show_entry, sender:get_player_name(), "nodes", "digtron:auto_controller", true)
 		end
-	end,	
-	
-	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
+	end,
+
+	on_rightclick = function(pos)
 		local meta = minetest.get_meta(pos)
 		meta:set_string("infotext", meta:get_string("infotext") .. "\n" .. S("Interrupted!"))
 		meta:set_string("waiting", "true")
@@ -338,30 +341,30 @@ minetest.register_node("digtron:pusher", {
 		"digtron_plate.png^[colorize:" .. digtron.pusher_controller_colorize,
 		"digtron_plate.png^digtron_control.png^[colorize:" .. digtron.pusher_controller_colorize,
 	},
-	
+
 	drawtype = "nodebox",
 	node_box = {
 		type = "fixed",
 		fixed = controller_nodebox,
 	},
-	
-	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)	
+
+	on_rightclick = function(pos, _, clicker)
 		local meta = minetest.get_meta(pos)
 		if meta:get_string("waiting") == "true" then
 			-- Been too soon since last time the digtron did a cycle.
 			return
 		end
 
-		local newpos, status_text, return_code = digtron.execute_move_cycle(pos, clicker)
+		local newpos, status_text = digtron.execute_move_cycle(pos, clicker)
 		meta = minetest.get_meta(newpos)
 		meta:set_string("infotext", status_text)
-		
+
 		-- Start the delay before digtron can run again.
 		minetest.get_meta(newpos):set_string("waiting", "true")
 		minetest.get_node_timer(newpos):start(digtron.config.cycle_time)
 	end,
-	
-	on_timer = function(pos, elapsed)
+
+	on_timer = function(pos)
 		minetest.get_meta(pos):set_string("waiting", nil)
 	end,
 })

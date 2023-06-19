@@ -1,6 +1,6 @@
 -- internationalization boilerplate
 local MP = minetest.get_modpath(minetest.get_current_modname())
-local S, NS = dofile(MP.."/intllib.lua")
+local S = dofile(MP.."/intllib.lua")
 
 minetest.register_node("digtron:axle", {
 	description = S("Digtron Rotation Axle"),
@@ -21,7 +21,7 @@ minetest.register_node("digtron:axle", {
 		"digtron_plate.png^digtron_axel_side.png",
 		"digtron_plate.png^digtron_axel_side.png",
 	},
-	
+
 	drawtype = "nodebox",
 	node_box = {
 		type = "fixed",
@@ -37,10 +37,10 @@ minetest.register_node("digtron:axle", {
 	},
 
 
-	
-	on_rightclick = function(pos, node, clicker, itemstack, pointed_thing)
+
+	on_rightclick = function(pos, node, clicker)
 		local meta = minetest.get_meta(pos)
-	
+
 		-- new delay code without nodetimer (lost on crating)
 		local now = minetest.get_gametime()
 		local last_time = tonumber(meta:get_string("last_time")) or 0
@@ -54,7 +54,7 @@ minetest.register_node("digtron:axle", {
 			return
 		end
 
-		local image = DigtronLayout.create(pos, clicker)
+		local image = digtron.DigtronLayout.create(pos, clicker)
 		if image:rotate_layout_image(node.param2) == false then
 			-- This should be impossible, but if self-validation fails abort.
 			return
@@ -76,8 +76,8 @@ minetest.register_node("digtron:axle", {
 			meta:set_string("infotext", S("Digtron is obstructed."))
 		end
 	end,
-	
-	on_timer = function(pos, elapsed)
+
+	on_timer = function(pos)
 		minetest.get_meta(pos):set_string("waiting", nil)
 	end,
 })

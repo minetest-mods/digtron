@@ -1,6 +1,6 @@
 -- internationalization boilerplate
 local MP = minetest.get_modpath(minetest.get_current_modname())
-local S, NS = dofile(MP.."/intllib.lua")
+local S = dofile(MP.."/intllib.lua")
 
 local inventory_formspec_string =
 	"size[9,9.3]" ..
@@ -29,7 +29,8 @@ minetest.register_node("digtron:duplicator", {
     _doc_items_usagehelp = digtron.doc.duplicator_usagehelp,
 	groups = {cracky = 3,  oddly_breakable_by_hand=3},
 	sounds = digtron.metal_sounds,
-	tiles = {"digtron_plate.png^(digtron_axel_side.png^[transformR90)",
+	tiles = {
+		"digtron_plate.png^(digtron_axel_side.png^[transformR90)",
 		"digtron_plate.png^(digtron_axel_side.png^[transformR270)",
 		"digtron_plate.png^digtron_axel_side.png",
 		"digtron_plate.png^(digtron_axel_side.png^[transformR180)",
@@ -68,13 +69,13 @@ minetest.register_node("digtron:duplicator", {
 		inv:set_size("main", 8*4)
 	end,
 
-	can_dig = function(pos,player)
+	can_dig = function(pos)
 		local meta = minetest.get_meta(pos)
 		local inv = meta:get_inventory()
 		return inv:is_empty("main")
 	end,
 
-	allow_metadata_inventory_put = function(pos, listname, index, stack, player)
+	allow_metadata_inventory_put = function(_, _, _, stack)
 		if minetest.get_item_group(stack:get_name(), "digtron") > 0 then
 			return stack:get_count()
 		else
@@ -82,7 +83,7 @@ minetest.register_node("digtron:duplicator", {
 		end
 	end,
 
-	on_receive_fields = function(pos, formname, fields, sender)
+	on_receive_fields = function(pos, _, fields, sender)
 		local player_name = sender:get_player_name()
 		if fields.help then
 			minetest.after(0.5, doc.show_entry, player_name, "nodes", "digtron:duplicator", true)
@@ -113,7 +114,7 @@ minetest.register_node("digtron:duplicator", {
 				return
 			end
 
-			local layout = DigtronLayout.create(pos, sender)
+			local layout = digtron.DigtronLayout.create(pos, sender)
 
 			if layout.contains_protected_node then
 				minetest.sound_play("buzzer", {gain=0.5, pos=pos})

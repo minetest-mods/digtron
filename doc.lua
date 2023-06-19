@@ -14,7 +14,7 @@ local battery_ratio = (10000/digtron.config.power_ratio) / coal_fuel
 
 -- internationalization boilerplate
 local MP = minetest.get_modpath(minetest.get_current_modname())
-local S, NS = dofile(MP.."/intllib.lua")
+local S = dofile(MP.."/intllib.lua")
 
 local pipeworks_enabled = minetest.get_modpath("pipeworks") ~= nil
 local hoppers_enabled = minetest.get_modpath("hopper") and hopper ~= nil and hopper.add_container ~= nil
@@ -102,7 +102,7 @@ if pipeworks_enabled then
 	.."\n\n"..
 	S("Fuel modules are compatible with Pipeworks blocks. When a Digtron moves one of the inventory modules adjacent to a pipe it will automatically hook up to it, and disconnect again when it moves on.")
 end
-	
+
 
 digtron.doc.combined_storage_longdesc = S("Stores fuel for a Digtron and also has an inventory for building materials")
 digtron.doc.combined_storage_usagehelp = S("For smaller jobs the two dedicated modules may simply be too much of a good thing, wasting precious Digtron space to give unneeded capacity. The combined storage module is the best of both worlds, splitting its internal space between building material inventory and fuel storage. It has 3/4 building material capacity and 1/4 fuel storage capacity.") .. "\n\n" .. standard_fuel_doc

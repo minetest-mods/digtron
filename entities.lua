@@ -7,19 +7,19 @@ minetest.register_entity("digtron:marker", {
 		physical = false,
 	},
 
-	on_activate = function(self, staticdata)
-		minetest.after(5.0, 
-			function(self) 
+	on_activate = function(self)
+		minetest.after(5.0,
+			function()
 				self.object:remove()
 			end,
 			self)
 	end,
-	
-	on_rightclick=function(self, clicker)
+
+	on_rightclick=function(self)
 		self.object:remove()
 	end,
-	
-	on_punch = function(self, hitter)
+
+	on_punch = function(self)
 		self.object:remove()
 	end,
 })
@@ -28,24 +28,31 @@ minetest.register_entity("digtron:marker_vertical", {
 	initial_properties = {
 		visual = "cube",
 		visual_size = {x=1.05, y=1.05},
-		textures = {"digtron_marker.png","digtron_marker.png","digtron_marker_side.png^[transformR90","digtron_marker_side.png^[transformR90","digtron_marker_side.png^[transformR90","digtron_marker_side.png^[transformR90"},
+		textures = {
+			"digtron_marker.png",
+			"digtron_marker.png",
+			"digtron_marker_side.png^[transformR90",
+			"digtron_marker_side.png^[transformR90",
+			"digtron_marker_side.png^[transformR90",
+			"digtron_marker_side.png^[transformR90"
+		},
 		collisionbox = {-0.525, -0.525, -0.525, 0.525, 0.525, 0.525},
 		physical = false,
 	},
 
-	on_activate = function(self, staticdata)
-		minetest.after(5.0, 
-			function(self) 
+	on_activate = function(self)
+		minetest.after(5.0,
+			function()
 				self.object:remove()
 			end,
 			self)
 	end,
-	
-	on_rightclick=function(self, clicker)
+
+	on_rightclick=function(self)
 		self.object:remove()
 	end,
-	
-	on_punch = function(self, hitter)
+
+	on_punch = function(self)
 		self.object:remove()
 	end,
 })
@@ -59,19 +66,19 @@ minetest.register_entity("digtron:marker_crate_good", {
 		physical = false,
 	},
 
-	on_activate = function(self, staticdata)
-		minetest.after(digtron.config.marker_crate_good_duration, 
-			function(self) 
+	on_activate = function(self)
+		minetest.after(digtron.config.marker_crate_good_duration,
+			function()
 				self.object:remove()
 			end,
 			self)
 	end,
-	
-	on_rightclick=function(self, clicker)
+
+	on_rightclick=function(self)
 		self.object:remove()
 	end,
-	
-	on_punch = function(self, hitter)
+
+	on_punch = function(self)
 		self.object:remove()
 	end,
 })
@@ -85,19 +92,19 @@ minetest.register_entity("digtron:marker_crate_bad", {
 		physical = false,
 	},
 
-	on_activate = function(self, staticdata)
-		minetest.after(digtron.config.marker_crate_bad_duration, 
-			function(self) 
+	on_activate = function(self)
+		minetest.after(digtron.config.marker_crate_bad_duration,
+			function()
 				self.object:remove()
 			end,
 			self)
 	end,
-	
-	on_rightclick=function(self, clicker)
+
+	on_rightclick=function(self)
 		self.object:remove()
 	end,
-	
-	on_punch = function(self, hitter)
+
+	on_punch = function(self)
 		self.object:remove()
 	end,
 })
@@ -114,7 +121,7 @@ minetest.register_entity("digtron:builder_item", {
 		textures = {""},
 		automatic_rotate = math.pi * 0.25,
 	},
-	
+
 	on_activate = function(self, staticdata)
 		local props = self.object:get_properties()
 		if staticdata ~= nil and staticdata ~= "" then
@@ -133,9 +140,9 @@ minetest.register_entity("digtron:builder_item", {
 			digtron.create_builder_item = nil
 		else
 			self.object:remove()
-		end		
+		end
 	end,
-	
+
 	get_staticdata = function(self)
 		local props = self.object:get_properties()
 		if props ~= nil and props.textures ~= nil and props.textures[1] ~= nil then

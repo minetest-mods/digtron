@@ -43,7 +43,7 @@ digtron.mark_diggable = function(pos, nodes_dug, player)
 	-- returns fuel cost and what will be dropped by digging these nodes.
 
 	local target = minetest.get_node(pos)
-	
+
 	-- prevent digtrons from being marked for digging.
 	if minetest.get_item_group(target.name, "digtron") ~= 0 or
 		minetest.get_item_group(target.name, "digtron_protected") ~= 0 or
@@ -57,7 +57,7 @@ digtron.mark_diggable = function(pos, nodes_dug, player)
 		if target.name ~= "air" then
 			local in_known_group = false
 			local material_cost = 0
-			
+
 			if digtron.config.uses_resources then
 				if minetest.get_item_group(target.name, "cracky") ~= 0 then
 					in_known_group = true
@@ -75,13 +75,13 @@ digtron.mark_diggable = function(pos, nodes_dug, player)
 					material_cost = digtron.config.dig_cost_default
 				end
 			end
-	
+
 			return material_cost, minetest.get_node_drops(target.name, "")
 		end
 	end
 	return 0
 end
-	
+
 digtron.can_build_to = function(pos, protected_nodes, dug_nodes)
 	-- Returns whether a space is clear to have something put into it
 
@@ -115,7 +115,7 @@ digtron.place_in_inventory = function(itemname, inventory_positions, fallback_po
 	--tries placing the item in each inventory node in turn. If there's no room, drop it at fallback_pos
 	local itemstack = ItemStack(itemname)
 	if inventory_positions ~= nil then
-		for k, location in pairs(inventory_positions) do
+		for _, location in pairs(inventory_positions) do
 			node_inventory_table.pos = location.pos
 			local inv = minetest.get_inventory(node_inventory_table)
 			itemstack = inv:add_item("main", itemstack)
@@ -147,7 +147,7 @@ digtron.take_from_inventory = function(itemname, inventory_positions)
 	if inventory_positions == nil then return nil end
 	--tries to take an item from each inventory node in turn. Returns location of inventory item was taken from on success, nil on failure
 	local itemstack = ItemStack(itemname)
-	for k, location in pairs(inventory_positions) do
+	for _, location in pairs(inventory_positions) do
 		node_inventory_table.pos = location.pos
 		local inv = minetest.get_inventory(node_inventory_table)
 		local output = inv:remove_item("main", itemstack)
@@ -158,8 +158,8 @@ digtron.take_from_inventory = function(itemname, inventory_positions)
 	return nil
 end
 
--- Used to determine which coordinate is being checked for periodicity. eg, if the digtron is moving in the z direction, then periodicity is checked for every n nodes in the z axis.
-digtron.get_controlling_coordinate = function(pos, facedir)
+-- Used to determine which coordinate is being checked for periodicity. eg, if the digtron is moving in the z direction, then periodicity is checked for every n nodes in the z axis
+digtron.get_controlling_coordinate = function(_, facedir)
 	-- used for determining builder period and offset
 	local dir = digtron.facedir_to_dir_map[facedir]
 	if dir == 1 or dir == 3 then
@@ -172,7 +172,7 @@ digtron.get_controlling_coordinate = function(pos, facedir)
 end
 
 local fuel_craft = {method="fuel", width=1, items={}} -- reusable crafting recipe table for get_craft_result calls below
--- Searches fuel store inventories for burnable items and burns them until target is reached or surpassed 
+-- Searches fuel store inventories for burnable items and burns them until target is reached or surpassed
 -- (or there's nothing left to burn). Returns the total fuel value burned
 -- if the "test" parameter is set to true, doesn't actually take anything out of inventories.
 -- We can get away with this sort of thing for fuel but not for builder inventory because there's just one
@@ -183,7 +183,7 @@ digtron.burn = function(fuelstore_positions, target, test)
 	end
 
 	local current_burned = 0
-	for k, location in pairs(fuelstore_positions) do
+	for _, location in pairs(fuelstore_positions) do
 		if current_burned > target then
 			break
 		end
@@ -194,8 +194,8 @@ digtron.burn = function(fuelstore_positions, target, test)
 		if invlist == nil then -- This check shouldn't be needed, it's yet another guard against https://github.com/minetest/minetest/issues/8067
 			break
 		end
-		
-		for i, itemstack in pairs(invlist) do
+
+		for _, itemstack in pairs(invlist) do
 			fuel_craft.items[1] = itemstack:peek_item(1)
 			local fuel_per_item = minetest.get_craft_result(fuel_craft).time
 			if fuel_per_item ~= 0 then
@@ -222,8 +222,8 @@ digtron.burn = function(fuelstore_positions, target, test)
 end
 
 -- Consume energy from the batteries
--- The same as burning coal, except that instead of destroying the items in the inventory, we merely drain 
--- the charge in them, leaving them empty. The charge is converted into "coal heat units" by a downscaling 
+-- The same as burning coal, except that instead of destroying the items in the inventory, we merely drain
+-- the charge in them, leaving them empty. The charge is converted into "coal heat units" by a downscaling
 -- factor, since if taken at face value (10000 EU), the batteries would be the ultimate power source barely
 -- ever needing replacement.
 digtron.tap_batteries = function(battery_positions, target, test)
@@ -237,20 +237,20 @@ digtron.tap_batteries = function(battery_positions, target, test)
 	-- An RE battery holds 10000 EU of charge
 	-- local power_ratio = 100 -- How much charge equals 1 unit of PU from coal
 	-- setting Moved to digtron.config.power_ratio
-	
-	for k, location in pairs(battery_positions) do
+
+	for _, location in pairs(battery_positions) do
 		if current_burned > target then
 			break
 		end
 		node_inventory_table.pos = location.pos
 		local inv = minetest.get_inventory(node_inventory_table)
 		local invlist = inv:get_list("batteries")
-		
+
 		if (invlist == nil) then -- This check shouldn't be needed, it's yet another guard against https://github.com/minetest/minetest/issues/8067
 			break
 		end
-		
-		for i, itemstack in pairs(invlist) do
+
+		for _, itemstack in pairs(invlist) do
 			local meta = minetest.deserialize(itemstack:get_metadata())
 			if (meta ~= nil) then
 				local power_available = math.floor(meta.charge / digtron.config.power_ratio)
@@ -265,14 +265,13 @@ digtron.tap_batteries = function(battery_positions, target, test)
 					end
 					current_burned = current_burned + actual_burned
 				end
-			
 			end
-			
+
 			if current_burned > target then
 				break
 			end
 		end
-				
+
 		if test ~= true then
 			-- only update the list if we're doing this for real.
 			inv:set_list("batteries", invlist)
@@ -363,7 +362,7 @@ digtron.damage_creatures = function(player, source_pos, target_pos, amount, item
 					obj:remove()
 				end
 			end
-		end		
+		end
 	end
 end
 
@@ -382,8 +381,8 @@ end
 -- If someone sets very large offsets or intervals for the offset markers they might be added too far
 -- away. safe_add_entity causes these attempts to be ignored rather than crashing the game.
 -- returns the entity if successful, nil otherwise
-function safe_add_entity(pos, name)
-	success, ret = pcall(minetest.add_entity, pos, name)
+local function safe_add_entity(pos, name)
+	local success, ret = pcall(minetest.add_entity, pos, name)
 	if success then return ret else return nil end
 end
 
@@ -411,13 +410,13 @@ digtron.show_offset_markers = function(pos, offset, period)
 
 	local entity = safe_add_entity({x=buildpos.x, y=buildpos.y, z=z_pos}, "digtron:marker")
 	if entity ~= nil then entity:setyaw(1.5708) end
-	
+
 	if z_pos >= buildpos.z then
-		local entity = safe_add_entity({x=buildpos.x, y=buildpos.y, z=z_pos - period}, "digtron:marker")
+		entity = safe_add_entity({x=buildpos.x, y=buildpos.y, z=z_pos - period}, "digtron:marker")
 		if entity ~= nil then entity:setyaw(1.5708) end
 	end
 	if z_pos <= buildpos.z then
-		local entity = safe_add_entity({x=buildpos.x, y=buildpos.y, z=z_pos + period}, "digtron:marker")
+		entity = safe_add_entity({x=buildpos.x, y=buildpos.y, z=z_pos + period}, "digtron:marker")
 		if entity ~= nil then entity:setyaw(1.5708) end
 	end
 end
