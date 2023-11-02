@@ -388,7 +388,7 @@ end
 
 digtron.show_offset_markers = function(pos, offset, period)
 	local buildpos = digtron.find_new_pos(pos, minetest.get_node(pos).param2)
-	local x_pos = math.floor((buildpos.x+offset)/period)*period - offset
+	local x_pos = math.floor((buildpos.x+offset)/period)*period - (offset or 0)
 	safe_add_entity({x=x_pos, y=buildpos.y, z=buildpos.z}, "digtron:marker")
 	if x_pos >= buildpos.x then
 		safe_add_entity({x=x_pos - period, y=buildpos.y, z=buildpos.z}, "digtron:marker")
