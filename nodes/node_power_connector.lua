@@ -1,6 +1,7 @@
 -- internationalization boilerplate
-local MP = minetest.get_modpath(minetest.get_current_modname())
-local S = dofile(MP.."/intllib.lua")
+local S = digtron.S
+-- local MP = minetest.get_modpath(minetest.get_current_modname())
+-- local S = dofile(MP.."/intllib.lua")
 
 local size = 3/16
 
@@ -12,9 +13,9 @@ local get_formspec_string = function(current_val, current_max)
 		default.gui_bg_img ..
 		default.gui_slots ..
 		"field[0.2,0.3;1,1;value;;".. current_val .. "]" ..
-		"button[1,0;1,1;maximize;" .. S("Maximize\nPower") .."]" ..
-		"label[2,0;"..S("Maximum Power\nRequired: @1", current_max) .."]"..
-		"button[3.5,0;1,1;refresh;" .. S("Refresh\nMax") .."]"
+		"button[1,0;1,1;maximize;" .. S("Maximize@nPower") .."]" ..
+		"label[2,0;"..S("Maximum Power@nRequired: @1", current_max) .."]"..
+		"button[3.5,0;1,1;refresh;" .. S("Refresh@nMax") .."]"
 end
 
 local connector_groups = {cracky = 3, oddly_breakable_by_hand=3, digtron = 8, technic_machine=1, technic_hv=1}

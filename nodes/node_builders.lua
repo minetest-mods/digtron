@@ -1,6 +1,7 @@
 -- internationalization boilerplate
-local MP = minetest.get_modpath(minetest.get_current_modname())
-local S = dofile(MP.."/intllib.lua")
+local S = digtron.S
+-- local MP = minetest.get_modpath(minetest.get_current_modname())
+-- local S = dofile(MP.."/intllib.lua")
 
 -- Note: builders go in group 4 and have both test_build and execute_build methods.
 
@@ -19,20 +20,20 @@ local builder_formspec_string =
 	"list[current_name;main;".. tostring(displace_due_to_help_button/2) ..",0;1,1;]" ..
 	"label[" .. tostring(displace_due_to_help_button/2).. ",0.8;" .. S("Block to build") .. "]" ..
 	"field[" .. tostring(displace_due_to_help_button + 1.3) ..",0.8;1,0.1;extrusion;" .. S("Extrusion") .. ";${extrusion}]" ..
-	"tooltip[extrusion;" .. S("Builder will extrude this many blocks in the direction it is facing.\nCan be set from 1 to @1.\nNote that Digtron won't build into unloaded map regions.",
+	"tooltip[extrusion;" .. S("Builder will extrude this many blocks in the direction it is facing.@nCan be set from 1 to @1.@nNote that Digtron won't build into unloaded map regions.",
 		digtron.config.maximum_extrusion) .. "]" ..
 	"field[" .. tostring(displace_due_to_help_button + 2.3) ..",0.8;1,0.1;period;" .. S("Periodicity") .. ";${period}]" ..
-	"tooltip[period;" .. S("Builder will build once every n steps.\nThese steps are globally aligned, so all builders with the\nsame period and offset will build on the same location.") .. "]" ..
+	"tooltip[period;" .. S("Builder will build once every n steps.@nThese steps are globally aligned, so all builders with the@nsame period and offset will build on the same location.") .. "]" ..
 	"field[" .. tostring(displace_due_to_help_button + 3.3) ..",0.8;1,0.1;offset;" .. S("Offset") .. ";${offset}]" ..
-	"tooltip[offset;" .. S("Offsets the start of periodicity counting by this amount.\nFor example, a builder with period 2 and offset 0 builds\nevery even-numbered block and one with period 2 and\n" ..
+	"tooltip[offset;" .. S("Offsets the start of periodicity counting by this amount.@nFor example, a builder with period 2 and offset 0 builds@nevery even-numbered block and one with period 2 and@n" ..
 		"offset 1 builds every odd-numbered block.") .. "]" ..
-	"button_exit[" .. tostring(displace_due_to_help_button + 4.0) ..",0.5;1,0.1;set;" .. S("Save &\nShow") .. "]" ..
+	"button_exit[" .. tostring(displace_due_to_help_button + 4.0) ..",0.5;1,0.1;set;" .. S("Save &@nShow") .. "]" ..
 	"tooltip[set;" .. S("Saves settings") .. "]" ..
 	"field[" .. tostring(displace_due_to_help_button + 5.3) .. ",0.8;1,0.1;build_facing;" .. S("Facing") .. ";${build_facing}]" ..
-	"tooltip[build_facing;" .. S("Value from 0-23. Not all block types make use of this.\nUse the 'Read & Save' button to copy the facing of the block\n" ..
+	"tooltip[build_facing;" .. S("Value from 0-23. Not all block types make use of this.@nUse the 'Read & Save' button to copy the facing of the block@n" ..
 		"currently in the builder output location.") .. "]" ..
-	"button_exit[" .. tostring(displace_due_to_help_button + 6.0) ..",0.5;1,0.1;read;" .. S("Read &\nSave") .. "]" ..
-	"tooltip[read;" .. S("Reads the facing of the block currently in the build location,\nthen saves all settings.") .. "]" ..
+	"button_exit[" .. tostring(displace_due_to_help_button + 6.0) ..",0.5;1,0.1;read;" .. S("Read &@nSave") .. "]" ..
+	"tooltip[read;" .. S("Reads the facing of the block currently in the build location,@nthen saves all settings.") .. "]" ..
 	"list[current_player;main;0,1.3;8,1;]" ..
 	default.get_hotbar_bg(0,1.3) ..
 	"list[current_player;main;0,2.5;8,3;8]" ..

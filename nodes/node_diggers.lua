@@ -1,6 +1,7 @@
 -- internationalization boilerplate
-local MP = minetest.get_modpath(minetest.get_current_modname())
-local S = dofile(MP.."/intllib.lua")
+local S = digtron.S
+-- local MP = minetest.get_modpath(minetest.get_current_modname())
+-- local S = dofile(MP.."/intllib.lua")
 
 -- Note: diggers go in group 3 and have an execute_dig method.
 
@@ -34,11 +35,11 @@ local intermittent_formspec_string = default.gui_bg ..
 	default.gui_bg_img ..
 	default.gui_slots ..
 	"field[0.5,0.8;1,0.1;period;" .. S("Periodicity") .. ";${period}]" ..
-	"tooltip[period;" .. S("Digger will dig once every n steps.\nThese steps are globally aligned, all diggers with\nthe same period and offset will dig on the same location.") .. "]" ..
+	"tooltip[period;" .. S("Digger will dig once every n steps.@nThese steps are globally aligned, all diggers with@nthe same period and offset will dig on the same location.") .. "]" ..
 	"field[1.5,0.8;1,0.1;offset;" .. S("Offset") .. ";${offset}]" ..
-	"tooltip[offset;" .. S("Offsets the start of periodicity counting by this amount.\nFor example, a digger with period 2 and offset 0 digs\nevery even-numbered block and one with period 2 and\n" ..
+	"tooltip[offset;" .. S("Offsets the start of periodicity counting by this amount.@nFor example, a digger with period 2 and offset 0 digs@nevery even-numbered block and one with period 2 and@n" ..
 		"offset 1 digs every odd-numbered block.") .. "]" ..
-	"button_exit[2.2,0.5;1,0.1;set;" .. S("Save &\nShow") .. "]" ..
+	"button_exit[2.2,0.5;1,0.1;set;" .. S("Save &@nShow") .. "]" ..
 	"tooltip[set;" .. S("Saves settings") .. "]"
 
 if modpath_doc then
