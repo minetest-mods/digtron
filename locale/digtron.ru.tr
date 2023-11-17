@@ -1,0 +1,29 @@
+# textdomain: digtron
+
+
+
+### node_controllers.lua ###
+
+Digtron Control Module=Модуль управления Digtron
+Heat remaining in controller furnace: @1=Оставшееся топливо в контроллере: @1
+repetition delay=задержка повторения
+Cycles=Циклы
+When triggered, this controller will try to run for the given number of cycles.@nThe cycle count will decrement as it runs, so if it gets halted by a problem@nyou can fix the problem and restart.=При срабатывании этот контроллер попытается выполнить заданное количество циклов.@nКоличество циклов будет уменьшаться по мере его выполнения, поэтому, если он будет остановлен из-за проблемы,@nвы можете устранить проблему и перезапустить.
+Set=Задать
+Saves the cycle setting without starting the controller running=Сохраняет настройку цикла без запуска контроллера
+Set &@nExecute=Зад. и@nвыполн
+Begins executing the given number of cycles=Начинает выполнение заданного количества циклов
+Slope=Наклон
+For diagonal digging. After moving forward this number of nodes the auto controller@nwill add an additional cycle moving the digtron laterally in the@ndirection of the arrows on the side of this controller.@nSet to 0 for no lateral digging.=Для диагонального копания. После перемещения вперед этого количества узлов автоматический контроллер добавит@nдополнительный цикл, перемещая digtron вбок в направлении стрелок на боковой панели этого контроллера.@nУстановите значение 0, чтобы не было бокового копания.
+Offset=Смещ.
+Sets the offset of the lateral motion defined in the Slope field.@nNote: this offset is relative to the controller's location.@nThe controller will move laterally when it reaches the indicated point.=Устанавливает смещение бокового перемещения, заданное в поле Наклон.@nПримечание: это смещение относительно местоположения контроллера.@nКонтроллер переместится в боковом направлении, когда достигнет указанной точки.
+Delay=Задерж.
+Number of seconds to wait between each cycle=Количество секунд ожидания между каждым циклом
+Stop block=Стоп-блок
+Help=Помощь
+Show documentation about this block=Посмотреть документацию об этом блоке
+Cycles remaining: @1=Оставшиеся циклы: @1
+Halted!=Остановлено!
+Digtron Automatic Control Module=Модуль автоматического управления Digtron
+Interrupted!=Прекращено!
+Digtron Pusher Module=Модуль толкателя Digtron
