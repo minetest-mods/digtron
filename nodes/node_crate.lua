@@ -1,6 +1,7 @@
 -- internationalization boilerplate
-local MP = minetest.get_modpath(minetest.get_current_modname())
-local S = dofile(MP.."/intllib.lua")
+local S = digtron.S
+-- local MP = minetest.get_modpath(minetest.get_current_modname())
+-- local S = dofile(MP.."/intllib.lua")
 
 local modpath_awards = minetest.get_modpath("awards")
 
@@ -163,9 +164,9 @@ if modpath_doc then
 	default.gui_bg_img ..
 	default.gui_slots ..
 	"field[0.3,0.5;4,0.5;title;" .. S("Digtron Name") .. ";${title}]" ..
-	"button_exit[0.0,1.2;1,0.1;save;" .. S("Save\nTitle") .. "]" ..
+	"button_exit[0.0,1.2;1,0.1;save;" .. S("Save@nTitle") .. "]" ..
 	"tooltip[save;" .. S("Saves the title of this Digtron") .. "]" ..
-	"button_exit[1.0,1.2;1,0.1;show;" .. S("Show\nBlocks") .. "]" ..
+	"button_exit[1.0,1.2;1,0.1;show;" .. S("Show@nBlocks") .. "]" ..
 	"tooltip[show;" .. S("Shows which blocks the packed Digtron will occupy if unpacked") .. "]" ..
 	"button_exit[2.0,1.2;1,0.1;unpack;" .. S("Unpack") .. "]" ..
 	"tooltip[unpack;" .. S("Attempts to unpack the Digtron on this location") .. "]" ..

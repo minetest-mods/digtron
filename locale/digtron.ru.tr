@@ -2,9 +2,36 @@
 
 
 
+### node_axle.lua ###
+
+Digtron Rotation Axle=Блок для вращения дигтрона
+Digtron is obstructed.=Дигитрон заблокирован.
+
+### node_battery_holder.lua ###
+
+Batteries=Батареи
+Digtron Battery Holder=Держатель батареи дигтрона
+
+### node_battery_holder.lua ###
+
+Block to build=Блок для строительства.
+Extrusion=Выдавл.
+Builder will extrude this many blocks in the direction it is facing.@nCan be set from 1 to @1.@nNote that Digtron won't build into unloaded map regions.=Строитель выдвинет это количество блоков в том направлении, в котором он направлен.@n Может быть установлено от 1 до @1.@n Обратите внимание, что дигтрон не будет строить в незагруженные области карты.
+Periodicity=Период.
+Builder will build once every n steps.@nThese steps are globally aligned, so all builders with the@nsame period and offset will build on the same location.=Строитель будет строить один раз каждые n шагов.@nЭти шаги глобально выровнены, поэтому все конструкторы с@nодинаковым периодом и смещением будут строить в одном и том же местоположении.
+Offsets the start of periodicity counting by this amount.@nFor example, a builder with period 2 and offset 0 builds@nevery even-numbered block and one with period 2 and@noffset 1 builds every odd-numbered block.=Смещает начало отсчета периодичности на эту величину.@nНапример, конструктор с периодом 2 и смещением 0 строит @nкаждый четный блок, а конструктор с периодом 2 и @nсмещением 1 строит каждый нечетный блок.
+Save &@nShow=Сохр. и@nПоказ
+Saves settings=Сохранить настройки
+Facing=Лицевая
+Value from 0-23. Not all block types make use of this.@nUse the 'Read & Save' button to copy the facing of the block@ncurrently in the builder output location.=Значение от 0 до 23. Применимо не ко всем блокам.@nИспользуйте кнопку "Прочитать и сохранить", чтобы скопировать лицевую сторону блока,@nнаходящегося в данный момент перед строителем.
+Read &@nSave=Проч. и@nсохран
+Reads the facing of the block currently in the build location,@nthen saves all settings.=Считывает лицевую сторону блока, находящегося в данный момент перед строителем,@nзатем сохраняет все настройки.
+Digtron Builder Module=Строительный модуль дигтрона
+Digtron Master Builder Module=Модуль дигтрона "Главный" строитель.
+
 ### node_controllers.lua ###
 
-Digtron Control Module=Модуль управления Digtron
+Digtron Control Module=Модуль управления дигтрона
 Heat remaining in controller furnace: @1=Оставшееся топливо в контроллере: @1
 repetition delay=задержка повторения
 Cycles=Циклы
@@ -24,6 +51,87 @@ Help=Помощь
 Show documentation about this block=Посмотреть документацию об этом блоке
 Cycles remaining: @1=Оставшиеся циклы: @1
 Halted!=Остановлено!
-Digtron Automatic Control Module=Модуль автоматического управления Digtron
+Digtron Automatic Control Module=Модуль автоматического управления дигтрона
 Interrupted!=Прекращено!
-Digtron Pusher Module=Модуль толкателя Digtron
+Digtron Pusher Module=Модуль толкателя дигтрона
+
+### node_crate.lua ###
+
+Digtron Crate=Ящик для Дигтрона,
+Owned by @1=принадлежит @1
+Digtron can't be packaged, it contains protected blocks=Дигтрон не может быть упакован, он содержит защищенные блоки
+No Digtron components adjacent to package=Нет никаких компонентов дигтрона, для складирования в ящик.
+Crated @1-block Digtron=Упаковано @1 блоков дигтрона.
+Digtron Crate (Empty)=Ящик для дигтрона (пустой)
+Digtron Locked Crate (Empty)=Защищённый ящик для дигтрона (пустой)
+Digtron Name=Название дигтрона
+Save@nTitle=Сохр.@nназв.
+Saves the title of this Digtron=Сохраняет название этого дигтрона
+Show@nBlocks=Показ@nблоки
+Shows which blocks the packed Digtron will occupy if unpacked=Показывает, какие блоки будет занимать упакованный дигтрон, если его распаковать
+Unpack=Распак.
+Attempts to unpack the Digtron on this location=Пытается распаковать дигтрон в этом месте
+Unable to read layout from crate metadata, regrettably this Digtron may be corrupted.=Не удается прочитать макет из метаданных ящика, к сожалению, этот дигтрон может быть поврежден.
+Unable to deploy Digtron due to protected blocks in target area=Не удается распаковать дигтрон в защищенную область другого игрока
+Unable to deploy Digtron due to obstruction in target area=Не удалось развернуть дигтрон из-за препятствий, нехватает места.
+Digtron Crate (Loaded)=Ящик с дигтроном (внутри)
+Digtron Locked Crate (Loaded)=Защищённый ящик с дигтроном (внутри)
+
+### node_diggers.lua ###
+
+Digger will dig once every n steps.@nThese steps are globally aligned, all diggers with@nthe same period and offset will dig on the same location.=Копатель будет копать один раз через каждые n шагов.@nЭти шаги глобально выровнены, все копатели с одинаковым периодом и смещением будут копать в одном и том же месте.
+Offsets the start of periodicity counting by this amount.@nFor example, a digger with period 2 and offset 0 digs@nevery even-numbered block and one with period 2 and@noffset 1 digs every odd-numbered block.=Смещает начало отсчета периодичности на эту величину.@nНапример, копатель с периодом 2 и смещением 0 копает каждый четный блок,@nа копатель с периодом 2 и смещением 1 копает каждый нечетный блок.
+Digtron Digger Head=Блок "копателя" дигтрона
+Digtron Intermittent Digger Head=Блок "копателя" дигтрона для периодического копания
+Digtron Soft Material Digger Head=Блок "копателя" дигтрона для сыпучих материалов.
+Digtron Intermittent Soft Material Digger Head=Блок дигтрона для сыпучих материалов и периодического копания
+Digtron Dual Digger Head=Двойной блок "копателя" дигтрона
+Digtron Dual Soft Material Digger Head=Двойной блок "копателя" дигтрона для сыпучих материалов.
+
+### node_duplicator.lua ###
+
+Digtron components=Компоненты дигтрона
+Duplicate=Дубликат
+Puts a copy of the adjacent Digtron into an empty crate@nlocated at the output side of the duplicator,@nusing components from the duplicator's inventory.=Помещает копию соседнего дигтрона в пустой ящик,@nрасположенный на выходной стороне дубликатора,@nиспользуя компоненты из инвентаря дубликатора.
+Digtron Duplicator=Дубликатор дигтрона
+The empty locked crate needs to be owned by you.=Пустой запертый ящик должен принадлежать вам.
+Needs an empty crate in output position to store duplicate=Требуется пустой ящик позади дупликатора, для создания копии
+Digtron can't be duplicated, it contains protected blocks=Дигтрон нельзя дублировать, он содержит защищенные блоки
+No Digtron components adjacent to duplicate=Нет никаких компонентов дигтрона, расположенных рядом с дупликатором
+Duplicator requires:=Дубликатору нужны:
+
+### node_item_ejector.lua ###
+
+Eject into world=Выбросить наружу
+When checked, will eject items even if there's no pipe to accept it=Если этот флажок установлен, будет извлекать элементы, даже если нет канала для их приема
+Automatic=Автоматически
+When checked, will eject items automatically with every Digtron cycle.@nItem ejectors can always be operated manually by punching them.=Если установлен флажок, элементы будут извлекаться автоматически при каждом цикле дигтрона.@nВыталкивателями элементов всегда можно управлять вручную, нажимая на них.
+Digtron Inventory Ejector=Выбрасыватель инвентаря дигтрон
+
+### node_misc.lua ###
+
+Digtron Structure=Основа для дигтрона
+Digtron Light=Фонарь для дигтрона
+Digtron Panel=Панель для дигтрона
+Digtron Edge Panel=Двойная панель для дигтрона
+Digtron Corner Panel=Угловая панель для дигтрона
+
+### node_power_connector.lua ###
+
+Maximize@nPower=Максимальная мощность
+Maximum Power@nRequired: @1=Максимальная мощность@nНеобходимая:
+Refresh@nMax=Обновить@nМакс.
+Digtron HV Power Connector=Высоковольтный разъем питания дигтрона
+Digtron Power @1/@2=Мощность дигтрона @1/@2
+
+### node_storage.lua ###
+
+Inventory items=Предметы инвентаря
+Digtron Inventory Storage=Хранилище инвентаря дигтрона
+Digtron Fuel Storage=Хранилище топлива дигтрона
+Fuel items=Топливные элементы
+Digtron Combined Storage=Комбинированное хранилище дигтрона
+
+### recipies.lua ###
+
+Digtron Core=Ядро дигтрона

@@ -1,6 +1,7 @@
 -- internationalization boilerplate
-local MP = minetest.get_modpath(minetest.get_current_modname())
-local S = dofile(MP.."/intllib.lua")
+local S = digtron.S
+-- local MP = minetest.get_modpath(minetest.get_current_modname())
+-- local S = dofile(MP.."/intllib.lua")
 
 local inventory_formspec_string =
 	"size[9,9.3]" ..
@@ -15,7 +16,7 @@ local inventory_formspec_string =
 	"listring[current_player;main]" ..
 	default.get_hotbar_bg(0,5.15)..
 	"button_exit[8,3.5;1,1;duplicate;"..S("Duplicate").."]" ..
-	"tooltip[duplicate;" .. S("Puts a copy of the adjacent Digtron into an empty crate\nlocated at the output side of the duplicator,\nusing components from the duplicator's inventory.") .. "]"
+	"tooltip[duplicate;" .. S("Puts a copy of the adjacent Digtron into an empty crate@nlocated at the output side of the duplicator,@nusing components from the duplicator's inventory.") .. "]"
 
 if minetest.get_modpath("doc") then
 	inventory_formspec_string = inventory_formspec_string ..
