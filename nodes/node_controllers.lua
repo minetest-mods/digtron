@@ -1,6 +1,7 @@
 -- internationalization boilerplate
 local MP = minetest.get_modpath(minetest.get_current_modname())
-local S = dofile(MP.."/intllib.lua")
+local S = digtron.S
+-- local S = dofile(MP.."/intllib.lua")
 
 local controller_nodebox ={
 	{-0.3125, -0.3125, -0.3125, 0.3125, 0.3125, 0.3125}, -- Core
@@ -97,7 +98,7 @@ local auto_formspec = "size[8,6.2]" ..
 	default.gui_slots ..
 	"container[2.0,0]" ..
 	"field[0.0,0.8;1,0.1;cycles;" .. S("Cycles").. ";${cycles}]" ..
-	"tooltip[cycles;" .. S("When triggered, this controller will try to run for the given number of cycles.\nThe cycle count will decrement as it runs, so if it gets halted by a problem\n" ..
+	"tooltip[cycles;" .. S("When triggered, this controller will try to run for the given number of cycles.@nThe cycle count will decrement as it runs, so if it gets halted by a problem@n" ..
 		"you can fix the problem and restart.").. "]" ..
 	"button_exit[0.7,0.5;1,0.1;set;" .. S("Set").. "]" ..
 	"tooltip[set;" .. S("Saves the cycle setting without starting the controller running").. "]" ..
