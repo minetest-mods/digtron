@@ -1,6 +1,22 @@
 # textdomain: digtron
+# Autor: ksandr
+# Special4: minetestserver.ru
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 
 
+
+### util_execute_cycle.lua ###
+
+Digtron is adjacent to unloaded nodes.=Дигтрон находится рядом с незагруженными блоками.
+Digtron has @1 blocks but only enough traction to move @2 blocks.@n=Дигтрон из @1 блоков, но тяги хватает только на перемещение @2 блоков.@n
+Size limit of @1 reached with @2 nodes!=Достигнуто ограничение по размеру @1 с помощью @2 узлов!
+Heat remaining in controller furnace: @1=Оставшаяся энергия в печи-контроллере: @1
+Digtron is obstructed.=Дигтрон заблокирован.
+Digtron needs more fuel.=Дигтрону нужно больше топлива.
+Digtron connected to at least one builder with no output material assigned.=Дигтрон имеет по крайней мере одну строительную головку, которой не назначен строительный блок.
+Digtron has insufficient building materials. Needed: @1=У дигтрона недостаточно строительных материалов. Требуется: @1
+Digtron unexpectedly failed to execute one or more build operations, likely due to an inventory error.=Дигтрону неожиданно не удалось выполнить одну или несколько операций строительства, вероятно, из-за ошибки с инвентарем.
+Heat remaining in controller furnace: @1=Оставшаяся энергия в печи-контроллере: @1
 
 ### node_axle.lua ###
 

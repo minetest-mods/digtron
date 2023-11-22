@@ -1,6 +1,7 @@
 -- internationalization boilerplate
-local MP = minetest.get_modpath(minetest.get_current_modname())
-local S = dofile(MP.."/intllib.lua")
+local S = digtron.S
+-- local MP = minetest.get_modpath(minetest.get_current_modname())
+-- local S = dofile(MP.."/intllib.lua")
 
 local dig_dust = function(pos, facing)
 	local direction = minetest.facedir_to_dir(facing)
@@ -62,7 +63,7 @@ local function neighbour_test(layout, status_text, dir)
 	if dir and dir.y ~= -1 and layout.traction * digtron.config.traction_factor < table.getn(layout.all) then
 		-- digtrons can't fly, though they can fall
 		minetest.sound_play("squeal", {gain=1.0, pos=layout.controller})
-		return S("Digtron has @1 blocks but only enough traction to move @2 blocks.\n", table.getn(layout.all), layout.traction * digtron.config.traction_factor)
+		return S("Digtron has @1 blocks but only enough traction to move @2 blocks.@n", table.getn(layout.all), layout.traction * digtron.config.traction_factor)
 			 .. status_text, 2
 	end
 
