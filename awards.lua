@@ -9,8 +9,9 @@ end
 ---------------------------------------------------------------------------
 
 -- internationalization boilerplate
-local MP = minetest.get_modpath(minetest.get_current_modname())
-local S = dofile(MP.."/intllib.lua")
+local S = digtron.S
+-- local MP = minetest.get_modpath(minetest.get_current_modname())
+-- local S = dofile(MP.."/intllib.lua")
 
 awards.register_trigger("digtron_dig", {
 	type = "counted_key",
@@ -162,70 +163,70 @@ awards.register_award("digtron_digger25",{
 
 awards.register_award("digtron_height1000",{
 	title = S("Digtron In The Sky"),
-	description = S("Operate a Digtron above 1000m elevation"),
+	description = S("Operate a Digtron above 1000m elevation."),
 	background = "awards_bg_mining.png",
 	icon = "default_river_water.png^default_snow_side.png^[transformR180^digtron_digger_yb_frame.png",
 })
 
 awards.register_award("digtron_height100",{
 	title = S("Digtron High"),
-	description = S("Operate a Digtron above 100m elevation"),
+	description = S("Operate a Digtron above 100m elevation."),
 	background = "awards_bg_mining.png",
 	icon = "default_river_water.png^default_snow_side.png^digtron_digger_yb_frame.png",
 })
 
 awards.register_award("digtron_depth100",{
 	title = S("Scratching the Surface"),
-	description = S("Operate a Digtron 100m underground"),
+	description = S("Operate a Digtron 100m underground."),
 	background = "awards_bg_mining.png",
 	icon = "default_cobble.png^digtron_digger_yb_frame.png^awards_level1.png",
 })
 
 awards.register_award("digtron_depth1000",{
 	title = S("Digging Deeper"),
-	description = S("Operate a Digtron 1,000m underground"),
+	description = S("Operate a Digtron 1,000m underground."),
 	background = "awards_bg_mining.png",
 	icon = "default_cobble.png^[colorize:#0002^digtron_digger_yb_frame.png^awards_level2.png",
 })
 
 awards.register_award("digtron_depth2000",{
 	title = S("More Than a Mile"),
-	description = S("Operate a Digtron 2,000m underground"),
+	description = S("Operate a Digtron 2,000m underground."),
 	background = "awards_bg_mining.png",
 	icon = "default_cobble.png^[colorize:#0004^digtron_digger_yb_frame.png^awards_level3.png",
 })
 
 awards.register_award("digtron_depth4000",{
 	title = S("Digging Below Plausibility"),
-	description = S("The deepest mine in the world is only 3.9 km deep, you operated a Digtron below 4km"),
+	description = S("Operate a Digtron 4,000m underground."),
 	background = "awards_bg_mining.png",
 	icon = "default_cobble.png^[colorize:#0006^digtron_digger_yb_frame.png^awards_level4.png",
 })
 
 awards.register_award("digtron_depth8000",{
 	title = S("Double Depth"),
-	description = S("Operate a Digtron 8,000m underground"),
+	description = S("Operate a Digtron 8,000m underground."),
 	background = "awards_bg_mining.png",
 	icon = "default_cobble.png^[colorize:#0008^digtron_digger_yb_frame.png^awards_level5.png",
 })
 
 awards.register_award("digtron_depth16000",{
 	title = S("Halfway to the Core"),
-	description = S("Operate a Digtron 16,000m underground"),
+	description = S("The deepest mine in the world is only ~15 km deep, you operated a Digtron below 16km."),
 	background = "awards_bg_mining.png",
 	icon = "default_cobble.png^[colorize:#000A^digtron_digger_yb_frame.png^awards_level6.png",
 })
 
 awards.register_award("digtron_depth30000",{
 	title = S("Nowhere To Go But Up"),
-	description = S("Operate a Digtron 30,000m underground"),
+	description = S("Operate a Digtron 30,000m underground."),
 	background = "awards_bg_mining.png",
 	icon = "default_cobble.png^[colorize:#000C^digtron_digger_yb_frame.png^awards_level7.png",
 })
 
 awards.register_award("digtron_100mese_dug",{
 	title = S("Mese Master"),
-	description = S("Mine 100 Mese crystals with a Digtron"),
+	description = S("Mine 100 Mese crystals with a Digtron."),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_mese_crystal.png^digtron_digger_yb_frame.png",
 	trigger = {
@@ -237,7 +238,7 @@ awards.register_award("digtron_100mese_dug",{
 
 awards.register_award("digtron_100diamond_dug",{
 	title = S("Diamond Vs. Diamond"),
-	description = S("Mine 100 diamonds with a Digtron"),
+	description = S("Mine 100 diamonds with a Digtron."),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_diamond.png^digtron_digger_yb_frame.png",
 	trigger = {
@@ -249,7 +250,7 @@ awards.register_award("digtron_100diamond_dug",{
 
 awards.register_award("digtron_1000dirt_dug",{
 	title = S("Strip Mining"),
-	description = S("Excavate 1000 units of dirt with a Digtron"),
+	description = S("Excavate 1000 units of dirt with a Digtron."),
 	background = "awards_bg_mining.png",
 	icon = "default_dirt.png^digtron_digger_yb_frame.png",
 	trigger = {
@@ -261,7 +262,7 @@ awards.register_award("digtron_1000dirt_dug",{
 
 awards.register_award("digtron_1000_dug",{
 	title = S("Digtron Miner"),
-	description = S("Excavate 1000 blocks using a Digtron"),
+	description = S("Excavate 1000 blocks using a Digtron."),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_tool_bronzepick.png^digtron_digger_yb_frame.png",
 	trigger = {
@@ -272,7 +273,7 @@ awards.register_award("digtron_1000_dug",{
 
 awards.register_award("digtron_10000_dug",{
 	title = S("Digtron Expert Miner"),
-	description = S("Excavate 10,000 blocks using a Digtron"),
+	description = S("Excavate 10,000 blocks using a Digtron."),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_tool_steelpick.png^digtron_digger_yb_frame.png",
 	trigger = {
@@ -283,7 +284,7 @@ awards.register_award("digtron_10000_dug",{
 
 awards.register_award("digtron_100000_dug",{
 	title = S("Digtron Master Miner"),
-	description = S("Excavate 100,000 blocks using a Digtron"),
+	description = S("Excavate 100,000 blocks using a Digtron."),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_tool_diamondpick.png^digtron_digger_yb_frame.png",
 	trigger = {
@@ -305,7 +306,7 @@ awards.register_award("digtron_1000000_dug",{
 
 awards.register_award("digtron_1000wood_dug",{
 	title = S("Clear Cutting"),
-	description = S("Chop down 1000 units of tree with a Digtron"),
+	description = S("Chop down 1000 units of tree with a Digtron."),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_sapling.png^digtron_digger_yb_frame.png",
 	trigger = {
@@ -317,7 +318,7 @@ awards.register_award("digtron_1000wood_dug",{
 
 awards.register_award("digtron_10000wood_dug",{
 	title = S("Digtron Deforestation"),
-	description = S("Chop down 10,000 units of tree with a Digtron"),
+	description = S("Chop down 10,000 units of tree with a Digtron."),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_sapling.png^digtron_digger_yb_frame.png",
 	trigger = {
@@ -329,7 +330,7 @@ awards.register_award("digtron_10000wood_dug",{
 
 awards.register_award("digtron_1000grass_dug",{
 	title = S("Lawnmower"),
-	description = S("Harvest 1000 units of grass with a Digtron"),
+	description = S("Harvest 1000 units of grass with a Digtron."),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_grass_5.png^digtron_digger_yb_frame.png",
 	trigger = {
@@ -341,7 +342,7 @@ awards.register_award("digtron_1000grass_dug",{
 
 awards.register_award("digtron_1000iron_dug",{
 	title = S("Iron Digtron"),
-	description = S("Excavate 1000 units of iron ore with a Digtron"),
+	description = S("Excavate 1000 units of iron ore with a Digtron."),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_steel_ingot.png^digtron_digger_yb_frame.png",
 	trigger = {
@@ -353,7 +354,7 @@ awards.register_award("digtron_1000iron_dug",{
 
 awards.register_award("digtron_1000copper_dug",{
 	title = S("Copper Digtron"),
-	description = S("Excavate 1000 units of copper ore with a Digtron"),
+	description = S("Excavate 1000 units of copper ore with a Digtron."),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_copper_ingot.png^digtron_digger_yb_frame.png",
 	trigger = {
@@ -365,7 +366,7 @@ awards.register_award("digtron_1000copper_dug",{
 
 awards.register_award("digtron_1000coal_dug",{
 	title = S("Coal Digtron"),
-	description = S("Excavate 1,000 units if coal with a Digtron"),
+	description = S("Excavate 1,000 units of coal with a Digtron."),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_coal_lump.png^digtron_digger_yb_frame.png",
 	trigger = {
@@ -377,7 +378,7 @@ awards.register_award("digtron_1000coal_dug",{
 
 awards.register_award("digtron_10000coal_dug",{
 	title = S("Bagger 288"),
-	description = S("Excavate 10,000 units of coal with a Digtron"),
+	description = S("Excavate 10,000 units of coal with a Digtron."),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_coal_block.png^digtron_digger_yb_frame.png",
 	trigger = {
@@ -389,7 +390,7 @@ awards.register_award("digtron_10000coal_dug",{
 
 awards.register_award("digtron_100gold_dug",{
 	title = S("Digtron 49er"),
-	description = S("Excavate 100 units of gold with a Digtron"),
+	description = S("Excavate 100 units of gold with a Digtron."),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^default_gold_ingot.png^digtron_digger_yb_frame.png",
 	trigger = {
@@ -401,7 +402,7 @@ awards.register_award("digtron_100gold_dug",{
 
 awards.register_award("digtron_1000_built",{
 	title = S("Constructive Digging"),
-	description = S("Build 1,000 blocks with a Digtron"),
+	description = S("Build 1,000 blocks with a Digtron."),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^digtron_builder.png",
 	trigger = {
@@ -412,7 +413,7 @@ awards.register_award("digtron_1000_built",{
 
 awards.register_award("digtron_10000_built",{
 	title = S("Highly Constructive Digging"),
-	description = S("Build 10,000 blocks with a Digtron"),
+	description = S("Build 10,000 blocks with a Digtron."),
 	background = "awards_bg_mining.png",
 	icon = "digtron_plate.png^digtron_axel_side.png^[transformR90^digtron_builder.png",
 	trigger = {
