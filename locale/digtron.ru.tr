@@ -297,3 +297,107 @@ When a digging machine is unable to complete a cycle it will make one of several
 Tips and Tricks=Советы и хитрости
 
 To more easily visualize the operation of a Digtron, imagine that its cycle of operation follows these steps in order:@n@n* Dig@n* Move@n* Build@n* Allow dust to settle (ie, sand and gravel fall)@n@nIf you're building a repeating pattern of blocks, your periodicity should be one larger than your largest offset. For example, if you've laid out builders to create a set of spiral stairs and the offsets are from 0 to 11, you'll want to use periodicity 12.@n@nA good way to program a set of builders is to build a complete example of the structure you want them to create, then place builders against the structure and have them "read" all of its facings. This also lets you more easily visualize the tricks that might be needed to allow the digtron to pass through the structure as it's being built.=Чтобы легче представить работу дигтрона, представьте, что цикл его работы следует следующим шагам по порядку:@n@n* Копать@n* Перемещаться@n* Строить@n* Дайте пыли осесть (т.е. песку и гравию осыпаться)@n@nЕсли вы создаете повторяющийся узор из блоков, ваша периодичность должна быть на единицу больше вашего наибольшего смещения. Например, если вы использовали конструкторы для создания набора винтовых лестниц и смещения находятся в диапазоне от 0 до 11, то надо использовать периодичность 12.@n@nХороший способ запрограммировать набор строителей - это создать полный пример структуры, которую вы хотите, чтобы они создали, затем поместить строителей напротив структуры и заставить их "прочитать" все настройки лицевой стороны. Это также позволяет вам наглядно увидеть процессы, которые происходят, когда дигтрон проходить через конструкцию по мере ее строительства.
+
+### awards.lua ###
+
+Deep Blue Digtron=Дигтрон в воде
+Encounter water while operating a Digtron.=Столкнитесь с водой, управляя дигтроном.
+
+Digtrons of Fire=Дигтрон в лаве
+Encounter lava while operating a Digtron.=Столкнитесь с лавой, управляя дигтроном.
+
+Bigtron=Мегатрон
+Operate a Digtron with 10 or more component blocks.=Запустите дигтрон с 10 или более компонентными блоками.
+
+Really Bigtron=Настоящий Мегатрон
+Operate a Digtron with 100 or more component blocks.=Запустите дигтрон с 100 или более компонентными блоками.
+
+Buildtron=СтройМонтажМашина
+Operate a Digtron with 25 or more builder modules.=Запустите дигтрон с 25 или более головками "Строитель".
+
+Digging Leviathan=Копающий Левиафан
+Operate a Digtron with 25 or more digger heads.=Запустите дигтрон с 25 или более головками "Копатель".
+
+Digtron In The Sky=Дигитрон в Небе
+Operate a Digtron above 1000m elevation.=Запустите дигтрон на высоте более 1000 метров.
+
+Digtron High=Дигтрон небоскрёб
+Operate a Digtron above 100m elevation.=Запустите дигтрон на высоте более 100 метров.
+
+Scratching the Surface=Сковырнуть твердь земную
+Operate a Digtron 100m underground.=Запустите дигтрон на глубине 100 метров под землей.
+
+Digging Deeper=Копатель глубин
+Operate a Digtron 1,000m underground.=Запустите дигтрон на глубине 1,000 метров под землей.
+
+More Than a Mile=За вторым километром
+Operate a Digtron 2,000m underground.=Запустите дигтрон на глубине 2,000 метров под землей.
+
+Digging Below Plausibility=Ну ещё немного покопаем.
+Operate a Digtron 4,000m underground.=Запустите дигтрон на глубине 4,000 метров под землей.
+
+Double Depth=Второе дно
+Operate a Digtron 8,000m underground.=Запустите дигтрон на глубине 8,000 метров под землей.
+
+Halfway to the Core=На пол пути к ядру
+The deepest mine in the world is only ~15 km deep, you operated a Digtron below 16km.=Глубина самой глубокой шахты в мире составляет около 15 км, вы эксплуатировали дигтрон глубже 16 км.
+
+Nowhere To Go But Up=Скоро выйдем с другой стороны
+Operate a Digtron 30,000m underground.=Запустите дигтрон на глубине 30,000 метров под землей.
+
+Mese Master=Хранитель Мезе-кристаллов
+Mine 100 Mese crystals with a Digtron.=Накопайте 100 кристаллов Мезе с помощью дигтрона.
+
+Diamond Vs. Diamond=Алмаз за алмазом
+Mine 100 diamonds with a Digtron.=Накопайте 100 алмазов с помощью дигтрона.
+
+Strip Mining=Крото-дрон
+Excavate 1000 units of dirt with a Digtron.=Выкопайте 1000 единиц грунта с помощью дигтрона.
+
+Digtron Miner=Оператор дигтрона
+Excavate 1000 blocks using a Digtron.=Выкопайте 1000 блоков с помощью дигтрона.
+
+Digtron Expert Miner=Бригадир дигтрона
+Excavate 10,000 blocks using a Digtron.=Выкопайте 10,000 блоков с помощью дигтрона.
+
+Digtron Master Miner=Старший бригадир дигтронов
+Excavate 100,000 blocks using a Digtron.=Выкопайте 100,000 блоков с помощью дигтрона.
+
+DIGTRON MEGAMINER=Повелитель дигтронов
+Excavate over a million blocks using a Digtron!=Выкопайте более миллиона блоков с помощью Дигтрона!
+
+Clear Cutting=Дровосек
+Chop down 1000 units of tree with a Digtron.=Срубите 1000 единиц дерева с помощью дигтрона.
+
+Digtron Deforestation=Железный дровосек.
+Chop down 10,000 units of tree with a Digtron.=Срубите 10,000 единиц дерева с помощью дигтрона.
+
+Lawnmower=Газонокосильщик
+Harvest 1000 units of grass with a Digtron.=Соберите 1000 единиц травы с помощью дигтрона.
+
+Iron Digtron=Железный дигтрон
+Excavate 1000 units of iron ore with a Digtron.=Выкопайте 1000 единиц железной руды с помощью дигтрона.
+
+Copper Digtron=Медный дигтрон
+Excavate 1000 units of copper ore with a Digtron.=Выкопайте 1000 единиц медной руды с помощью дигтрона.
+
+Coal Digtron=Угольный дигтрон
+Excavate 1,000 units of coal with a Digtron.=Выкопайте 1000 единиц угля с помощью дигтрона.
+
+Bagger 288=Упаковщик 288
+Excavate 10,000 units of coal with a Digtron.=Выкопайте 10,000 единиц угля с помощью дигтрона.
+
+Digtron 49er=Золотая лихорадка
+Excavate 100 units of gold with a Digtron.=Выкопайте 100 единиц золота с помощью дигтрона.
+
+Constructive Digging=Промышленный строитель
+Build 1,000 blocks with a Digtron.=Постройте 1000 блоков с помощью дигтрона.
+
+Highly Constructive Digging=Промышленный строитель уровень 2
+Build 10,000 blocks with a Digtron.=Постройте 10,000 блоков с помощью дигтрона.
+
+Digtron Packrat=Кладовщик дигтронов
+Stored 10 or more Digtron blocks in one crate.=Упакуйте 10 или более блоков дигтрона в один ящик.
+
+Digtron Hoarder=Хранитель дигтрона
+Stored 100 or more Digtron blocks in one crate.=Упакуйте 100 или более блоков дигтрона в один ящик.
