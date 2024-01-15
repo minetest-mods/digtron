@@ -337,6 +337,14 @@ digtron.damage_creatures = function(player, source_pos, target_pos, amount, item
 						table.insert(items_dropped, lua_entity.itemstring)
 						lua_entity.itemstring = ""
 						obj:remove()
+					elseif lua_entity.name == "__builtin:falling_node" then
+						-- Eat all falling nodes in front of the digtron
+						-- to avoid them eating away our digger heads
+						local drops = minetest.get_node_drops(lua_entity.node, "")
+						for _, item in pairs(drops) do
+							table.insert(items_dropped, item)
+						end
+						obj:remove()
 					else
 						if obj.add_velocity ~= nil then
 							obj:add_velocity(velocity)
