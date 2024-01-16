@@ -147,6 +147,27 @@ minetest.register_node("digtron:digger", {
 			return 0
 		end
 
+		local dignode = minetest.get_node(digpos)
+
+		-- default:chest are common in underground dungeons
+		-- Avoid them interrupting the automation by absorbing all the items in them.
+		if dignode.name == "default:chest" or dignode.name == "default:chest_open" then
+			local inv = minetest.get_meta(digpos):get_inventory()
+			local list_main = inv:get_list("main")
+			inv:set_list("main", {})
+			local fuel_cost, dropped = digtron.mark_diggable(digpos, nodes_dug, player)
+			if dropped then
+				for _, item in ipairs(list_main) do
+					if not item:is_empty() then
+						table.insert(dropped, item)
+					end
+				end
+
+				return fuel_cost, dropped
+			else
+				inv:set_list("main", list_main)
+			end
+		end
 		return digtron.mark_diggable(digpos, nodes_dug, player)
 	end,
 
