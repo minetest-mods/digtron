@@ -449,6 +449,7 @@ minetest.register_node("digtron:master_builder", {
 		"digtron_plate.png^digtron_master_builder.png^[colorize:" .. digtron.auto_controller_colorize,
 		"digtron_plate.png^digtron_master_builder.png^[colorize:" .. digtron.auto_controller_colorize,
 	},
+	use_texture_alpha = "opaque",
 
 	drawtype = "nodebox",
 	node_box = {
