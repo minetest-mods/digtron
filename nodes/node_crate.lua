@@ -49,6 +49,9 @@ local store_digtron = function(pos, clicker, loaded_node_name, protected)
 
 	digtron.award_crate(layout, clicker:get_player_name())
 
+	local meta = minetest.get_meta(pos)
+	local old_title = meta:get("title")
+
 	local layout_string = layout:serialize()
 
 	-- destroy everything. Note that this includes the empty crate, which will be bundled up with the layout.
@@ -76,7 +79,6 @@ local store_digtron = function(pos, clicker, loaded_node_name, protected)
 	minetest.set_node(pos, {name=loaded_node_name})
 	minetest.sound_play("machine1", {gain=1.0, pos=pos})
 
-	local meta = minetest.get_meta(pos)
 	meta:set_string("crated_layout", layout_string)
 
 	if protected then
@@ -84,7 +86,7 @@ local store_digtron = function(pos, clicker, loaded_node_name, protected)
 		meta:set_string("owner", clicker:get_player_name() or "")
 	end
 
-	local titlestring = S("Crated @1-block Digtron", tostring(#layout.all-1))
+	local titlestring = old_title or S("Crated @1-block Digtron", tostring(#layout.all-1))
 	meta:set_string("title", titlestring )
 	meta:set_string("infotext", titlestring .. "\n" .. protection_suffix)
 end
@@ -264,6 +266,9 @@ local loaded_on_recieve = function(pos, fields, sender, protected)
 	-- build digtron. Since the empty crate was included in the layout, that will overwrite this loaded crate and destroy it.
 	minetest.sound_play("machine2", {gain=1.0, pos=pos})
 	layout:write_layout_image(sender)
+
+	-- Preserve old title for repacking
+	meta:set_string("title", title)
 end
 
 local loaded_on_dig = function(pos, player, loaded_node_name)
