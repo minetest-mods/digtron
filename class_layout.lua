@@ -367,16 +367,20 @@ local node_callbacks = function(player)
 			local old_node = dug_node[i]
 			local old_meta = dug_node_meta[i]
 
+			local old_def = minetest.registered_nodes[old_node.name]
+			if old_def ~= nil and old_def.after_dig_node ~= nil then
+				-- Copy pos and node because callback can modify them
+				-- (copying meta isn't necessary, since it's only used in this call)
+				local old_pos_copy = vector.copy(old_pos)
+				local old_node_copy = {name=old_node.name, param1=old_node.param1, param2=old_node.param2}
+				old_def.after_dig_node(old_pos_copy, old_node_copy, old_meta, player)
+			end
+
 			for _, callback in ipairs(minetest.registered_on_dignodes) do
 				-- Copy pos and node because callback can modify them
 				local pos_copy = vector.copy(old_pos)
 				local oldnode_copy = {name=old_node.name, param1=old_node.param1, param2=old_node.param2}
 				callback(pos_copy, oldnode_copy, digtron.fake_player)
-			end
-
-			local old_def = minetest.registered_nodes[old_node.name]
-			if old_def ~= nil and old_def.after_dig_node ~= nil then
-				old_def.after_dig_node(old_pos, old_node, old_meta, player)
 			end
 		end
 	end
@@ -387,17 +391,19 @@ local node_callbacks = function(player)
 			local new_node = placed_new_node[i]
 			local old_node = placed_old_node[i]
 
+			local new_def = minetest.registered_nodes[new_node.name]
+			if new_def ~= nil and new_def.after_place_node ~= nil then
+				-- Copy pos because callback can modify it
+				local new_pos_copy = vector.copy(new_pos)
+				new_def.after_place_node(new_pos_copy, player)
+			end
+
 			for _, callback in ipairs(minetest.registered_on_placenodes) do
 				-- Copy pos and node because callback can modify them
 				local pos_copy = vector.copy(new_pos)
 				local oldnode_copy = {name=old_node.name, param1=old_node.param1, param2=old_node.param2}
 				local newnode_copy = {name=new_node.name, param1=new_node.param1, param2=new_node.param2}
 				callback(pos_copy, newnode_copy, digtron.fake_player, oldnode_copy)
-			end
-
-			local new_def = minetest.registered_nodes[new_node.name]
-			if new_def ~= nil and new_def.after_place_node ~= nil then
-				new_def.after_place_node(new_pos, player)
 			end
 		end
 	end
