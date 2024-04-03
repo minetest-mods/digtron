@@ -5,6 +5,16 @@ local S = digtron.S
 
 local pipeworks_path = minetest.get_modpath("pipeworks")
 
+---Apply `default.set_inventory_action_loggers` onto the given `def` table
+---@see default.set_inventory_action_loggers
+---@param def table
+---@param name string
+---@return table def
+local function set_logger(def, name)
+	default.set_inventory_action_loggers(def, name)
+	return def
+end
+
 local inventory_formspec_string =
 	"size[8,9.3]" ..
 	default.gui_bg ..
@@ -24,7 +34,7 @@ end
 
 -- Storage buffer. Builder nodes draw from this inventory and digger nodes deposit into it.
 -- Note that inventories are digtron group 2.
-minetest.register_node("digtron:inventory", {
+minetest.register_node("digtron:inventory", set_logger({
 	description = S("Digtron Inventory Storage"),
 	_doc_items_longdesc = digtron.doc.inventory_longdesc,
 	_doc_items_usagehelp = digtron.doc.inventory_usagehelp,
@@ -84,7 +94,7 @@ minetest.register_node("digtron:inventory", {
 
 	after_place_node = (function() if pipeworks_path then return pipeworks.after_place end end)(),
 	after_dig_node = (function() if pipeworks_path then return pipeworks.after_dig end end)()
-})
+}, "digtron inventory storage"))
 
 local fuelstore_formspec_string =
 	"size[8,9.3]" ..
@@ -105,7 +115,7 @@ end
 
 -- Fuel storage. Controller node draws fuel from here.
 -- Note that fuel stores are digtron group 5.
-minetest.register_node("digtron:fuelstore", {
+minetest.register_node("digtron:fuelstore", set_logger({
 	description = S("Digtron Fuel Storage"),
 	_doc_items_longdesc = digtron.doc.fuelstore_longdesc,
 	_doc_items_usagehelp = digtron.doc.fuelstore_usagehelp,
@@ -183,7 +193,7 @@ minetest.register_node("digtron:fuelstore", {
 
 	after_place_node = (function() if pipeworks_path then return pipeworks.after_place end end)(),
 	after_dig_node = (function() if pipeworks_path then return pipeworks.after_dig end end)()
-})
+}, "digtron fuel storage"))
 
 local combined_storage_formspec_string =
 	"size[8,9.9]" ..
@@ -205,7 +215,7 @@ local combined_storage_formspec = function()
 end
 
 -- Combined storage. Group 6 has both an inventory and a fuel store
-minetest.register_node("digtron:combined_storage", {
+minetest.register_node("digtron:combined_storage", set_logger({
 	description = S("Digtron Combined Storage"),
 	_doc_items_longdesc = digtron.doc.combined_storage_longdesc,
     _doc_items_usagehelp = digtron.doc.combined_storage_usagehelp,
@@ -296,7 +306,7 @@ minetest.register_node("digtron:combined_storage", {
 
 	after_place_node = (function() if pipeworks_path then return pipeworks.after_place end end)(),
 	after_dig_node = (function() if pipeworks_path then return pipeworks.after_dig end end)()
-})
+}, "digtron combined storage"))
 
 -- Hopper compatibility
 if minetest.get_modpath("hopper") and hopper ~= nil and hopper.add_container ~= nil then
