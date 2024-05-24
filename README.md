@@ -29,7 +29,7 @@ Other specialized Digtron blocks include:
 * A light that can be mounted on a Digtron to illuminate the workspace as it moves
 * Structural components to make it look cool
 
-The Digtron mod only depends on the default mod, but includes optional support for several other mods:
+The Digtron mod only depends on the default mod and [fakelib](https://content.minetest.net/packages/OgelGames/fakelib/), but includes optional support for several other mods:
 
 * [doc](https://forum.minetest.net/viewtopic.php?t=15912), an in-game documentation mod. Detailed documentation for all of the Digtron's individual blocks are included as well as pages of general concepts and design tips.
 * [pipeworks](https://forum.minetest.net/viewtopic.php?id=2155), a set of pneumatic tubes that allows inventory items to be extracted from or inserted into Digtron inventories.
