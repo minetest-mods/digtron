@@ -490,7 +490,7 @@ function digtron.DigtronLayout.write_layout_image(self, player)
 
 	-- fake_player will be passed to callbacks to prevent actual player from "taking the blame" for this action.
 	-- For example, the hunger mod shouldn't be making the player hungry when he moves Digtron.
-	digtron.fake_player:update(self.controller, player:get_player_name())
+	digtron.fake_player:set_pos(self.controller)
 	-- note that the actual player is still passed to the per-node after_place_node and after_dig_node, should they exist.
 	node_callbacks(player)
 	dug_nodes_count = 0

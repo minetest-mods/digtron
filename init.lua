@@ -42,10 +42,8 @@ digtron.builder_on_place_prefixes = {
 
 local digtron_modpath = minetest.get_modpath( "digtron" )
 
-dofile( digtron_modpath .. "/class_fakeplayer.lua")
-
 -- since we only need one fake player at a time and it doesn't retain useful state, create a global one and just update it as needed.
-digtron.fake_player = digtron.DigtronFakePlayer.create({x=0,y=0,z=0}, "fake_player")
+digtron.fake_player = fakelib.create_player()
 
 dofile( digtron_modpath .. "/config.lua" )
 dofile( digtron_modpath .. "/util.lua" )

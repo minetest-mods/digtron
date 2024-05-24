@@ -17,7 +17,7 @@ read_globals = {
 	"dump", "VoxelArea",
 
 	-- Deps
-	"default", "awards", "pipeworks", "hopper", "technic", "doc", "intllib"
+	"default", "awards", "pipeworks", "hopper", "technic", "doc", "intllib", "fakelib"
 }
 
 files = {
