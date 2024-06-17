@@ -417,14 +417,14 @@ digtron.show_offset_markers = function(pos, offset, period)
 	local z_pos = math.floor((buildpos.z+offset)/period)*period - offset
 
 	local entity = safe_add_entity({x=buildpos.x, y=buildpos.y, z=z_pos}, "digtron:marker")
-	if entity ~= nil then entity:setyaw(1.5708) end
+	if entity ~= nil then entity:set_yaw(1.5708) end
 
 	if z_pos >= buildpos.z then
 		entity = safe_add_entity({x=buildpos.x, y=buildpos.y, z=z_pos - period}, "digtron:marker")
-		if entity ~= nil then entity:setyaw(1.5708) end
+		if entity ~= nil then entity:set_yaw(1.5708) end
 	end
 	if z_pos <= buildpos.z then
 		entity = safe_add_entity({x=buildpos.x, y=buildpos.y, z=z_pos + period}, "digtron:marker")
-		if entity ~= nil then entity:setyaw(1.5708) end
+		if entity ~= nil then entity:set_yaw(1.5708) end
 	end
 end

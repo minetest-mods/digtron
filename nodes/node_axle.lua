@@ -65,7 +65,7 @@ minetest.register_node("digtron:axle", {
 				minetest.sound_play("whirr", {gain=1.0, pos=pos})
 				meta = minetest.get_meta(pos)
 				meta:set_string("waiting", "true")
-				meta:set_string("infotext", nil)
+				meta:set_string("infotext", "")
 				-- minetest.get_node_timer(pos):start(digtron.config.cycle_time*2)
 				-- new delay code
 				meta:set_string("last_time",tostring(minetest.get_gametime()))
@@ -79,6 +79,6 @@ minetest.register_node("digtron:axle", {
 	end,
 
 	on_timer = function(pos)
-		minetest.get_meta(pos):set_string("waiting", nil)
+		minetest.get_meta(pos):set_string("waiting", "")
 	end,
 })

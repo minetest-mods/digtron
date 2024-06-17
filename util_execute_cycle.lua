@@ -102,6 +102,14 @@ local function check_digtron_size(layout)
 	end
 end
 
+local function add_object_pos(object, dir)
+	if object.add_pos then
+		object:add_pos(dir)
+	else
+		object:move_to(vector.add(dir, object:get_pos()), true)
+	end
+end
+
 -- returns newpos, status string, and a return code indicating why the method returned (so the auto-controller can keep trying if it's due to unloaded nodes)
 -- 0 - success
 -- 1 - failed due to unloaded nodes
@@ -324,7 +332,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	pos = vector.add(pos, dir)
 	meta = minetest.get_meta(pos)
 	if move_player then
-		clicker:moveto(vector.add(dir, clicker:get_pos()), true)
+		add_object_pos(clicker, dir)
 	end
 
 	-- store or drop the products of the digger heads
@@ -463,7 +471,7 @@ digtron.execute_move_cycle = function(pos, clicker)
 
 	pos = vector.add(pos, dir)
 	if move_player then
-		clicker:moveto(vector.add(clicker:get_pos(), dir), true)
+		add_object_pos(clicker, dir)
 	end
 	return pos, "", 0
 end
@@ -583,7 +591,7 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 	pos = vector.add(pos, dir)
 	meta = minetest.get_meta(pos)
 	if move_player then
-		clicker:moveto(vector.add(clicker:get_pos(), dir), true)
+		add_object_pos(clicker, dir)
 	end
 
 	-- store or drop the products of the digger heads
