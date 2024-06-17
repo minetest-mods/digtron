@@ -102,19 +102,18 @@ local function check_digtron_size(layout)
 	end
 end
 
-local function add_object_pos(object, dir)
-	-- Cache the function we use, optimizing second+ calls
-	if object.add_pos then
-		-- For Minetest 5.9 or later
-		add_object_pos = function(f_object, f_dir)
-			f_object:add_pos(f_dir)
-		end
-	else
-		add_object_pos = function(f_object, f_dir)
-			f_object:move_to(vector.add(f_dir, f_object:get_pos()), true)
-		end
+-- add_pos was introduced on Jan5 and this feature on Jan 17
+-- This is the simpliest way to detect the version we need
+-- Since we cannoty access ObjectRef before we get one
+local add_object_pos
+if minetest.features.random_state_restore then
+	add_object_pos = function(object, dir)
+		object:add_pos(dir)
 	end
-	add_object_pos(object, dir)
+else
+	add_object_pos = function(object, dir)
+		object:move_to(vector.add(dir, object:get_pos()), true)
+	end
 end
 
 -- returns newpos, status string, and a return code indicating why the method returned (so the auto-controller can keep trying if it's due to unloaded nodes)
