@@ -289,8 +289,9 @@ digtron.execute_dig_cycle = function(pos, clicker)
 			return_string = S("Digtron connected to at least one builder with no output material assigned.") .. "\n"
 			return_code = 6
 		elseif test_build_return_code == 2 then
+			local item_display_name = failed_to_find:get_short_description() .. " (" .. failed_to_find:get_name() .. ")"
 			minetest.sound_play("dingding", {gain=1.0, pos=pos}) -- Insufficient inventory
-			return_string = S("Digtron has insufficient building materials. Needed: @1", failed_to_find:get_name()) .. "\n"
+			return_string = S("Digtron has insufficient building materials. Needed: @1", item_display_name) .. "\n"
 			return_code = 7
 		end
 		return pos, return_string .. status_text, return_code --Abort, don't dig and don't build.
