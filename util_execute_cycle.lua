@@ -102,7 +102,8 @@ local function check_digtron_size(layout)
 	end
 end
 
--- add_pos was introduced on Jan5 and this feature on Jan 17
+-- :add_pos(...) is available on 2024-01-05 since Minetest 5.9.0-dev, commit d0753ddd
+-- random_state_restore is introduced on 2024-01-17 in commit ceaa7e2
 -- This is the simpliest way to detect the version we need
 -- Since we cannoty access ObjectRef before we get one
 local add_object_pos
