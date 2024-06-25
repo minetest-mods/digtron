@@ -102,6 +102,21 @@ local function check_digtron_size(layout)
 	end
 end
 
+-- :add_pos(...) is available on 2024-01-05 since Minetest 5.9.0-dev, commit d0753ddd
+-- random_state_restore is introduced on 2024-01-17 in commit ceaa7e2
+-- This is the simpliest way to detect the version we need
+-- Since we cannoty access ObjectRef before we get one
+local add_object_pos
+if minetest.features.random_state_restore then
+	add_object_pos = function(object, dir)
+		object:add_pos(dir)
+	end
+else
+	add_object_pos = function(object, dir)
+		object:move_to(vector.add(dir, object:get_pos()), true)
+	end
+end
+
 -- returns newpos, status string, and a return code indicating why the method returned (so the auto-controller can keep trying if it's due to unloaded nodes)
 -- 0 - success
 -- 1 - failed due to unloaded nodes
@@ -325,7 +340,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	pos = vector.add(pos, dir)
 	meta = minetest.get_meta(pos)
 	if move_player then
-		clicker:moveto(vector.add(dir, clicker:get_pos()), true)
+		add_object_pos(clicker, dir)
 	end
 
 	-- store or drop the products of the digger heads
@@ -464,7 +479,7 @@ digtron.execute_move_cycle = function(pos, clicker)
 
 	pos = vector.add(pos, dir)
 	if move_player then
-		clicker:moveto(vector.add(clicker:get_pos(), dir), true)
+		add_object_pos(clicker, dir)
 	end
 	return pos, "", 0
 end
@@ -584,7 +599,7 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 	pos = vector.add(pos, dir)
 	meta = minetest.get_meta(pos)
 	if move_player then
-		clicker:moveto(vector.add(clicker:get_pos(), dir), true)
+		add_object_pos(clicker, dir)
 	end
 
 	-- store or drop the products of the digger heads
