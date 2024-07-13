@@ -67,6 +67,10 @@ minetest.register_node("digtron:battery_holder", {
 	-- Allow all items with energy storage to be placed in the inventory
 	allow_metadata_inventory_put = function(_, listname, _, stack)
 		if listname == "batteries" then
+			if not minetest.global_exists("technic") then
+				return 0
+			end
+
 			local node_name = stack:get_name()
 
 			-- Allow all items with energy storage from technic mod
