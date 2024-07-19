@@ -65,7 +65,7 @@ local def = {
 	end,
 
 	-- Allow all items with energy storage to be placed in the inventory
-	allow_metadata_inventory_put = function(_, listname, _, stack)
+	allow_metadata_inventory_put = function(pos, listname, _, stack, player)
 		if listname == "batteries" then
 			if not minetest.global_exists("technic") then
 				return 0
@@ -80,6 +80,12 @@ local def = {
 				-- And specifically if they hold any charge
 				-- Disregard empty batteries, the player should know better
 				if md and md.charge > 0 then
+					local name = player:get_player_name()
+					if minetest.is_protected(pos, name) then
+						minetest.record_protection_violation(pos, name)
+						return 0
+					end
+
 					return stack:get_count()
 				else
 					return 0
@@ -90,6 +96,26 @@ local def = {
 			end
 		end
 		return 0
+	end,
+
+	allow_metadata_inventory_move = function(pos, _, _, _, _, count, player)
+		local name = player:get_player_name()
+		if minetest.is_protected(pos, name) then
+			minetest.record_protection_violation(pos, name)
+			return 0
+		end
+
+		return count
+	end,
+
+	allow_metadata_inventory_take = function(pos, _, _, stack, player)
+		local name = player:get_player_name()
+		if minetest.is_protected(pos, name) then
+			minetest.record_protection_violation(pos, name)
+			return 0
+		end
+
+		return stack:get_count()
 	end,
 
 
