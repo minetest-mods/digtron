@@ -74,6 +74,36 @@ minetest.register_node("digtron:inventory", set_logger({
 		return inv:is_empty("main")
 	end,
 
+	allow_metadata_inventory_put = function(pos, _, _, stack, player)
+		local name = player:get_player_name()
+		if minetest.is_protected(pos, name) then
+			minetest.record_protection_violation(pos, name)
+			return 0
+		end
+
+		return stack:get_count()
+	end,
+
+	allow_metadata_inventory_move = function(pos, _, _, _, _, count, player)
+		local name = player:get_player_name()
+		if minetest.is_protected(pos, name) then
+			minetest.record_protection_violation(pos, name)
+			return 0
+		end
+
+		return count
+	end,
+
+	allow_metadata_inventory_take = function(pos, _, _, stack, player)
+		local name = player:get_player_name()
+		if minetest.is_protected(pos, name) then
+			minetest.record_protection_violation(pos, name)
+			return 0
+		end
+
+		return stack:get_count()
+	end,
+
 	-- Pipeworks compatibility
 	----------------------------------------------------------------
 
@@ -150,15 +180,42 @@ minetest.register_node("digtron:fuelstore", set_logger({
 	end,
 
 	-- Only allow fuel items to be placed in fuel
-	allow_metadata_inventory_put = function(_, listname, _, stack)
+	allow_metadata_inventory_put = function(pos, listname, _, stack, player)
+		local name = player:get_player_name()
+		if minetest.is_protected(pos, name) then
+			minetest.record_protection_violation(pos, name)
+			return 0
+		end
+
 		if listname == "fuel" then
 			if minetest.get_craft_result({method="fuel", width=1, items={stack}}).time ~= 0 then
+
 				return stack:get_count()
 			else
 				return 0
 			end
 		end
 		return 0
+	end,
+
+	allow_metadata_inventory_move = function(pos, _, _, _, _, count, player)
+		local name = player:get_player_name()
+		if minetest.is_protected(pos, name) then
+			minetest.record_protection_violation(pos, name)
+			return 0
+		end
+
+		return count
+	end,
+
+	allow_metadata_inventory_take = function(pos, _, _, stack, player)
+		local name = player:get_player_name()
+		if minetest.is_protected(pos, name) then
+			minetest.record_protection_violation(pos, name)
+			return 0
+		end
+
+		return stack:get_count()
 	end,
 
 	can_dig = function(pos)
@@ -250,7 +307,13 @@ minetest.register_node("digtron:combined_storage", set_logger({
 	end,
 
 	-- Only allow fuel items to be placed in fuel
-	allow_metadata_inventory_put = function(_, listname, _, stack)
+	allow_metadata_inventory_put = function(pos, listname, _, stack, player)
+		local name = player:get_player_name()
+		if minetest.is_protected(pos, name) then
+			minetest.record_protection_violation(pos, name)
+			return 0
+		end
+
 		if listname == "fuel" then
 			if minetest.get_craft_result({method="fuel", width=1, items={stack}}).time ~= 0 then
 				return stack:get_count()
@@ -262,6 +325,12 @@ minetest.register_node("digtron:combined_storage", set_logger({
 	end,
 
 	allow_metadata_inventory_move = function(pos, from_list, from_index, to_list, _, count)
+		local name = player:get_player_name()
+		if minetest.is_protected(pos, name) then
+			minetest.record_protection_violation(pos, name)
+			return 0
+		end
+
 		if to_list == "main" then
 			return count
 		end
@@ -273,6 +342,16 @@ minetest.register_node("digtron:combined_storage", set_logger({
 			return stack:get_count()
 		end
 		return 0
+	end,
+
+	allow_metadata_inventory_take = function(pos, _, _, stack, player)
+		local name = player:get_player_name()
+		if minetest.is_protected(pos, name) then
+			minetest.record_protection_violation(pos, name)
+			return 0
+		end
+
+		return stack:get_count()
 	end,
 
 	can_dig = function(pos)
