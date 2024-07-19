@@ -324,7 +324,7 @@ minetest.register_node("digtron:combined_storage", set_logger({
 		return stack:get_count() -- otherwise, allow all drops
 	end,
 
-	allow_metadata_inventory_move = function(pos, from_list, from_index, to_list, _, count)
+	allow_metadata_inventory_move = function(pos, from_list, from_index, to_list, _, count, player)
 		local name = player:get_player_name()
 		if minetest.is_protected(pos, name) then
 			minetest.record_protection_violation(pos, name)
