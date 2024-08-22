@@ -65,7 +65,7 @@ local def = {
 	end,
 
 	-- Allow all items with energy storage to be placed in the inventory
-	allow_metadata_inventory_put = function(_, listname, _, stack)
+	allow_metadata_inventory_put = function(pos, listname, _, stack, player)
 		if listname == "batteries" then
 			if not minetest.global_exists("technic") then
 				return 0
@@ -80,17 +80,23 @@ local def = {
 				-- And specifically if they hold any charge
 				-- Disregard empty batteries, the player should know better
 				if md and md.charge > 0 then
+					if digtron.check_protected_and_record(pos, player) then
+						return 0
+					end
 					return stack:get_count()
 				else
 					return 0
 				end
-
 			else
 				return 0
 			end
 		end
 		return 0
 	end,
+
+	allow_metadata_inventory_move = digtron.protected_allow_metadata_inventory_move,
+
+	allow_metadata_inventory_take = digtron.protected_allow_metadata_inventory_take,
 
 
 	can_dig = function(pos)

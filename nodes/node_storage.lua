@@ -74,6 +74,12 @@ minetest.register_node("digtron:inventory", set_logger({
 		return inv:is_empty("main")
 	end,
 
+	allow_metadata_inventory_put = digtron.protected_allow_metadata_inventory_put,
+
+	allow_metadata_inventory_move = digtron.protected_allow_metadata_inventory_move,
+
+	allow_metadata_inventory_take = digtron.protected_allow_metadata_inventory_take,
+
 	-- Pipeworks compatibility
 	----------------------------------------------------------------
 
@@ -150,16 +156,20 @@ minetest.register_node("digtron:fuelstore", set_logger({
 	end,
 
 	-- Only allow fuel items to be placed in fuel
-	allow_metadata_inventory_put = function(_, listname, _, stack)
-		if listname == "fuel" then
-			if minetest.get_craft_result({method="fuel", width=1, items={stack}}).time ~= 0 then
-				return stack:get_count()
-			else
-				return 0
-			end
+	allow_metadata_inventory_put = function(pos, listname, _, stack, player)
+		if digtron.check_protected_and_record(pos, player) then
+			return 0
+		end
+
+		if listname == "fuel" and minetest.get_craft_result({method="fuel", width=1, items={stack}}).time ~= 0 then
+			return stack:get_count()
 		end
 		return 0
 	end,
+
+	allow_metadata_inventory_move = digtron.protected_allow_metadata_inventory_move,
+
+	allow_metadata_inventory_take = digtron.protected_allow_metadata_inventory_take,
 
 	can_dig = function(pos)
 		local meta = minetest.get_meta(pos)
@@ -252,7 +262,11 @@ minetest.register_node("digtron:combined_storage", set_logger({
 	end,
 
 	-- Only allow fuel items to be placed in fuel
-	allow_metadata_inventory_put = function(_, listname, _, stack)
+	allow_metadata_inventory_put = function(pos, listname, _, stack, player)
+		if digtron.check_protected_and_record(pos, player) then
+			return 0
+		end
+
 		if listname == "fuel" then
 			if minetest.get_craft_result({method="fuel", width=1, items={stack}}).time ~= 0 then
 				return stack:get_count()
@@ -263,7 +277,11 @@ minetest.register_node("digtron:combined_storage", set_logger({
 		return stack:get_count() -- otherwise, allow all drops
 	end,
 
-	allow_metadata_inventory_move = function(pos, from_list, from_index, to_list, _, count)
+	allow_metadata_inventory_move = function(pos, from_list, from_index, to_list, _, count, player)
+		if digtron.check_protected_and_record(pos, player) then
+			return 0
+		end
+
 		if to_list == "main" then
 			return count
 		end
@@ -276,6 +294,8 @@ minetest.register_node("digtron:combined_storage", set_logger({
 		end
 		return 0
 	end,
+
+	allow_metadata_inventory_take = digtron.protected_allow_metadata_inventory_take,
 
 	can_dig = function(pos)
 		local meta = minetest.get_meta(pos)

@@ -259,7 +259,11 @@ minetest.register_node("digtron:builder", {
 		digtron.update_builder_item(pos)
 	end,
 
-	allow_metadata_inventory_put = function(pos, listname, index, stack)
+	allow_metadata_inventory_put = function(pos, listname, index, stack, player)
+		if digtron.check_protected_and_record(pos, player) then
+			return 0
+		end
+
 		local stack_name = stack:get_name()
 
 		if minetest.get_item_group(stack_name, "digtron") ~= 0 then
@@ -284,10 +288,12 @@ minetest.register_node("digtron:builder", {
 		return 0
 	end,
 
-	allow_metadata_inventory_take = function(pos, listname, index)
-		node_inventory_table.pos = pos
-		local inv = minetest.get_inventory(node_inventory_table)
-		inv:set_stack(listname, index, ItemStack(""))
+	allow_metadata_inventory_take = function(pos, listname, index, _, player)
+		if not digtron.check_protected_and_record(pos, player) then
+			node_inventory_table.pos = pos
+			local inv = minetest.get_inventory(node_inventory_table)
+			inv:set_stack(listname, index, ItemStack(""))
+		end
 		return 0
 	end,
 
