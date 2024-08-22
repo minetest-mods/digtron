@@ -237,8 +237,9 @@ minetest.register_node("digtron:auto_controller", {
 		inv:set_size("stop", 1)
 	end,
 
-	allow_metadata_inventory_put = function(pos, listname, index, stack)
-		if minetest.get_item_group(stack:get_name(), "digtron") ~= 0 then
+	allow_metadata_inventory_put = function(pos, listname, index, stack, player)
+		if digtron.check_protected_and_record(pos, player)
+			or minetest.get_item_group(stack:get_name(), "digtron") ~= 0 then
 			return 0 -- pointless setting a Digtron node as a stop block
 		end
 		node_inventory_table.pos = pos
@@ -247,10 +248,12 @@ minetest.register_node("digtron:auto_controller", {
 		return 0
 	end,
 
-	allow_metadata_inventory_take = function(pos, listname, index)
-		node_inventory_table.pos = pos
-		local inv = minetest.get_inventory(node_inventory_table)
-		inv:set_stack(listname, index, ItemStack(""))
+	allow_metadata_inventory_take = function(pos, listname, index, _, player)
+		if not digtron.check_protected_and_record(pos, player) then
+			node_inventory_table.pos = pos
+			local inv = minetest.get_inventory(node_inventory_table)
+			inv:set_stack(listname, index, ItemStack(""))
+		end
 		return 0
 	end,
 
