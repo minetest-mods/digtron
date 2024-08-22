@@ -321,15 +321,18 @@ digtron.damage_creatures = function(player, source_pos, target_pos, amount, item
 		}
 		for _, obj in ipairs(objects) do
 			if obj:is_player() then
-				-- See issue #2960 for status of a "set player velocity" method
-				-- instead, knock the player back
-				local newpos = {
-					x = target_pos.x + velocity.x,
-					y = target_pos.y + velocity.y,
-					z = target_pos.z + velocity.z,
-				}
-				obj:set_pos(newpos)
-				obj:punch(player, 1.0, damage_def, nil)
+				-- Digtron moving logic handles owner movement
+				if obj:get_player_name() ~= player:get_player_name() then
+					-- See issue #2960 for status of a "set player velocity" method
+					-- instead, knock the player back
+					local newpos = {
+						x = target_pos.x + velocity.x,
+						y = target_pos.y + velocity.y,
+						z = target_pos.z + velocity.z,
+					}
+					obj:set_pos(newpos)
+					obj:punch(player, 1.0, damage_def, nil)
+				end
 			else
 				local lua_entity = obj:get_luaentity()
 				if lua_entity ~= nil then
