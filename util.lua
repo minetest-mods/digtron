@@ -428,3 +428,24 @@ digtron.show_offset_markers = function(pos, offset, period)
 		if entity ~= nil then entity:set_yaw(1.5708) end
 	end
 end
+
+digtron.check_protected_and_record = function(pos, player)
+	local name = player:get_player_name()
+	if minetest.is_protected(pos, name) then
+		minetest.record_protection_violation(pos, name)
+		return true
+	end
+	return false
+end
+
+digtron.protected_allow_metadata_inventory_put = function(pos, _, _, stack, player)
+	return digtron.check_protected_and_record(pos, player) and 0 or stack:get_count()
+end
+
+digtron.protected_allow_metadata_inventory_move = function(pos, _, _, _, _, count, player)
+	return digtron.check_protected_and_record(pos, player) and 0 or count
+end
+
+digtron.protected_allow_metadata_inventory_take = function(pos, _, _, stack, player)
+	return digtron.check_protected_and_record(pos, player) and 0 or stack:get_count()
+end

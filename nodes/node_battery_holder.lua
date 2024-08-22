@@ -80,17 +80,13 @@ local def = {
 				-- And specifically if they hold any charge
 				-- Disregard empty batteries, the player should know better
 				if md and md.charge > 0 then
-					local name = player:get_player_name()
-					if minetest.is_protected(pos, name) then
-						minetest.record_protection_violation(pos, name)
+					if digtron.check_protected_and_record(pos, player) then
 						return 0
 					end
-
 					return stack:get_count()
 				else
 					return 0
 				end
-
 			else
 				return 0
 			end
@@ -98,25 +94,9 @@ local def = {
 		return 0
 	end,
 
-	allow_metadata_inventory_move = function(pos, _, _, _, _, count, player)
-		local name = player:get_player_name()
-		if minetest.is_protected(pos, name) then
-			minetest.record_protection_violation(pos, name)
-			return 0
-		end
+	allow_metadata_inventory_move = digtron.protected_allow_metadata_inventory_move,
 
-		return count
-	end,
-
-	allow_metadata_inventory_take = function(pos, _, _, stack, player)
-		local name = player:get_player_name()
-		if minetest.is_protected(pos, name) then
-			minetest.record_protection_violation(pos, name)
-			return 0
-		end
-
-		return stack:get_count()
-	end,
+	allow_metadata_inventory_take = digtron.protected_allow_metadata_inventory_take,
 
 
 	can_dig = function(pos)

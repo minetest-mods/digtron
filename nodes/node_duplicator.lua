@@ -76,13 +76,21 @@ minetest.register_node("digtron:duplicator", {
 		return inv:is_empty("main")
 	end,
 
-	allow_metadata_inventory_put = function(_, _, _, stack)
+	allow_metadata_inventory_put = function(pos, _, _, stack, player)
+		if digtron.check_protected_and_record(pos, player) then
+			return 0
+		end
+
 		if minetest.get_item_group(stack:get_name(), "digtron") > 0 then
 			return stack:get_count()
 		else
 			return 0
 		end
 	end,
+
+	allow_metadata_inventory_move = digtron.protected_allow_metadata_inventory_move,
+
+	allow_metadata_inventory_take = digtron.protected_allow_metadata_inventory_take,
 
 	on_receive_fields = function(pos, _, fields, sender)
 		local player_name = sender:get_player_name()
