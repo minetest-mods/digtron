@@ -288,7 +288,7 @@ minetest.register_node("digtron:builder", {
 		return 0
 	end,
 
-	allow_metadata_inventory_take = function(pos, listname, index)
+	allow_metadata_inventory_take = function(pos, listname, index, _, player)
 		if not digtron.check_protected_and_record(pos, player) then
 			node_inventory_table.pos = pos
 			local inv = minetest.get_inventory(node_inventory_table)
