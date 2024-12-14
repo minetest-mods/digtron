@@ -6,7 +6,7 @@ digtron.DigtronLayout.__index = digtron.DigtronLayout
 
 local get_node_image = function(pos, node)
 	local node_image = {node=node, pos={x=pos.x, y=pos.y, z=pos.z}}
-	local node_def = minetest.registered_nodes[node.name]
+	local node_def = digtron.get_nodedef(node.name)
 	node_image.paramtype2 = node_def.paramtype2
 	local meta = minetest.get_meta(pos)
 	node_image.meta = meta:to_table()
@@ -167,7 +167,7 @@ function digtron.DigtronLayout.create(pos, player)
 			to_test:set_if_not_in(tested, testpos.x, testpos.y - 1, testpos.z, true)
 			to_test:set_if_not_in(tested, testpos.x, testpos.y, testpos.z + 1, true)
 			to_test:set_if_not_in(tested, testpos.x, testpos.y, testpos.z - 1, true)
-		elseif not minetest.registered_nodes[node.name] or minetest.registered_nodes[node.name].buildable_to ~= true then
+		elseif not digtron.get_nodedef(node.name).buildable_to then
 			-- Tracks whether the digtron is hovering in mid-air. If any part of the digtron array touches something solid it gains traction.
 			-- Allowing unknown nodes to provide traction, since they're not buildable_to either
 			self.traction = self.traction + 1
@@ -364,7 +364,7 @@ function digtron.DigtronLayout.can_write_layout_image(self)
 		-- check if the target node is buildable_to or is marked as part of the digtron that's moving
 		if not (
 			self.old_pos_pointset:get(node_image.pos.x, node_image.pos.y, node_image.pos.z)
-			or minetest.registered_nodes[minetest.get_node(node_image.pos).name].buildable_to
+			or digtron.get_nodedef(core.get_node(node_image.pos).name).buildable_to
 			) then
 			return false
 		end

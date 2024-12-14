@@ -6,7 +6,8 @@ globals = {
 }
 
 read_globals = {
-	-- Minetest
+	-- Luanti/Minetest
+	"core",
 	"minetest",
 	"vector",
 	"ItemStack",

@@ -150,7 +150,7 @@ minetest.register_node("digtron:duplicator", {
 			local unsatisfied = {}
 			for name, count in pairs(required_count) do
 				if not inv:contains_item("main", ItemStack({name=name, count=count})) then
-					table.insert(unsatisfied, tostring(count) .. " " .. minetest.registered_nodes[name].description)
+					table.insert(unsatisfied, tostring(count) .. " " .. digtron.get_nodedef(name).description)
 				end
 			end
 			if #unsatisfied > 0 then

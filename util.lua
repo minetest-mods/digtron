@@ -35,6 +35,17 @@ digtron.find_new_pos_downward = function(pos, facing)
 	return vector.add(pos, digtron.facedir_to_down_dir(facing))
 end
 
+local registered_nodes = core.registered_nodes
+local unknown_node_def_fallback = {
+	-- for node_duplicator.lua / on_receive_fields
+	description = "unknown node",
+	-- for class_layout.lua / get_node_image
+	paramtype2 = "none",
+}
+digtron.get_nodedef = function(name)
+	return registered_nodes[name] or unknown_node_def_fallback
+end
+
 digtron.mark_diggable = function(pos, nodes_dug, player)
 	-- mark the node as dug, if the player provided would have been able to dig it.
 	-- Don't *actually* dig the node yet, though, because if we dig a node with sand over it the sand will start falling
@@ -93,7 +104,7 @@ digtron.can_build_to = function(pos, protected_nodes, dug_nodes)
 	local target = minetest.get_node(pos)
 	if target.name == "air" or
 	   dug_nodes:get(pos.x, pos.y, pos.z) == true or
-	   minetest.registered_nodes[target.name].buildable_to == true
+	   digtron.get_nodedef(target.name).buildable_to
 	   then
 		return true
 	end
