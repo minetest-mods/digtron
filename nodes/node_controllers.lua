@@ -125,69 +125,165 @@ if has_doc_mod then
 		"tooltip[help;" .. S("Show documentation about this block").. "]"
 end
 
-local function auto_cycle(pos)
-	local node = minetest.get_node(pos)
-	local controlling_coordinate = digtron.get_controlling_coordinate(pos, node.param2)
-	local meta = minetest.get_meta(pos)
-	local player = minetest.get_player_by_name(meta:get_string("triggering_player"))
-	if player == nil or meta:get_string("waiting") == "true" then
-		return
-	end
+-- Mutual recursion (well, not really, calls are mediated by core.after).
+local auto_cycle_dig, auto_cycle_emerge
 
+local running_msg = S("Rightclick to stop.") -- used in two different places
+
+local function get_auto_cycle_status(cycle, running, additional_info)
+	return S("Cycles remaining: @1", cycle)
+		.. (additional_info and ("\n" .. additional_info) or "")
+		.. "\n" .. (running and running_msg or S("Halted!"))
+end
+
+local function check_continue(pos, newpos, return_code, cycle_decrement)
+	local meta = core.get_meta(newpos)
 	local cycle = meta:get_int("cycles")
-	local slope = meta:get_int("slope")
-
-	if meta:get_string("lateral_done") ~= "true" and slope ~= 0 and (pos[controlling_coordinate] + meta:get_int("offset")) % slope == 0 then
-		--Do a downward dig cycle. Don't update the "cycles" count, these don't count towards that.
-		local newpos, status, return_code = digtron.execute_downward_dig_cycle(pos, player)
-
-		if vector.equals(pos, newpos) then
-			status = status .. "\n" .. S("Cycles remaining: @1", cycle) .. "\n" .. S("Halted!")
-			meta:set_string("infotext", status)
-			if return_code == 1 then --return code 1 happens when there's unloaded nodes adjacent, just keep trying.
-				if digtron.config.emerge_unloaded_mapblocks then
-					minetest.emerge_area(vector.add(pos, -80), vector.add(pos, 80))
-				end
-				minetest.after(meta:get_int("period"), auto_cycle, newpos)
-			else
-				meta:set_string("formspec", auto_formspec)
-			end
-		else
-			meta = minetest.get_meta(newpos)
-			minetest.after(meta:get_int("period"), auto_cycle, newpos)
-			meta:set_string("infotext", status)
-			meta:set_string("lateral_done", "true")
-		end
-		return
-	end
-
-	local newpos, status, return_code = digtron.execute_dig_cycle(pos, player)
-
+	local period = meta:get_int("period")
 	if vector.equals(pos, newpos) then
-		status = status .. "\n" .. S("Cycles remaining: @1", cycle) .. "\n" .. S("Halted!")
-		meta:set_string("infotext", status)
-		if return_code == 1 then --return code 1 happens when there's unloaded nodes adjacent, call emerge and keep trying.
-			if digtron.config.emerge_unloaded_mapblocks then
-				minetest.emerge_area(vector.add(pos, -80), vector.add(pos, 80))
-			end
-			minetest.after(meta:get_int("period"), auto_cycle, newpos)
+		if return_code == 1 then
+			-- Neighboring IGNORE nodes. Might be digtron nodes, therefore retry
+			-- after emerging area around digtron (but discard current cycle).
+			-- TODO: replace this by being smarter when building the layout.
+			auto_cycle_emerge(newpos, period)
+			return false, get_auto_cycle_status(cycle, true, "\n" .. S("Loading nodes..."))
 		else
+			-- Halt with error.
 			meta:set_string("formspec", auto_formspec)
+			return false, get_auto_cycle_status(cycle, false)
 		end
-		return
 	end
 
-	meta = minetest.get_meta(newpos)
-	cycle = meta:get_int("cycles") - 1
-	meta:set_int("cycles", cycle)
-	status = status .. "\n" .. S("Cycles remaining: @1", cycle)
-	meta:set_string("infotext", status)
-	meta:set_string("lateral_done", "")
+	if cycle_decrement then
+		cycle = cycle - 1
+		meta:set_int("cycles", cycle)
+	end
 
 	if cycle > 0 then
-		minetest.after(meta:get_int("period"), auto_cycle, newpos)
+		-- Continue normally.
+		return true, get_auto_cycle_status(cycle, true)
 	else
+		-- Finished.
 		meta:set_string("formspec", auto_formspec)
+		return false, get_auto_cycle_status(cycle, false)
+	end
+end
+
+-- The outermost blocks of a chunk may get overwritten with stale data when a neighboring
+-- chunk is generated. Therefore force generating any neighboring chunk before the digtron
+-- enters the outermost block. (Symbol `auto_cycle_emerge` declared local above.)
+auto_cycle_emerge = function(pos)
+	-- subtract time to emerge from cycle period
+	local start_time = core.get_us_time()
+
+	local meta = core.get_meta(pos)
+	local period = meta:get_int("period")
+
+	-- TODO: find way to avoid building the layout again just to determine its size.
+	local player = core.get_player_by_name(meta:get_string("triggering_player"))
+	local layout = digtron.DigtronLayout.create(pos, player)
+
+	-- Make sure all neighboring chunks are generated when a digtron node touches the
+	-- inside of the outermost block of the current chunk.
+	local safe_distance = core.MAP_BLOCKSIZE + 1
+	local min = vector.subtract(layout.extents_min, safe_distance)
+	local max = vector.add(layout.extents_max, safe_distance)
+
+	core.emerge_area(min, max, function(_, action, remaining)
+		if action == core.EMERGE_CANCELLED or action == core.EMERGE_ERRORED then
+			meta:set_string("emerge_errors", "true")
+		end
+		if remaining <= 0 then
+			local elapsed = (core.get_us_time() - start_time) / 1000000
+			core.after(math.max(period - elapsed, 0), auto_cycle_dig, pos)
+		end
+	end)
+end
+
+-- The actual dig and repeat of auto cycling. Repeating happens via the `auto_cycle_emerge`
+-- and `check_continue` functions. (Symbol `auto_cycle_dig` declared local above.)
+auto_cycle_dig = function(pos)
+	local meta = core.get_meta(pos)
+	local player = core.get_player_by_name(meta:get_string("triggering_player"))
+
+	if player == nil then
+		-- Shouldn't happen; the formspec can be restored by rightclicking if
+		-- necessary.
+		return
+	end
+
+	if meta:get_string("waiting") == "true" then
+		-- Formspec and status message is managed by `auto_cycle_interrupt`.
+		return
+	end
+
+	if meta:get("emerge_errors") then
+		local status = meta:get_string("infotext")
+		status = status .. "\n" .. S("Halted due to abnormal emerge result!")
+		meta:set_string("infotext", status)
+		meta:set_string("formspec", auto_formspec)
+		return
+	end
+
+	local slope = meta:get_int("slope")
+	local node = core.get_node(pos)
+	local controlling_coordinate = digtron.get_controlling_coordinate(pos, node.param2)
+	if meta:get_string("lateral_done") ~= "true" and slope ~= 0
+			and (pos[controlling_coordinate] + meta:get_int("offset")) % slope == 0 then
+		-- Do a lateral dig cycle.
+		local newpos, status, return_code = digtron.execute_downward_dig_cycle(pos, player)
+		meta = core.get_meta(newpos)
+
+		--  Don't update the "cycles" count, lateral cycles don't count towards that.
+		local cont, cycle_status = check_continue(pos, newpos, return_code, false)
+		meta:set_string("infotext", status .. "\n" .. cycle_status)
+
+		if cont then
+			-- Force non lateral dig cycle.
+			meta:set_string("lateral_done", "true")
+			auto_cycle_emerge(newpos)
+		end
+	else
+		-- Do a normal dig cycle.
+		local newpos, status, return_code = digtron.execute_dig_cycle(pos, player)
+		meta = core.get_meta(newpos)
+
+		local cont, cycle_status = check_continue(pos, newpos, return_code, true)
+		meta:set_string("infotext", status .. "\n" .. cycle_status)
+
+		if cont then
+			-- Enable checking for lateral dig again on next cycle.
+			meta:set_string("lateral_done", "")
+			auto_cycle_emerge(newpos)
+		end
+	end
+end
+
+-- Fully automatic digtron operation. The formspec is removed while active. It terminates
+--  - after the set number of cycles (not including lateral cycles) have completed
+--  - if it is interrupted by right clicking
+--  - an emerge run didn't complete successfully
+-- The formspec should be restored when operation terminates, but in case of crashes it
+-- can always be manually restored by right clicking (see `auto_cycle_interrupt` below).
+local function auto_cycle(pos)
+	local meta = core.get_meta(pos)
+	meta:set_string("formspec", "")
+	meta:set_string("waiting", "")
+	meta:set_string("emerge_errors", "")
+	auto_cycle_dig(pos)
+end
+
+-- Signal the digtron to stop after current cycle completes using the `waiting` metadata
+-- field. Force restore formspec and update infotext as needed.
+local function auto_cycle_interrupt(pos)
+	local meta = core.get_meta(pos)
+	meta:set_string("waiting", "true")
+	meta:set_string("formspec", auto_formspec)
+	-- If `running_msg` (which is always last) is found in infotext, replace it.
+	local status = meta:get_string("infotext")
+	local msg_pos = status:find(running_msg, 1, true)
+	if msg_pos then
+		meta:set_string("infotext",  status:sub(1, msg_pos - 1) .. S("Interrupted!"))
 	end
 end
 
@@ -279,8 +375,6 @@ minetest.register_node("digtron:auto_controller", {
 			if sender:is_player() and cycles > 0 then
 				meta:set_string("triggering_player", sender:get_player_name())
 				if fields.execute then
-					meta:set_string("waiting", "")
-					meta:set_string("formspec", "")
 					auto_cycle(pos)
 				end
 			end
@@ -312,10 +406,7 @@ minetest.register_node("digtron:auto_controller", {
 	end,
 
 	on_rightclick = function(pos)
-		local meta = minetest.get_meta(pos)
-		meta:set_string("infotext", meta:get_string("infotext") .. "\n" .. S("Interrupted!"))
-		meta:set_string("waiting", "true")
-		meta:set_string("formspec", auto_formspec)
+		auto_cycle_interrupt(pos)
 	end,
 })
 
