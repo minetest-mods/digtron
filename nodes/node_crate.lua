@@ -238,7 +238,7 @@ local loaded_on_recieve = function(pos, fields, sender, protected)
 			if minetest.is_protected(node_image.pos, sender:get_player_name()) and not minetest.check_player_privs(sender, "protection_bypass") then
 				protected_node = true
 				minetest.add_entity(node_image.pos, "digtron:marker_crate_bad")
-			elseif not minetest.registered_nodes[minetest.get_node(node_image.pos).name].buildable_to then
+			elseif not digtron.get_nodedef(core.get_node(node_image.pos).name).buildable_to then
 				obstructed_node = true
 				minetest.add_entity(node_image.pos, "digtron:marker_crate_bad")
 			else
