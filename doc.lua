@@ -43,7 +43,7 @@ digtron.doc.builder_usagehelp = S("A builder head is the most complex component 
 .."@n@n"..
 "When the \"Save & Show\" button is clicked the properties for period and offset will be saved, and markers will briefly be shown to indicate where the nearest spots corresponding to those values are. The builder will build its output at those locations provided it is moving along the matching axis."
 .."@n@n"..
-"There is also an \"Extrusion\" setting. This allows your builder to extrude a line of identical blocks from the builder output, in the direction the output side is facing, until it reaches an obstruction or until it reaches the extrusion limit. This can be useful for placing columns below a bridge, or for filling a large volume with a uniform block type without requiring a large number of builder heads."
+"There is also an \"Extrusion\" setting. This allows your builder to extrude a line of identical blocks from the builder output, in the direction the output side is facing, until it reaches an obstruction or until it reaches the extrusion limit. This can be useful for placing columns below a bridge, or for filling a large volume with a uniform block type without requiring a large number of builder heads. Setting \"Extrusion\" to 0 indicates that the builder should only build into a node that was dug this same cycle. This is useful to replace falling blocks with something more permanent in a tunnel roof, but not build a roof if there is air above."
 .."@n@n"..
 "The \"output\" side of a builder is the side with a black crosshair on it."
 .."@n@n"..

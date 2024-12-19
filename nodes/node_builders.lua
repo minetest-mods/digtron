@@ -114,7 +114,7 @@ minetest.register_on_player_receive_fields(function(sender, formname, fields)
 			meta:set_int("build_facing", math.floor(build_facing))
 		end
 	end
-	if extrusion and extrusion > 0 and extrusion <= digtron.config.maximum_extrusion then
+	if extrusion and extrusion >= 0 and extrusion <= digtron.config.maximum_extrusion then
 		meta:set_int("extrusion", math.floor(tonumber(fields.extrusion)))
 	end
 
@@ -331,7 +331,11 @@ minetest.register_node("digtron:builder", {
 
 		local extrusion_count = 0
 		local extrusion_target = meta:get_int("extrusion")
+		local build_only_dug = false
 		if extrusion_target == nil or extrusion_target < 1 or extrusion_target > 100 then
+			if extrusion_target == 0 then
+				build_only_dug = true
+			end
 			extrusion_target = 1 -- failsafe
 		end
 
@@ -355,6 +359,11 @@ minetest.register_node("digtron:builder", {
 				--assumption is wrong, but I can't hold the player's hand through *every* possible bad design decision. Worst case,
 				--the digtron will think its inventory can't handle the next build step and abort the build when it actually could have
 				--managed one more cycle. That's not a bad outcome for a digtron array that was built stupidly to begin with.
+				return 1, return_items
+			end
+
+			local dug_this_cycle = nodes_dug:get(buildpos.x, buildpos.y, buildpos.z) == true
+			if not dug_this_cycle and build_only_dug then
 				return 1, return_items
 			end
 
@@ -384,7 +393,11 @@ minetest.register_node("digtron:builder", {
 
 		local extrusion_count = 0
 		local extrusion_target = meta:get_int("extrusion")
+		local build_only_dug = false
 		if extrusion_target == nil or extrusion_target < 1 or extrusion_target > 100 then
+			if extrusion_target == 0 then
+				build_only_dug = true
+			end
 			extrusion_target = 1 -- failsafe
 		end
 		local built_count = 0
@@ -415,6 +428,9 @@ minetest.register_node("digtron:builder", {
 
 			local oldnode = minetest.get_node(buildpos)
 			local dug_this_cycle = nodes_dug:get(buildpos.x, buildpos.y, buildpos.z) == true
+			if not dug_this_cycle and build_only_dug then
+				return built_count
+			end
 
 			if not digtron.config.uses_resources then
 				local _, success = digtron.item_place_node(item_stack, player, buildpos, build_facing, dug_this_cycle)
