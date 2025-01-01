@@ -182,6 +182,16 @@ local function move_layout_digging(layout, pos, dir,
 	-- if the player is standing within the array or next to it, move him too.
 	local move_player = is_player_inside_layout(layout, clicker)
 
+	--move the array
+	layout:move_layout_image(dir)
+	if not layout:write_layout_image(clicker) then
+		return pos, "unrecoverable write_layout_image error", 1
+	end
+	local newpos = vector.add(pos, dir)
+	if move_player then
+		add_object_pos(clicker, dir)
+	end
+
 	-- damage the weak flesh
 	if digtron.config.damage_hp > 0 and layout.diggers ~= nil then
 		for _, location in pairs(layout.diggers) do
@@ -195,16 +205,6 @@ local function move_layout_digging(layout, pos, dir,
 				table.insert(items_dropped, itemstack)
 			end
 		end
-	end
-
-	--move the array
-	layout:move_layout_image(dir)
-	if not layout:write_layout_image(clicker) then
-		return pos, "unrecoverable write_layout_image error", 1
-	end
-	local newpos = vector.add(pos, dir)
-	if move_player then
-		add_object_pos(clicker, dir)
 	end
 
 	-- store or drop the products of the digger heads
