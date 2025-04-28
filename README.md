@@ -36,3 +36,4 @@ The Digtron mod depends on the default mod and [fakelib](https://content.minetes
 * [hopper](https://forum.minetest.net/viewtopic.php?&t=12379), a different mod for inserting into and extracting from Digtron inventories. Note that only [the most recent version of hopper is Digtron-capable,](https://github.com/minetest-mods/hopper) earlier versions lack a suitable API.
 * [awards](https://forum.minetest.net/viewtopic.php?&t=4870), a mod that adds achievements to the game. Over thirty Digtron-specific achievements are included.
 * [technic](https://forum.minetest.net/viewtopic.php?f=11&t=2538), which adds rechargeable batteries and power cables to the game that Digtron can use instead of fuel.
+* [TechAge](https://forum.minetest.net/viewtopic.php?f=9&t=24619), a mod that adds technology stages where the player advances from the water mill and steam engine into future technology. It includes a rechargeable Digtron Battery.
