@@ -262,17 +262,14 @@ digtron.tap_batteries = function(battery_positions, target, test)
 		end
 
 		for _, itemstack in pairs(invlist) do
-			local meta = minetest.deserialize(itemstack:get_metadata())
-			if (meta ~= nil) then
-				local power_available = math.floor(meta.charge / digtron.config.power_ratio)
+			if minetest.global_exists("technic") then
+				local power_available = math.floor(technic.get_charge(itemstack) / digtron.config.power_ratio)
 				if power_available ~= 0 then
 					local actual_burned = power_available -- we just take all we have from the battery, since they aren't stackable
 					-- don't bother recording the items if we're just testing, nothing is actually being removed.
 					if test ~= true then
 						-- since we are taking everything, the wear and charge can both be set to 0
-						itemstack:set_wear(0)
-						meta.charge = 0
-						itemstack:set_metadata(minetest.serialize(meta))
+						technic.set_charge(itemstack, 0)
 					end
 					current_burned = current_burned + actual_burned
 				end
