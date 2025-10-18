@@ -364,6 +364,7 @@ minetest.register_node("digtron:builder", {
 		local build_facing = tonumber(meta:get_int("build_facing"))
 		local facing = minetest.get_node(pos).param2
 		local buildpos = digtron.find_new_pos(pos, facing)
+		local protection_bypass = minetest.check_player_privs(player, "protection_bypass")
 
 		if (buildpos[controlling_coordinate] + meta:get_int("offset")) % meta:get_int("period") ~= 0 then
 			return 0
@@ -386,6 +387,18 @@ minetest.register_node("digtron:builder", {
 		while extrusion_count < extrusion_target do
 			if not digtron.can_build_to(buildpos, protected_nodes, nodes_dug) then
 				return built_count
+			end
+
+			-- When extruding beyond the first node, we may be out of area
+			-- explored by `DigtronLayout`. `can_build_to` is not able to
+			-- distinguish unknown nodes from unprotected ones.
+			-- We have to check for protection ourselves.
+			if extrusion_count > 0 then
+				if minetest.is_protected(buildpos, player:get_player_name()) and
+					not protection_bypass
+				then
+					return built_count
+				end
 			end
 
 			local oldnode = minetest.get_node(buildpos)
