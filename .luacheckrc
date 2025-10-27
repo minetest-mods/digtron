@@ -21,6 +21,7 @@ read_globals = {
 	"doc",
 	"intllib",
 	"fakelib",
+	"wrench"
 }
 
 files = {
