@@ -142,6 +142,9 @@ minetest.register_node("digtron:digger", {
 	execute_dig = function(pos, protected_nodes, nodes_dug, _, _, player)
 		local facing = minetest.get_node(pos).param2
 		local digpos = digtron.find_new_pos(pos, facing)
+		if nodes_dug:get_pos(digpos) then
+			return 0
+		end
 
 		if protected_nodes:get(digpos.x, digpos.y, digpos.z) then
 			return 0
@@ -225,6 +228,9 @@ minetest.register_node("digtron:intermittent_digger", {
 
 		local facing = minetest.get_node(pos).param2
 		local digpos = digtron.find_new_pos(pos, facing)
+		if nodes_dug:get_pos(digpos) then
+			return 0
+		end
 
 		if protected_nodes:get(digpos.x, digpos.y, digpos.z) then
 			return 0
@@ -287,6 +293,9 @@ minetest.register_node("digtron:soft_digger", {
 	execute_dig = function(pos, protected_nodes, nodes_dug, _, _, player)
 		local facing = minetest.get_node(pos).param2
 		local digpos = digtron.find_new_pos(pos, facing)
+		if nodes_dug:get_pos(digpos) then
+			return 0
+		end
 
 		if protected_nodes:get(digpos.x, digpos.y, digpos.z) then
 			return 0
@@ -352,6 +361,9 @@ minetest.register_node("digtron:intermittent_soft_digger", {
 
 		local facing = minetest.get_node(pos).param2
 		local digpos = digtron.find_new_pos(pos, facing)
+		if nodes_dug:get_pos(digpos) then
+			return 0
+		end
 
 		if protected_nodes:get(digpos.x, digpos.y, digpos.z) then
 			return 0
@@ -427,6 +439,9 @@ minetest.register_node("digtron:dual_digger", {
 		local facing = minetest.get_node(pos).param2
 		local digpos = digtron.find_new_pos(pos, facing)
 		local digdown = digtron.find_new_pos_downward(pos, facing)
+		if nodes_dug:get_pos(digpos) or nodes_dug:get_pos(digdown) then
+			return 0
+		end
 
 		local items = {}
 		local cost = 0
@@ -509,6 +524,9 @@ minetest.register_node("digtron:dual_soft_digger", {
 		local facing = minetest.get_node(pos).param2
 		local digpos = digtron.find_new_pos(pos, facing)
 		local digdown = digtron.find_new_pos_downward(pos, facing)
+		if nodes_dug:get_pos(digpos) or nodes_dug:get_pos(digdown) then
+			return 0
+		end
 
 		local items = {}
 		local cost = 0
