@@ -439,14 +439,13 @@ minetest.register_node("digtron:dual_digger", {
 		local facing = minetest.get_node(pos).param2
 		local digpos = digtron.find_new_pos(pos, facing)
 		local digdown = digtron.find_new_pos_downward(pos, facing)
-		if nodes_dug:get_pos(digpos) or nodes_dug:get_pos(digdown) then
-			return 0
-		end
 
 		local items = {}
 		local cost = 0
 
-		if protected_nodes:get(digpos.x, digpos.y, digpos.z) ~= true then
+		if protected_nodes:get(digpos.x, digpos.y, digpos.z) ~= true
+			and not nodes_dug:get_pos(digpos)
+		then
 			local forward_cost, forward_items = digtron.mark_diggable(digpos, nodes_dug, player)
 			if forward_items ~= nil then
 				for _, item in pairs(forward_items) do
@@ -454,6 +453,10 @@ minetest.register_node("digtron:dual_digger", {
 				end
 			end
 			cost = cost + forward_cost
+		end
+			
+		if nodes_dug:get_pos(digdown) then
+			return cost, items
 		end
 		if protected_nodes:get(digdown.x, digdown.y, digdown.z) ~= true then
 			local down_cost, down_items = digtron.mark_diggable(digdown, nodes_dug, player)
@@ -531,7 +534,10 @@ minetest.register_node("digtron:dual_soft_digger", {
 		local items = {}
 		local cost = 0
 
-		if protected_nodes:get(digpos.x, digpos.y, digpos.z) ~= true and digtron.is_soft_material(digpos) then
+		if protected_nodes:get(digpos.x, digpos.y, digpos.z) ~= true
+			and not nodes_dug:get_pos(digpos)
+			and digtron.is_soft_material(digpos)
+		then
 			local forward_cost, forward_items = digtron.mark_diggable(digpos, nodes_dug, player)
 			if forward_items ~= nil then
 				for _, item in pairs(forward_items) do
@@ -539,6 +545,10 @@ minetest.register_node("digtron:dual_soft_digger", {
 				end
 			end
 			cost = cost + forward_cost
+		end
+			
+		if nodes_dug:get_pos(digdown) then
+			return cost, items
 		end
 		if protected_nodes:get(digdown.x, digdown.y, digdown.z) ~= true and digtron.is_soft_material(digdown) then
 			local down_cost, down_items = digtron.mark_diggable(digdown, nodes_dug, player)
