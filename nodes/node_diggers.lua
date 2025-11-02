@@ -454,7 +454,7 @@ minetest.register_node("digtron:dual_digger", {
 			end
 			cost = cost + forward_cost
 		end
-			
+
 		if nodes_dug:get_pos(digdown) then
 			return cost, items
 		end
@@ -546,7 +546,7 @@ minetest.register_node("digtron:dual_soft_digger", {
 			end
 			cost = cost + forward_cost
 		end
-			
+	
 		if nodes_dug:get_pos(digdown) then
 			return cost, items
 		end
