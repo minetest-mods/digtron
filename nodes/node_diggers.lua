@@ -142,8 +142,7 @@ minetest.register_node("digtron:digger", {
 	execute_dig = function(pos, protected_nodes, nodes_dug, _, _, player)
 		local facing = minetest.get_node(pos).param2
 		local digpos = digtron.find_new_pos(pos, facing)
-
-		if protected_nodes:get(digpos.x, digpos.y, digpos.z) then
+		if not digtron.can_dig_pos(digpos, protected_nodes, nodes_dug) then
 			return 0
 		end
 
@@ -225,8 +224,7 @@ minetest.register_node("digtron:intermittent_digger", {
 
 		local facing = minetest.get_node(pos).param2
 		local digpos = digtron.find_new_pos(pos, facing)
-
-		if protected_nodes:get(digpos.x, digpos.y, digpos.z) then
+		if not digtron.can_dig_pos(digpos, protected_nodes, nodes_dug) then
 			return 0
 		end
 
@@ -287,8 +285,7 @@ minetest.register_node("digtron:soft_digger", {
 	execute_dig = function(pos, protected_nodes, nodes_dug, _, _, player)
 		local facing = minetest.get_node(pos).param2
 		local digpos = digtron.find_new_pos(pos, facing)
-
-		if protected_nodes:get(digpos.x, digpos.y, digpos.z) then
+		if not digtron.can_dig_pos(digpos, protected_nodes, nodes_dug) then
 			return 0
 		end
 
@@ -352,8 +349,7 @@ minetest.register_node("digtron:intermittent_soft_digger", {
 
 		local facing = minetest.get_node(pos).param2
 		local digpos = digtron.find_new_pos(pos, facing)
-
-		if protected_nodes:get(digpos.x, digpos.y, digpos.z) then
+		if not digtron.can_dig_pos(digpos, protected_nodes, nodes_dug) then
 			return 0
 		end
 
@@ -431,7 +427,7 @@ minetest.register_node("digtron:dual_digger", {
 		local items = {}
 		local cost = 0
 
-		if protected_nodes:get(digpos.x, digpos.y, digpos.z) ~= true then
+		if digtron.can_dig_pos(digpos, protected_nodes, nodes_dug) then
 			local forward_cost, forward_items = digtron.mark_diggable(digpos, nodes_dug, player)
 			if forward_items ~= nil then
 				for _, item in pairs(forward_items) do
@@ -440,15 +436,18 @@ minetest.register_node("digtron:dual_digger", {
 			end
 			cost = cost + forward_cost
 		end
-		if protected_nodes:get(digdown.x, digdown.y, digdown.z) ~= true then
-			local down_cost, down_items = digtron.mark_diggable(digdown, nodes_dug, player)
-			if down_items ~= nil then
-				for _, item in pairs(down_items) do
-					table.insert(items, item)
-				end
-			end
-			cost = cost + down_cost
+
+		if not digtron.can_dig_pos(digdown, protected_nodes, nodes_dug) then
+			return cost, items
 		end
+
+		local down_cost, down_items = digtron.mark_diggable(digdown, nodes_dug, player)
+		if down_items ~= nil then
+			for _, item in pairs(down_items) do
+				table.insert(items, item)
+			end
+		end
+		cost = cost + down_cost
 
 		return cost, items
 	end,
@@ -509,11 +508,16 @@ minetest.register_node("digtron:dual_soft_digger", {
 		local facing = minetest.get_node(pos).param2
 		local digpos = digtron.find_new_pos(pos, facing)
 		local digdown = digtron.find_new_pos_downward(pos, facing)
+		if nodes_dug:get_pos(digpos) or nodes_dug:get_pos(digdown) then
+			return 0
+		end
 
 		local items = {}
 		local cost = 0
 
-		if protected_nodes:get(digpos.x, digpos.y, digpos.z) ~= true and digtron.is_soft_material(digpos) then
+		if digtron.can_dig_pos(digpos, protected_nodes, nodes_dug)
+			and digtron.is_soft_material(digpos)
+		then
 			local forward_cost, forward_items = digtron.mark_diggable(digpos, nodes_dug, player)
 			if forward_items ~= nil then
 				for _, item in pairs(forward_items) do
@@ -522,7 +526,12 @@ minetest.register_node("digtron:dual_soft_digger", {
 			end
 			cost = cost + forward_cost
 		end
-		if protected_nodes:get(digdown.x, digdown.y, digdown.z) ~= true and digtron.is_soft_material(digdown) then
+
+		if not digtron.can_dig_pos(digdown, protected_nodes, nodes_dug) then
+			return cost, items
+		end
+
+		if digtron.is_soft_material(digdown) then
 			local down_cost, down_items = digtron.mark_diggable(digdown, nodes_dug, player)
 			if down_items ~= nil then
 				for _, item in pairs(down_items) do
@@ -541,3 +550,4 @@ minetest.register_node("digtron:dual_soft_digger", {
 		digtron.damage_creatures(player, pos, digtron.find_new_pos_downward(pos, facing), damage_hp_half, items_dropped)
 	end,
 })
+

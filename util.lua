@@ -111,6 +111,10 @@ digtron.can_build_to = function(pos, protected_nodes, dug_nodes)
 	return false
 end
 
+digtron.can_dig_pos = function(pos, protected_nodes, dug_nodes)
+	return not (protected_nodes:get_pos(pos) or dug_nodes:get_pos(pos))
+end
+
 digtron.can_move_to = function(pos, protected_nodes, dug_nodes)
 	-- Same as can_build_to, but also checks if the current node is part of the digtron.
 	-- this allows us to disregard obstructions that *will* move out of the way.
@@ -460,3 +464,4 @@ end
 digtron.protected_allow_metadata_inventory_take = function(pos, _, _, stack, player)
 	return digtron.check_protected_and_record(pos, player) and 0 or stack:get_count()
 end
+
