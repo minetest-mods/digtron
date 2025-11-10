@@ -68,6 +68,7 @@ digtron.mark_diggable = function(pos, nodes_dug, player)
 			string.format("Digtron encountered unknown node %s at (%d, %d, %d), not digging", target.name, pos.x, pos.y, pos.z))
 	elseif (targetdef.diggable or targetdef.buildable_to) and
 		(targetdef.can_dig == nil or targetdef.can_dig(pos, player)) and
+		targetdef.on_dig == minetest.nodedef_default.on_dig and
 		target.name ~= "air" then
 		nodes_dug:set(pos.x, pos.y, pos.z, true)
 		local in_known_group = false
