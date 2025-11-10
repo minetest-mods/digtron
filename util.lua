@@ -63,32 +63,35 @@ digtron.mark_diggable = function(pos, nodes_dug, player)
 	end
 
 	local targetdef = minetest.registered_nodes[target.name]
-	if targetdef == nil or targetdef.can_dig == nil or targetdef.can_dig(pos, player) then
+	if targetdef == nil then
+		minetest.log("warning",
+			string.format("Digtron encountered unknown node %s at (%d, %d, %d), not digging", target.name, pos.x, pos.y, pos.z))
+	elseif (targetdef.diggable or targetdef.buildable_to) and
+		(targetdef.can_dig == nil or targetdef.can_dig(pos, player)) and
+		target.name ~= "air" then
 		nodes_dug:set(pos.x, pos.y, pos.z, true)
-		if target.name ~= "air" then
-			local in_known_group = false
-			local material_cost = 0
+		local in_known_group = false
+		local material_cost = 0
 
-			if digtron.config.uses_resources then
-				if minetest.get_item_group(target.name, "cracky") ~= 0 then
-					in_known_group = true
-					material_cost = math.max(material_cost, digtron.config.dig_cost_cracky)
-				end
-				if minetest.get_item_group(target.name, "crumbly") ~= 0 then
-					in_known_group = true
-					material_cost = math.max(material_cost, digtron.config.dig_cost_crumbly)
-				end
-				if minetest.get_item_group(target.name, "choppy") ~= 0 then
-					in_known_group = true
-					material_cost = math.max(material_cost, digtron.config.dig_cost_choppy)
-				end
-				if not in_known_group then
-					material_cost = digtron.config.dig_cost_default
-				end
+		if digtron.config.uses_resources then
+			if minetest.get_item_group(target.name, "cracky") ~= 0 then
+				in_known_group = true
+				material_cost = math.max(material_cost, digtron.config.dig_cost_cracky)
 			end
-
-			return material_cost, minetest.get_node_drops(target.name, "")
+			if minetest.get_item_group(target.name, "crumbly") ~= 0 then
+				in_known_group = true
+				material_cost = math.max(material_cost, digtron.config.dig_cost_crumbly)
+			end
+			if minetest.get_item_group(target.name, "choppy") ~= 0 then
+				in_known_group = true
+				material_cost = math.max(material_cost, digtron.config.dig_cost_choppy)
+			end
+			if not in_known_group then
+				material_cost = digtron.config.dig_cost_default
+			end
 		end
+
+		return material_cost, minetest.get_node_drops(target.name, "")
 	end
 	return 0
 end
