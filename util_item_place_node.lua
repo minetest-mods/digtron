@@ -49,8 +49,8 @@ end
 local function copy_pointed_thing(pointed_thing)
 	return {
 		type  = pointed_thing.type,
-		above = vector.new(pointed_thing.above),
-		under = vector.new(pointed_thing.under),
+		above = vector.copy(pointed_thing.above),
+		under = vector.copy(pointed_thing.under),
 	}
 end
 
@@ -84,8 +84,8 @@ digtron.item_place_node = function(itemstack, placer, place_to, param2)
 
 	local pointed_thing = {}
 	pointed_thing.type = "node"
-	pointed_thing.above = {x=place_to.x, y=place_to.y, z=place_to.z}
-	pointed_thing.under = {x=place_to.x, y=place_to.y - 1, z=place_to.z}
+	pointed_thing.above = vector.copy(place_to)
+	pointed_thing.under = vector.offset(place_to, 0, - 1, 0)
 
 	-- Handle node-specific on_place calls as best we can.
 	if def.on_place and def.on_place ~= minetest.nodedef_default.on_place and digtron.whitelisted_on_place(item_name) then
@@ -99,7 +99,9 @@ digtron.item_place_node = function(itemstack, placer, place_to, param2)
 		-- though note that some mods do "creative_mode" handling within their own on_place methods, which makes it impossible for Digtron
 		-- to know what to do in that case - if you're in creative_mode Digtron will place such items but it will think it failed and not
 		-- deduct them from inventory no matter what Digtron's settings are. Unfortunate, but not very harmful and I have no workaround.
-		local returnstack, success = def.on_place(ItemStack(itemstack), placer, pointed_thing)
+		-- also copy pointed_thing
+		local pointed_thing_copy = copy_pointed_thing(pointed_thing)
+		local returnstack, success = def.on_place(ItemStack(itemstack), placer, pointed_thing_copy)
 		if returnstack and returnstack:get_count() < itemstack:get_count() then success = true end -- some mods neglect to return a success condition
 		if success then
 			-- Override the param2 value to force it to be what Digtron wants
@@ -150,7 +152,7 @@ digtron.item_place_node = function(itemstack, placer, place_to, param2)
 	-- Run callback, using genuine player for per-node definition.
 	if def.after_place_node then
 		-- Deepcopy place_to and pointed_thing because callback can modify it
-		local place_to_copy = {x=place_to.x, y=place_to.y, z=place_to.z}
+		local place_to_copy = vector.new(place_to)
 		local pointed_thing_copy = copy_pointed_thing(pointed_thing)
 		if def.after_place_node(place_to_copy, placer, itemstack,
 				pointed_thing_copy) then
@@ -164,7 +166,7 @@ digtron.item_place_node = function(itemstack, placer, place_to, param2)
 	-- to update it here.
 	for _, callback in ipairs(minetest.registered_on_placenodes) do
 		-- Deepcopy pos, node and pointed_thing because callback can modify them
-		local place_to_copy = {x=place_to.x, y=place_to.y, z=place_to.z}
+		local place_to_copy = vector.new(place_to)
 		local newnode_copy = {name=newnode.name, param1=newnode.param1, param2=newnode.param2}
 		local oldnode_copy = {name=oldnode.name, param1=oldnode.param1, param2=oldnode.param2}
 		local pointed_thing_copy = copy_pointed_thing(pointed_thing)

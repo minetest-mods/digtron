@@ -69,7 +69,7 @@ local store_digtron = function(pos, clicker, loaded_node_name, protected)
 
 		for _, callback in ipairs(minetest.registered_on_dignodes) do
 			-- Copy pos and node because callback can modify them
-			local pos_copy = {x=old_pos.x, y=old_pos.y, z=old_pos.z}
+			local pos_copy = vector.copy(old_pos)
 			local oldnode_copy = {name=old_node.name, param1=old_node.param1, param2=old_node.param2}
 			callback(pos_copy, oldnode_copy, clicker)
 		end
