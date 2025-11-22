@@ -5,7 +5,7 @@ digtron.DigtronLayout.__index = digtron.DigtronLayout
 -- Creation
 
 local get_node_image = function(pos, node)
-	local node_image = {node=node, pos={x=pos.x, y=pos.y, z=pos.z}}
+	local node_image = {node=node, pos=vector.copy(pos)}
 	local node_def = digtron.get_nodedef(node.name)
 	node_image.paramtype2 = node_def.paramtype2
 	local meta = minetest.get_meta(pos)
@@ -59,7 +59,7 @@ function digtron.DigtronLayout.create(pos, player)
 	self.old_pos_pointset = digtron.Pointset.create() -- For tracking original location of nodes if we do transformations on the Digtron
 	self.nodes_dug = digtron.Pointset.create() -- For tracking adjacent nodes that will have been dug by digger heads in future
 	self.contains_protected_node = false -- used to indicate if at least one node in this digtron array is protected from the player.
-	self.controller = {x=pos.x, y=pos.y, z=pos.z} 	--Make a deep copy of the pos parameter just in case the calling code wants to play silly buggers with it
+	self.controller = vector.copy(pos) 	--Make a deep copy of the pos parameter just in case the calling code wants to play silly buggers with it
 
 	-- We never visit the source node, so insert it into the all table a priori.
 	-- Revisit this design decision if a controller node is created that contains fuel or inventory or whatever.
@@ -397,7 +397,7 @@ local node_callbacks = function(player)
 
 			for _, callback in ipairs(minetest.registered_on_dignodes) do
 				-- Copy pos and node because callback can modify them
-				local pos_copy = {x=old_pos.x, y=old_pos.y, z=old_pos.z}
+				local pos_copy = vector.copy(old_pos)
 				local oldnode_copy = {name=old_node.name, param1=old_node.param1, param2=old_node.param2}
 				callback(pos_copy, oldnode_copy, digtron.fake_player)
 			end
@@ -417,7 +417,7 @@ local node_callbacks = function(player)
 
 			for _, callback in ipairs(minetest.registered_on_placenodes) do
 				-- Copy pos and node because callback can modify them
-				local pos_copy = {x=new_pos.x, y=new_pos.y, z=new_pos.z}
+				local pos_copy = vector.copy(new_pos)
 				local oldnode_copy = {name=old_node.name, param1=old_node.param1, param2=old_node.param2}
 				local newnode_copy = {name=new_node.name, param1=new_node.param1, param2=new_node.param2}
 				callback(pos_copy, newnode_copy, digtron.fake_player, oldnode_copy)

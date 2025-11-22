@@ -425,34 +425,34 @@ end
 digtron.show_offset_markers = function(pos, offset, period)
 	local buildpos = digtron.find_new_pos(pos, minetest.get_node(pos).param2)
 	local x_pos = math.floor((buildpos.x+offset)/period)*period - (offset or 0)
-	safe_add_entity({x=x_pos, y=buildpos.y, z=buildpos.z}, "digtron:marker")
+	safe_add_entity(vector.new(x_pos, buildpos.y, buildpos.z), "digtron:marker")
 	if x_pos >= buildpos.x then
-		safe_add_entity({x=x_pos - period, y=buildpos.y, z=buildpos.z}, "digtron:marker")
+		safe_add_entity(vector.new(x_pos - period, buildpos.y, buildpos.z), "digtron:marker")
 	end
 	if x_pos <= buildpos.x then
-		safe_add_entity({x=x_pos + period, y=buildpos.y, z=buildpos.z}, "digtron:marker")
+		safe_add_entity(vector.new(x_pos + period, buildpos.y, buildpos.z), "digtron:marker")
 	end
 
 	local y_pos = math.floor((buildpos.y+offset)/period)*period - offset
-	safe_add_entity({x=buildpos.x, y=y_pos, z=buildpos.z}, "digtron:marker_vertical")
+	safe_add_entity(vector.new(buildpos.x, y_pos, buildpos.z), "digtron:marker_vertical")
 	if y_pos >= buildpos.y then
-		safe_add_entity({x=buildpos.x, y=y_pos - period, z=buildpos.z}, "digtron:marker_vertical")
+		safe_add_entity(vector.new(buildpos.x, y_pos - period, buildpos.z), "digtron:marker_vertical")
 	end
 	if y_pos <= buildpos.y then
-		safe_add_entity({x=buildpos.x, y=y_pos + period, z=buildpos.z}, "digtron:marker_vertical")
+		safe_add_entity(vector.new(buildpos.x, y_pos + period, buildpos.z), "digtron:marker_vertical")
 	end
 
 	local z_pos = math.floor((buildpos.z+offset)/period)*period - offset
 
-	local entity = safe_add_entity({x=buildpos.x, y=buildpos.y, z=z_pos}, "digtron:marker")
+	local entity = safe_add_entity(vector.new(buildpos.x, buildpos.y, z_pos), "digtron:marker")
 	if entity ~= nil then entity:set_yaw(1.5708) end
 
 	if z_pos >= buildpos.z then
-		entity = safe_add_entity({x=buildpos.x, y=buildpos.y, z=z_pos - period}, "digtron:marker")
+		entity = safe_add_entity(vector.new(buildpos.x, buildpos.y, z_pos - period), "digtron:marker")
 		if entity ~= nil then entity:set_yaw(1.5708) end
 	end
 	if z_pos <= buildpos.z then
-		entity = safe_add_entity({x=buildpos.x, y=buildpos.y, z=z_pos + period}, "digtron:marker")
+		entity = safe_add_entity(vector.new(buildpos.x, buildpos.y, z_pos + period), "digtron:marker")
 		if entity ~= nil then entity:set_yaw(1.5708) end
 	end
 end

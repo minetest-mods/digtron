@@ -336,7 +336,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	if not layout:write_layout_image(clicker) then
 		return pos, "unrecoverable write_layout_image error", 1
 	end
-	local oldpos = {x=pos.x, y=pos.y, z=pos.z}
+	local oldpos = vector.copy(pos)
 	pos = vector.add(pos, dir)
 	meta = minetest.get_meta(pos)
 	if move_player then
@@ -430,7 +430,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 		end
 		-- all of the digtron's nodes wind up in nodes_dug, so this is an ideal place to stick
 		-- a check to make sand fall after the digtron has passed.
-		minetest.check_for_falling({x=node_to_dig.x, y=node_to_dig.y+1, z=node_to_dig.z})
+		minetest.check_for_falling(vector.offset(node_to_dig, 0, 1, 0))
 		node_to_dig, whether_to_dig = layout.nodes_dug:pop()
 	end
 	return pos, status_text, 0
@@ -595,7 +595,7 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 	if not layout:write_layout_image(clicker) then
 		return pos, "unrecoverable write_layout_image error", 1
 	end
-	local oldpos = {x=pos.x, y=pos.y, z=pos.z}
+	local oldpos = vector.copy(pos)
 	pos = vector.add(pos, dir)
 	meta = minetest.get_meta(pos)
 	if move_player then

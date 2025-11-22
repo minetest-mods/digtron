@@ -137,7 +137,7 @@ minetest.register_node("digtron:duplicator", {
 				return
 			end
 
-			layout.all[1] = {node={name=target_node.name}, meta={fields = {}, inventory = {}}, pos={x=pos.x, y=pos.y, z=pos.z}} -- replace the duplicator's image with the empty crate image
+			layout.all[1] = {node={name=target_node.name}, meta={fields = {}, inventory = {}}, pos=vector.copy(pos)} -- replace the duplicator's image with the empty crate image
 
 			-- count required nodes, skipping node 1 since it's the crate and we already know it's present in-world
 			local required_count = {}
