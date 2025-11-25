@@ -6,6 +6,23 @@ digtron.auto_controller_colorize = "#88000030"
 digtron.pusher_controller_colorize = "#00880030"
 digtron.soft_digger_colorize = "#88880030"
 
+if not vector.copy then
+	error("[digtron] Your Luanti/Minetest version is too old. Please update to 5.5.0 or newer.")
+end
+
+digtron.set_inventory_action_loggers = function(def, name)
+	default.set_inventory_action_loggers(def, name)
+	return def
+end
+
+if not default.set_inventory_action_loggers then
+	minetest.log("error", "[digtron] Your Minetest Game (default mod) version seems very old. Digtron may not work correctly. Please consider updating to a current version.")
+
+	digtron.set_inventory_action_loggers = function(def)
+		return def
+	end
+end
+
 -- A global dictionary is used here so that other substitutions can be added easily by other mods, if necessary
 digtron.builder_read_item_substitutions = {
 	["default:torch_ceiling"] = "default:torch",
