@@ -115,6 +115,4 @@ local def = {
 	after_dig_node = (function() if minetest.get_modpath("pipeworks")then return pipeworks.after_dig end end)()
 }
 
-default.set_inventory_action_loggers(def, "digtron battery holder")
-
-minetest.register_node("digtron:battery_holder", def)
+minetest.register_node("digtron:battery_holder", digtron.set_inventory_action_loggers(def))

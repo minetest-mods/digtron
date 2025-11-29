@@ -294,7 +294,7 @@ minetest.register_node("digtron:auto_controller", {
 
 			offset = offset or 0
 			local newpos = pos
-			local markerpos = {x=newpos.x, y=newpos.y, z=newpos.z}
+			local markerpos = vector.copy(newpos)
 			local x_pos = math.floor((newpos[controlling_coordinate]+offset)/slope)*slope - offset
 			markerpos[controlling_coordinate] = x_pos
 			minetest.add_entity(markerpos, "digtron:marker_vertical")
