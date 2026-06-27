@@ -126,7 +126,7 @@ local function get_nodedef_callback_at(group_name, pos, callback_name)
 	end
 
 	core.log(
-		("Note '%s' has group '%s' but is missing '%s' method! This is an error in mod programming, file a bug.")
+		("digtron: Node '%s' has group '%s' but is missing '%s' method! This is an error in mod programming, file a bug.")
 		:format(node.name, group_name, callback_name)
 	)
 	return nil
