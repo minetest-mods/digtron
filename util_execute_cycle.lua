@@ -71,11 +71,11 @@ local function neighbour_test(layout, status_text, dir)
 end
 
 -- Checks if a player is within a layout's extents.
-local function move_player_test(layout, player)
+local function is_player_inside_layout(layout, player)
 	local player_pos = player:get_pos()
-	if player_pos.x >= layout.extents_min_x - 1 and player_pos.x <= layout.extents_max_x + 1 and
-	   player_pos.y >= layout.extents_min_y - 1 and player_pos.y <= layout.extents_max_y + 1 and
-	   player_pos.z >= layout.extents_min_z - 1 and player_pos.z <= layout.extents_max_z + 1 then
+	if player_pos.x >= layout.extents_min.x - 1 and player_pos.x <= layout.extents_max.x + 1 and
+	   player_pos.y >= layout.extents_min.y - 1 and player_pos.y <= layout.extents_max.y + 1 and
+	   player_pos.z >= layout.extents_min.z - 1 and player_pos.z <= layout.extents_max.z + 1 then
 		return true
 	end
 	return false
@@ -117,6 +117,148 @@ else
 	end
 end
 
+local function get_nodedef_callback_at(group_name, pos, callback_name)
+	local node = core.get_node(pos)
+	local def = core.registered_nodes[node.name] or {}
+	local func = def[callback_name]
+	if func then
+		return func, node
+	end
+
+	core.log(
+		("digtron: Node '%s' has group '%s' but is missing '%s' method! This is an error in mod programming, file a bug.")
+		:format(node.name, group_name, callback_name)
+	)
+	return nil
+end
+
+local function do_execute_dig(layout, dir, controlling_axis, is_lateral_dig, clicker)
+	assert(type(controlling_axis) == "string")
+	assert(type(is_lateral_dig) == "boolean")
+
+	local items_dropped = {}
+	local digging_fuel_cost = 0
+	local particle_systems = {}
+
+	-- execute the execute_dig method on all digtron components that have one
+	-- This builds a set of nodes that will be dug and returns a list of products that will be generated
+	-- but doesn't actually dig the nodes yet. That comes later.
+	-- If we dug them now, sand would fall and some digtron nodes would die.
+	for _, location in pairs(layout.diggers or {}) do
+		local func, node = get_nodedef_callback_at("digger", location.pos, "execute_dig")
+		if func then
+			local fuel_cost, dropped = func(location.pos, layout.protected, layout.nodes_dug, controlling_axis, is_lateral_dig, clicker)
+			if dropped ~= nil then
+				for _, itemname in pairs(dropped) do
+					table.insert(items_dropped, itemname)
+				end
+				if digtron.config.particle_effects then
+					table.insert(particle_systems, dig_dust(vector.add(location.pos, dir), node.param2))
+				end
+			end
+			digging_fuel_cost = digging_fuel_cost + fuel_cost
+		end
+	end
+
+	return items_dropped, digging_fuel_cost, particle_systems
+end
+
+local function move_layout_digging(layout, pos, dir,
+		controlling_axis, clicker, items_dropped)
+
+	-- All tests passed, ready to go for real!
+	core.sound_play("construction", {gain=1.0, pos=pos})
+
+	-- if the player is standing within the array or next to it, move him too.
+	local move_player = is_player_inside_layout(layout, clicker)
+
+	-- damage the weak flesh
+	if digtron.config.damage_hp > 0 and layout.diggers ~= nil then
+		for _, location in pairs(layout.diggers) do
+			local func = get_nodedef_callback_at(nil, location.pos, "damage_creatures")
+			if func then
+				func(clicker, location.pos, controlling_axis, items_dropped)
+			end
+		end
+	end
+
+	--move the array
+	layout:move_layout_image(dir)
+	if not layout:write_layout_image(clicker) then
+		return pos, "unrecoverable write_layout_image error", 1
+	end
+	local newpos = vector.add(pos, dir)
+	if move_player then
+		add_object_pos(clicker, dir)
+	end
+
+	-- store or drop the products of the digger heads
+	for _, itemname in pairs(items_dropped) do
+		digtron.place_in_inventory(itemname, layout.inventories, pos)
+	end
+	digtron.award_item_dug(items_dropped, clicker) -- Achievements mod hook
+
+	return newpos, "", 0 -- success
+end
+
+local function burn_fuel(layout, pos, fuel_burning, fuel_cost, particle_systems, exhaust)
+	-- actually burn the fuel needed
+	fuel_burning = fuel_burning - fuel_cost
+	if particle_systems and exhaust == 1 then
+		table.insert(particle_systems, burn_smoke(pos, fuel_cost))
+	end
+	if fuel_burning < 0 then
+		-- we tap into the batteries either way
+		fuel_burning = fuel_burning + digtron.tap_batteries(layout.battery_holders, -fuel_burning, false)
+		if exhaust == 1 then
+			-- but we burn coal only if we must (exhaust = flag)
+			fuel_burning = fuel_burning + digtron.burn(layout.fuelstores, -fuel_burning, false)
+		end
+	end
+
+	local meta = core.get_meta(pos)
+	meta:set_float("fuel_burning", fuel_burning)
+	meta:set_int("on_coal", exhaust)
+
+	return fuel_burning
+end
+
+local function remove_nodes(nodes_pointset, clicker, particle_systems, do_check_for_falling)
+	-- Eyecandy
+	for _, particles in pairs(particle_systems) do
+		core.add_particlespawner(particles)
+	end
+
+	-- finally, dig out any nodes remaining to be dug. Some of these will have had their flag revoked because
+	-- a builder put something there or because they're another digtron node.
+	local node_to_dig, whether_to_dig = nodes_pointset:pop()
+	while node_to_dig ~= nil do
+		if whether_to_dig == true then
+			core.log("action", string.format(
+				"%s uses Digtron to dig %s at (%d, %d, %d)", clicker:get_player_name(), minetest.get_node(node_to_dig).name,
+				node_to_dig.x, node_to_dig.y, node_to_dig.z)
+			)
+			core.remove_node(node_to_dig)
+		end
+		if do_check_for_falling then
+			-- all of the digtron's nodes wind up in layout.nodes_dug, so this is an ideal place to stick
+			-- a check to make sand fall after the digtron has passed.
+			core.check_for_falling(vector.offset(node_to_dig, 0, 1, 0))
+			node_to_dig, whether_to_dig = nodes_pointset:pop()
+		end
+	end
+end
+
+local function set_obstructed(pos, be_noisy)
+	-- mark this node as waiting, will clear this flag in digtron.config.cycle_time seconds
+	core.get_meta(pos):set_string("waiting", "true")
+	core.get_node_timer(pos):start(digtron.config.cycle_time)
+	if be_noisy then
+		core.sound_play("squeal", {gain=1.0, pos=pos})
+		core.sound_play("buzzer", {gain=0.5, pos=pos})
+	end
+end
+
 -- returns newpos, status string, and a return code indicating why the method returned (so the auto-controller can keep trying if it's due to unloaded nodes)
 -- 0 - success
 -- 1 - failed due to unloaded nodes
@@ -147,38 +289,15 @@ digtron.execute_dig_cycle = function(pos, clicker)
 		return pos, size_check_error, 8
 	end
 
-	local controlling_coordinate = digtron.get_controlling_coordinate(pos, facing)
+	local controlling_axis = digtron.get_controlling_coordinate(pos, facing)
 
 	----------------------------------------------------------------------------------------------------------------------
 
-	local items_dropped = {}
-	local digging_fuel_cost = 0
-	local particle_systems = {}
+	local items_dropped -- { itemname, ... }
+	local digging_fuel_cost -- number
+	local particle_systems -- { particlespawner def, ... }
 
-	-- execute the execute_dig method on all digtron components that have one
-	-- This builds a set of nodes that will be dug and returns a list of products that will be generated
-	-- but doesn't actually dig the nodes yet. That comes later.
-	-- If we dug them now, sand would fall and some digtron nodes would die.
-	if layout.diggers ~= nil then
-		for _, location in pairs(layout.diggers) do
-			local target = minetest.get_node(location.pos)
-			local targetdef = minetest.registered_nodes[target.name]
-			if targetdef.execute_dig ~= nil then
-				local fuel_cost, dropped = targetdef.execute_dig(location.pos, layout.protected, layout.nodes_dug, controlling_coordinate, false, clicker)
-				if dropped ~= nil then
-					for _, itemname in pairs(dropped) do
-						table.insert(items_dropped, itemname)
-					end
-					if digtron.config.particle_effects then
-						table.insert(particle_systems, dig_dust(vector.add(location.pos, dir), target.param2))
-					end
-				end
-				digging_fuel_cost = digging_fuel_cost + fuel_cost
-			else
-				minetest.log(string.format("%s has digger group but is missing execute_dig method! This is an error in mod programming, file a bug.", targetdef.name))
-			end
-		end
-	end
+	items_dropped, digging_fuel_cost, particle_systems = do_execute_dig(layout, dir, controlling_axis, false, clicker)
 
 	----------------------------------------------------------------------------------------------------------------------
 
@@ -197,11 +316,7 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	end
 
 	if not can_move then
-		-- mark this node as waiting, will clear this flag in digtron.config.cycle_time seconds
-		minetest.get_meta(pos):set_string("waiting", "true")
-		minetest.get_node_timer(pos):start(digtron.config.cycle_time)
-		minetest.sound_play("squeal", {gain=1.0, pos=pos})
-		minetest.sound_play("buzzer", {gain=0.5, pos=pos})
+		set_obstructed(pos, true)
 		return pos, S("Digtron is obstructed.") .. "\n" .. status_text, 3 --Abort, don't dig and don't build.
 	end
 
@@ -214,18 +329,18 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	local can_build = true
 	local test_items = {}
 	local test_build_fuel_cost = 0
-	local test_build_return_code, test_build_return_items, failed_to_find
+	local test_build_return_code, failed_to_find
 
 	if layout.builders ~= nil then
 		for _, location in pairs(layout.builders) do
-			local target = minetest.get_node(location.pos)
-			local targetdef = minetest.registered_nodes[target.name]
-			local test_location = vector.add(location.pos, dir)
-			if targetdef.test_build ~= nil then
-				test_build_return_code, test_build_return_items, failed_to_find = targetdef.test_build(
-					location.pos, test_location, layout.inventories, layout.protected, layout.nodes_dug, controlling_coordinate, layout.controller
+			local func = get_nodedef_callback_at("builder", location.pos, "test_build")
+			if func then
+				local test_location = vector.add(location.pos, dir)
+				local items
+				test_build_return_code, items, failed_to_find = func(
+					location.pos, test_location, layout.inventories, layout.protected, layout.nodes_dug, controlling_axis, layout.controller
 				)
-				for _, return_item in pairs(test_build_return_items) do
+				for _, return_item in pairs(items) do
 					table.insert(test_items, return_item)
 					test_build_fuel_cost = test_build_fuel_cost + digtron.config.build_cost
 				end
@@ -233,8 +348,6 @@ digtron.execute_dig_cycle = function(pos, clicker)
 					can_build = false
 					break
 				end
-			else
-				minetest.log(string.format("%s has builder group but is missing test_build method! This is an error in mod programming, file a bug.", targetdef.name))
 			end
 		end
 	end
@@ -295,8 +408,8 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	end
 
 	if not can_build then
-		minetest.get_meta(pos):set_string("waiting", "true")
-		minetest.get_node_timer(pos):start(digtron.config.cycle_time)
+		set_obstructed(pos, false)
+
 		local return_string = nil
 		return_code = 5
 		if test_build_return_code == 3 then
@@ -314,51 +427,26 @@ digtron.execute_dig_cycle = function(pos, clicker)
 
 	----------------------------------------------------------------------------------------------------------------------
 
-	-- All tests passed, ready to go for real!
-	minetest.sound_play("construction", {gain=1.0, pos=pos})
-
-	-- if the player is standing within the array or next to it, move him too.
-	local move_player = move_player_test(layout, clicker)
-
-	-- damage the weak flesh
-	if digtron.config.damage_hp > 0 and layout.diggers ~= nil then
-		for _, location in pairs(layout.diggers) do
-			local target = minetest.get_node(location.pos)
-			local targetdef = minetest.registered_nodes[target.name]
-			if targetdef.damage_creatures ~= nil then
-				targetdef.damage_creatures(clicker, location.pos, controlling_coordinate, items_dropped)
-			end
-		end
-	end
-
-	--move the array
-	layout:move_layout_image(dir)
-	if not layout:write_layout_image(clicker) then
-		return pos, "unrecoverable write_layout_image error", 1
-	end
 	local oldpos = vector.copy(pos)
-	pos = vector.add(pos, dir)
-	meta = minetest.get_meta(pos)
-	if move_player then
-		add_object_pos(clicker, dir)
+	pos, status_text, return_code = move_layout_digging(
+		layout, pos, dir,
+		controlling_axis, clicker, items_dropped
+	)
+
+	if return_code ~= 0 then
+		return pos, status_text, return_code
 	end
 
-	-- store or drop the products of the digger heads
-	for _, itemname in pairs(items_dropped) do
-		digtron.place_in_inventory(itemname, layout.inventories, oldpos)
-	end
-	digtron.award_item_dug(items_dropped, clicker) -- Achievements mod hook
 
 	local building_fuel_cost = 0
 	local strange_failure = false
 	-- execute_build on all digtron components that have one
 	if layout.builders ~= nil then
 		for _, location in pairs(layout.builders) do
-			local target = minetest.get_node(location.pos)
-			local targetdef = minetest.registered_nodes[target.name]
-			if targetdef.execute_build ~= nil then
+			local func = get_nodedef_callback_at("builder", location.pos, "execute_build")
+			if func then
 				--using the old location of the controller as fallback so that any leftovers land with the rest of the digger output. Not that there should be any.
-				local build_return = targetdef.execute_build(location.pos, clicker, layout.inventories, layout.protected, layout.nodes_dug, controlling_coordinate, oldpos)
+				local build_return = func(location.pos, clicker, layout.inventories, layout.protected, layout.nodes_dug, controlling_axis, oldpos)
 				if build_return < 0 then
 					-- This happens if there's insufficient inventory, but we should have confirmed there was sufficient inventory during test phase.
 					-- So this should never happen. However, "should never happens" happen sometimes. So
@@ -367,20 +455,15 @@ digtron.execute_dig_cycle = function(pos, clicker)
 				elseif digtron.config.uses_resources then
 					building_fuel_cost = building_fuel_cost + (digtron.config.build_cost * build_return)
 				end
-			else
-				minetest.log(string.format("%s has builder group but is missing execute_build method! This is an error in mod programming, file a bug.", targetdef.name))
 			end
 		end
 	end
 
 	if layout.auto_ejectors ~= nil then
 		for _, location in pairs(layout.auto_ejectors) do
-			local target = minetest.get_node(location.pos)
-			local targetdef = minetest.registered_nodes[target.name]
-			if targetdef.execute_eject ~= nil then
-				targetdef.execute_eject(location.pos, target, clicker, layout)
-			else
-				minetest.log(string.format("%s has an ejector group but is missing execute_eject method! This is an error in mod programming, file a bug.", targetdef.name))
+			local func, node = get_nodedef_callback_at("ejector", location.pos, "execute_eject")
+			if func then
+				func(location.pos, node, clicker, layout)
 			end
 		end
 	end
@@ -394,45 +477,13 @@ digtron.execute_dig_cycle = function(pos, clicker)
 	end
 
 	local total_fuel_cost = math.max(digging_fuel_cost + building_fuel_cost - power_from_cables, 0)
-
-	-- actually burn the fuel needed
-	fuel_burning = fuel_burning - total_fuel_cost
-	if digtron.config.particle_effects and exhaust == 1 then
-		table.insert(particle_systems, burn_smoke(pos, total_fuel_cost))
-	end
-	if fuel_burning < 0 then
-		-- we tap into the batteries either way
-		fuel_burning = fuel_burning + digtron.tap_batteries(layout.battery_holders, -fuel_burning, false)
-		if exhaust == 1 then
-			-- but we burn coal only if we must (exhaust = flag)
-			fuel_burning = fuel_burning + digtron.burn(layout.fuelstores, -fuel_burning, false)
-		end
-	end
-
-	meta:set_float("fuel_burning", fuel_burning)
-	meta:set_int("on_coal", exhaust)
+	fuel_burning = burn_fuel(layout, pos, fuel_burning, total_fuel_cost,
+		digtron.config.particle_effects and particle_systems, exhaust
+	)
 	status_text = status_text .. S("Heat remaining in controller furnace: @1", math.floor(math.max(0, fuel_burning)))
 
-	-- Eyecandy
-	for _, particles in pairs(particle_systems) do
-		minetest.add_particlespawner(particles)
-	end
+	remove_nodes(layout.nodes_dug, clicker, particle_systems, true)
 
-	-- finally, dig out any nodes remaining to be dug. Some of these will have had their flag revoked because
-	-- a builder put something there or because they're another digtron node.
-	local node_to_dig, whether_to_dig = layout.nodes_dug:pop()
-	while node_to_dig ~= nil do
-		if whether_to_dig == true then
-			minetest.log("action", string.format(
-				"%s uses Digtron to dig %s at (%d, %d, %d)", clicker:get_player_name(), minetest.get_node(node_to_dig).name, node_to_dig.x, node_to_dig.y, node_to_dig.z)
-			)
-			minetest.remove_node(node_to_dig)
-		end
-		-- all of the digtron's nodes wind up in nodes_dug, so this is an ideal place to stick
-		-- a check to make sand fall after the digtron has passed.
-		minetest.check_for_falling(vector.offset(node_to_dig, 0, 1, 0))
-		node_to_dig, whether_to_dig = layout.nodes_dug:pop()
-	end
 	return pos, status_text, 0
 end
 
@@ -457,16 +508,12 @@ digtron.execute_move_cycle = function(pos, clicker)
 	local dir = minetest.facedir_to_dir(facing)
 
 	-- if the player is standing within the array or next to it, move him too.
-	local move_player = move_player_test(layout, clicker)
+	local move_player = is_player_inside_layout(layout, clicker)
 
 	-- test if any digtrons are obstructed by non-digtron nodes
 	layout:move_layout_image(dir)
 	if not layout:can_write_layout_image() then
-		-- mark this node as waiting, will clear this flag in digtron.config.cycle_time seconds
-		minetest.get_meta(pos):set_string("waiting", "true")
-		minetest.get_node_timer(pos):start(digtron.config.cycle_time)
-		minetest.sound_play("squeal", {gain=1.0, pos=pos})
-		minetest.sound_play("buzzer", {gain=0.5, pos=pos})
+		set_obstructed(pos, true)
 		return pos, S("Digtron is obstructed.") .. "\n" .. status_text, 3 --Abort, don't dig and don't build.
 	end
 
@@ -513,38 +560,15 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 		return pos, size_check_error, 8
 	end
 
-	local controlling_coordinate = digtron.get_controlling_coordinate(pos, facing)
+	local controlling_axis = digtron.get_controlling_coordinate(pos, facing)
 
 	----------------------------------------------------------------------------------------------------------------------
 
-	local items_dropped = {}
-	local digging_fuel_cost = 0
-	local particle_systems = {}
+	local items_dropped -- { itemname, ... }
+	local digging_fuel_cost -- number
+	local particle_systems -- { particlespawner def, ... }
 
-	-- execute the execute_dig method on all digtron components that have one
-	-- This builds a set of nodes that will be dug and returns a list of products that will be generated
-	-- but doesn't actually dig the nodes yet. That comes later.
-	-- If we dug them now, sand would fall and some digtron nodes would die.
-	if layout.diggers ~= nil then
-		for _, location in pairs(layout.diggers) do
-			local target = minetest.get_node(location.pos)
-			local targetdef = minetest.registered_nodes[target.name]
-			if targetdef.execute_dig ~= nil then
-				local fuel_cost, dropped = targetdef.execute_dig(location.pos, layout.protected, layout.nodes_dug, controlling_coordinate, true, clicker)
-				if dropped ~= nil then
-					for _, itemname in pairs(dropped) do
-						table.insert(items_dropped, itemname)
-					end
-					if digtron.config.particle_effects then
-						table.insert(particle_systems, dig_dust(vector.add(location.pos, dir), target.param2))
-					end
-				end
-				digging_fuel_cost = digging_fuel_cost + fuel_cost
-			else
-				minetest.log(string.format("%s has digger group but is missing execute_dig method! This is an error in mod programming, file a bug.", targetdef.name))
-			end
-		end
-	end
+	items_dropped, digging_fuel_cost, particle_systems = do_execute_dig(layout, dir, controlling_axis, true, clicker)
 
 	----------------------------------------------------------------------------------------------------------------------
 
@@ -563,87 +587,27 @@ digtron.execute_downward_dig_cycle = function(pos, clicker)
 	end
 
 	if not can_move then
-		-- mark this node as waiting, will clear this flag in digtron.config.cycle_time seconds
-		minetest.get_meta(pos):set_string("waiting", "true")
-		minetest.get_node_timer(pos):start(digtron.config.cycle_time)
-		minetest.sound_play("squeal", {gain=1.0, pos=pos})
-		minetest.sound_play("buzzer", {gain=0.5, pos=pos})
+		set_obstructed(pos, true)
 		return pos, S("Digtron is obstructed.") .. "\n" .. status_text, 3 --Abort, don't dig and don't build.
 	end
 
 	----------------------------------------------------------------------------------------------------------------------
 
-	-- All tests passed, ready to go for real!
-	minetest.sound_play("construction", {gain=1.0, pos=pos})
+	pos, status_text, return_code = move_layout_digging(
+		layout, pos, dir,
+		controlling_axis, clicker, items_dropped
+	)
 
-	-- if the player is standing within the array or next to it, move him too.
-	local move_player = move_player_test(layout, clicker)
-
-	-- damage the weak flesh
-	if digtron.config.damage_hp > 0 and layout.diggers ~= nil then
-		for _, location in pairs(layout.diggers) do
-			local target = minetest.get_node(location.pos)
-			local targetdef = minetest.registered_nodes[target.name]
-			if targetdef.damage_creatures ~= nil then
-				targetdef.damage_creatures(clicker, location.pos, controlling_coordinate, items_dropped)
-			end
-		end
+	if return_code ~= 0 then
+		return pos, status_text, return_code
 	end
 
-	--move the array
-	layout:move_layout_image(digtron.facedir_to_down_dir(facing))
-	if not layout:write_layout_image(clicker) then
-		return pos, "unrecoverable write_layout_image error", 1
-	end
-	local oldpos = vector.copy(pos)
-	pos = vector.add(pos, dir)
-	meta = minetest.get_meta(pos)
-	if move_player then
-		add_object_pos(clicker, dir)
-	end
-
-	-- store or drop the products of the digger heads
-	for _, itemname in pairs(items_dropped) do
-		digtron.place_in_inventory(itemname, layout.inventories, oldpos)
-	end
-	digtron.award_item_dug(items_dropped, clicker) -- Achievements mod hook
-
-	status_text = ""
-
-	-- actually burn the fuel needed
-	fuel_burning = fuel_burning - digging_fuel_cost
-	if digtron.config.particle_effects and exhaust == 1 then
-		table.insert(particle_systems, burn_smoke(pos, digging_fuel_cost))
-	end
-	if fuel_burning < 0 then
-		-- we tap into the batteries either way
-		fuel_burning = fuel_burning + digtron.tap_batteries(layout.battery_holders, -fuel_burning, false)
-		if exhaust == 1 then
-			-- but we burn coal only if we must (exhaust = flag)
-			fuel_burning = fuel_burning + digtron.burn(layout.fuelstores, -fuel_burning, false)
-		end
-	end
-
-	meta:set_float("fuel_burning", fuel_burning)
-	meta:set_int("on_coal", exhaust)
+	fuel_burning = burn_fuel(layout, pos, fuel_burning, digging_fuel_cost,
+		digtron.config.particle_effects and particle_systems, exhaust
+	)
 	status_text = status_text .. S("Heat remaining in controller furnace: @1", math.floor(math.max(0, fuel_burning)))
 
-	-- Eyecandy
-	for _, particles in pairs(particle_systems) do
-		minetest.add_particlespawner(particles)
-	end
+	remove_nodes(layout.nodes_dug, clicker, particle_systems, false)
 
-	-- finally, dig out any nodes remaining to be dug. Some of these will have had their flag revoked because
-	-- a builder put something there or because they're another digtron node.
-	local node_to_dig, whether_to_dig = layout.nodes_dug:pop()
-	while node_to_dig ~= nil do
-		if whether_to_dig == true then
-			minetest.log("action", string.format(
-				"%s uses Digtron to dig %s at (%d, %d, %d)", clicker:get_player_name(), minetest.get_node(node_to_dig).name, node_to_dig.x, node_to_dig.y, node_to_dig.z)
-			)
-			minetest.remove_node(node_to_dig)
-		end
-		node_to_dig, whether_to_dig = layout.nodes_dug:pop()
-	end
 	return pos, status_text, 0
 end

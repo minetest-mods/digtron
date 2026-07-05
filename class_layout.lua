@@ -42,10 +42,6 @@ local get_node_image = function(pos, node)
 	return node_image
 end
 
--- temporary pointsets used while searching
-local to_test = digtron.Pointset.create()
-local tested = digtron.Pointset.create()
-
 function digtron.DigtronLayout.create(pos, player)
 	local self = {}
 	setmetatable(self, digtron.DigtronLayout)
@@ -65,13 +61,12 @@ function digtron.DigtronLayout.create(pos, player)
 	-- Revisit this design decision if a controller node is created that contains fuel or inventory or whatever.
 	table.insert(self.all, get_node_image(pos, minetest.get_node(pos)))
 
-	self.extents_max_x = pos.x
-	self.extents_min_x = pos.x
-	self.extents_max_y = pos.y
-	self.extents_min_y = pos.y
-	self.extents_max_z = pos.z
-	self.extents_min_z = pos.z
+	self.extents_max = vector.copy(pos)
+	self.extents_min = vector.copy(pos)
 
+	-- temporary pointsets used while searching
+	local to_test = digtron.Pointset.create()
+	local tested = digtron.Pointset.create()
 	tested:set(pos.x, pos.y, pos.z, true)
 	to_test:set(pos.x + 1, pos.y, pos.z, true)
 	to_test:set(pos.x - 1, pos.y, pos.z, true)
@@ -153,12 +148,8 @@ function digtron.DigtronLayout.create(pos, player)
 			end
 
 			-- update extents
-			self.extents_max_x = math.max(self.extents_max_x, testpos.x)
-			self.extents_min_x = math.min(self.extents_min_x, testpos.x)
-			self.extents_max_y = math.max(self.extents_max_y, testpos.y)
-			self.extents_min_y = math.min(self.extents_min_y, testpos.y)
-			self.extents_max_z = math.max(self.extents_max_z, testpos.z)
-			self.extents_min_z = math.min(self.extents_min_z, testpos.z)
+			self.extents_max = vector.combine(self.extents_max, testpos, math.max)
+			self.extents_min = vector.combine(self.extents_min, testpos, math.min)
 
 			--queue up potential new test points adjacent to this digtron node
 			to_test:set_if_not_in(tested, testpos.x + 1, testpos.y, testpos.z, true)
@@ -177,9 +168,6 @@ function digtron.DigtronLayout.create(pos, player)
 	end
 
 	digtron.award_layout(self, player) -- hook for achievements mod
-
-	to_test:clear()
-	tested:clear()
 
 	return self
 end
@@ -259,20 +247,6 @@ local rotate_pos = function(axis, direction, pos)
 	return pos
 end
 
--- operates directly on the pos vector
-local subtract_in_place = function(pos, subtract)
-	pos.x = pos.x - subtract.x
-	pos.y = pos.y - subtract.y
-	pos.z = pos.z - subtract.z
-	return pos
-end
-local add_in_place = function(pos, add)
-	pos.x = pos.x + add.x
-	pos.y = pos.y + add.y
-	pos.z = pos.z + add.z
-	return pos
-end
-
 local rotate_node_image = function(node_image, origin, axis, direction, old_pos_pointset)
 	-- Facings
 	if node_image.paramtype2 == "wallmounted" then
@@ -293,16 +267,18 @@ local rotate_node_image = function(node_image, origin, axis, direction, old_pos_
 	old_pos_pointset:set(node_image.pos.x, node_image.pos.y, node_image.pos.z, true)
 
 	-- position in space relative to origin
-	local pos = subtract_in_place(node_image.pos, origin)
+	local pos = vector.subtract(node_image.pos, origin)
 	pos = rotate_pos(axis, direction, pos)
 	-- Move back to original reference frame
-	node_image.pos = add_in_place(pos, origin)
+	node_image.pos = vector.add(pos, origin)
 
 	return node_image
 end
 
-
-local top = {
+-- Refer to Luanti `lua_api.md`, `paramtype2 = "facedir"`
+-- FIXME: Why is Y flipped?
+-- FIXME: Use digtron.facedir_to_down_dir(...) instead?
+local FACEDIR_AXIS_DIRECTION_LUT = {
 	[0]={axis="y", dir=-1},
 	{axis="z", dir=1},
 	{axis="z", dir=-1},
@@ -326,7 +302,7 @@ function digtron.DigtronLayout.rotate_layout_image(self, facedir)
 	-- 16, 17, 18, 19 == (-1,0,0)
 	-- 20, 21, 22, 23== (0,-1,0)
 
-	local params = top[math.floor(facedir/4)]
+	local params = FACEDIR_AXIS_DIRECTION_LUT[math.floor(facedir/4)]
 
 	for _, node_image in pairs(self.all) do
 		rotate_node_image(node_image, self.controller, params.axis, params.dir, self.old_pos_pointset)
@@ -338,16 +314,12 @@ end
 -- Translation
 
 function digtron.DigtronLayout.move_layout_image(self, dir)
-	self.extents_max_x = self.extents_max_x + dir.x
-	self.extents_min_x = self.extents_min_x + dir.x
-	self.extents_max_y = self.extents_max_y + dir.y
-	self.extents_min_y = self.extents_min_y + dir.y
-	self.extents_max_z = self.extents_max_z + dir.z
-	self.extents_min_z = self.extents_min_z + dir.z
+	self.extents_max = vector.add(self.extents_max, dir)
+	self.extents_min = vector.add(self.extents_min, dir)
 
 	for _, node_image in pairs(self.all) do
 		self.old_pos_pointset:set(node_image.pos.x, node_image.pos.y, node_image.pos.z, true)
-		node_image.pos = add_in_place(node_image.pos, dir)
+		node_image.pos = vector.add(node_image.pos, dir)
 		self.nodes_dug:set(node_image.pos.x, node_image.pos.y, node_image.pos.z, false) -- we've moved a digtron node into this space, mark it so that we don't dig it.
 	end
 end
