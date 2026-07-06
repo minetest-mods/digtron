@@ -2,6 +2,7 @@
 local S = digtron.S
 -- local MP = minetest.get_modpath(minetest.get_current_modname())
 -- local S = dofile(MP.."/intllib.lua")
+local have_doc_mod = core.get_modpath("doc")
 
 local inventory_formspec_string =
 	"size[9,9.3]" ..
@@ -18,7 +19,7 @@ local inventory_formspec_string =
 	"button_exit[8,3.5;1,1;duplicate;"..S("Duplicate").."]" ..
 	"tooltip[duplicate;" .. S("Puts a copy of the adjacent Digtron into an empty crate@nlocated at the output side of the duplicator,@nusing components from the duplicator's inventory.") .. "]"
 
-if minetest.get_modpath("doc") then
+if have_doc_mod then
 	inventory_formspec_string = inventory_formspec_string ..
 		"button_exit[8,4.5;1,1;help;"..S("Help").."]" ..
 		"tooltip[help;" .. S("Show documentation about this block") .. "]"
@@ -94,8 +95,8 @@ minetest.register_node("digtron:duplicator", {
 
 	on_receive_fields = function(pos, _, fields, sender)
 		local player_name = sender:get_player_name()
-		if fields.help then
-			minetest.after(0.5, doc.show_entry, player_name, "nodes", "digtron:duplicator", true)
+		if fields.help and have_doc_mod then
+			digtron.doc_show_entry(player_name, "nodes", "digtron:duplicator", true)
 			return
 		end
 

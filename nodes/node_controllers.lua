@@ -2,6 +2,7 @@
 -- local MP = minetest.get_modpath(minetest.get_current_modname())
 local S = digtron.S
 -- local S = dofile(MP.."/intllib.lua")
+local has_doc_mod = core.get_modpath("doc")
 
 local controller_nodebox ={
 	{-0.3125, -0.3125, -0.3125, 0.3125, 0.3125, 0.3125}, -- Core
@@ -121,10 +122,10 @@ local auto_formspec = "size[8,6.2]" ..
 	"listring[current_player;main]" ..
 	"listring[current_name;stop]"
 
-if minetest.get_modpath("doc") then
+if has_doc_mod then
 	auto_formspec = auto_formspec ..
-	"button_exit[7.0,0.5;1,0.1;help;" .. S("Help") .. "]" ..
-	"tooltip[help;" .. S("Show documentation about this block").. "]"
+		"button_exit[7.0,0.5;1,0.1;help;" .. S("Help") .. "]" ..
+		"tooltip[help;" .. S("Show documentation about this block").. "]"
 end
 
 local function auto_cycle(pos)
@@ -308,8 +309,8 @@ minetest.register_node("digtron:auto_controller", {
 			end
 		end
 
-		if fields.help and minetest.get_modpath("doc") then --check for mod in case someone disabled it after this digger was built
-			minetest.after(0.5, doc.show_entry, sender:get_player_name(), "nodes", "digtron:auto_controller", true)
+		if fields.help and has_doc_mod then
+			digtron.doc_show_entry(sender:get_player_name(), "nodes", "digtron:auto_controller", true)
 		end
 	end,
 

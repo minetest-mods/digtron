@@ -1,7 +1,24 @@
 digtron.doc = {}
 
-if not minetest.get_modpath("doc") then
+digtron.doc_show_entry = nil
+
+if not core.get_modpath("doc") then
 	return
+end
+
+digtron.doc_show_entry = doc.show_entry -- (playername, category_id, entry_id, ignore_hidden)
+
+if not core.get_modpath("doc_items") then
+	core.log("warning", "digtron: For proper 'doc' support, please also install the 'doc_items' mod.")
+
+	-- Fall back to a known page
+	digtron.doc_show_entry = function(playername, category_id, ...)
+		if category_id == "nodes" then
+			doc.show_category(playername, "digtron")
+		else
+			doc.show_entry(playername, category_id, ...)
+		end
+	end
 end
 
 local coal_fuel = minetest.get_craft_result({method="fuel", width=1, items={"default:coal_lump"}}).time

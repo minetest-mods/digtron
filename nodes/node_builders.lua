@@ -7,10 +7,11 @@ local S = digtron.S
 
 local node_inventory_table = {type="node"} -- a reusable parameter for get_inventory calls, set the pos parameter before using.
 
-local has_wrench_mod = minetest.get_modpath("wrench")
+local has_wrench_mod = core.get_modpath("wrench")
+local have_doc_mod   = core.get_modpath("doc")
 
 local displace_due_to_help_button = 1.0
-if minetest.get_modpath("doc") then
+if have_doc_mod then
 	displace_due_to_help_button = 0.0
 end
 
@@ -42,7 +43,7 @@ local builder_formspec_string =
 	"listring[current_player;main]" ..
 	"listring[current_name;main]"
 
-if minetest.get_modpath("doc") then
+if have_doc_mod then
 	builder_formspec_string = builder_formspec_string ..
 		"button_exit[7.0,0.5;1,0.1;help;" .. S("Help") .. "]" ..
 		"tooltip[help;" .. S("Show documentation about this block") .. "]"
@@ -200,8 +201,8 @@ minetest.register_on_player_receive_fields(function(sender, formname, fields)
 
 	end
 
-	if fields.help and minetest.get_modpath("doc") then --check for mod in case someone disabled it after this digger was built
-		minetest.after(0.5, doc.show_entry, sender:get_player_name(), "nodes", "digtron:builder", true)
+	if fields.help and have_doc_mod then
+		digtron.doc_show_entry(sender:get_player_name(), "nodes", "digtron:builder", true)
 	end
 
 	digtron.update_builder_item(pos)

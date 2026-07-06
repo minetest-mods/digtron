@@ -4,8 +4,8 @@ local S = digtron.S
 -- local S = dofile(MP.."/intllib.lua")
 
 --Build up the formspec, somewhat complicated due to multiple mod options
-local pipeworks_path = minetest.get_modpath("pipeworks")
-local doc_path = minetest.get_modpath("doc")
+local pipeworks_path = core.get_modpath("pipeworks")
+local have_doc_mod   = core.get_modpath("doc")
 local formspec_width = 1.5
 
 local ejector_formspec_string =
@@ -13,7 +13,7 @@ local ejector_formspec_string =
 	default.gui_bg_img ..
 	default.gui_slots
 
-if doc_path then
+if have_doc_mod then
 	ejector_formspec_string = ejector_formspec_string ..
 		"button_exit[".. 0.2 + formspec_width ..",0.5;1,0.1;help;" .. S("Help") .. "]" ..
 		"tooltip[help;" .. S("Show documentation about this block") .. "]"
@@ -153,9 +153,9 @@ minetest.register_node("digtron:inventory_ejector", {
 	on_receive_fields = function(pos, _, fields, sender)
 		local meta = minetest.get_meta(pos)
 
-		if fields.help and minetest.get_modpath("doc") then --check for mod in case someone disabled it after this digger was built
-			local node_name = minetest.get_node(pos).name
-			minetest.after(0.5, doc.show_entry, sender:get_player_name(), "nodes", node_name, true)
+		if fields.help and have_doc_mod then
+			local node_name = core.get_node(pos).name
+			digtron.doc_show_entry(sender:get_player_name(), "nodes", node_name, true)
 		end
 
 		if fields.nonpipe then
