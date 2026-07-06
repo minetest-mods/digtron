@@ -1,39 +1,71 @@
 # Modular Tunnel Boring Machine
 ## aka The Almighty Digtron
 
+![screenshot](screenshot.png)
 
-This mod contains a set of blocks that can be used to construct highly customizable and modular tunnel-boring machines, bridge-builders, road-pavers, wall-o-matics, and other such construction/destruction contraptions.
+**More examples: [Digtron Luanti Forum Topic](https://forum.luanti.org/viewtopic.php?t=16295)**
 
-A digging machine's components must be connected to the control block via a path leading through the faces of the blocks - diagonal connections across edges and corners don't count. 
+This mod contains a set of blocks that can be used to construct highly customizable and
+modular tunnel-boring machines, bridge-builders, road-pavers, wall-o-matics, and other
+such construction/destruction contraptions.
 
-The basic block types that can be assembled into a functioning digging machine are:
+## Basic functionality
 
-* Digger heads, which excavate material in front of them when the machine is triggered
-* Builder heads, which build a user-configured node in the direction they're facing
-* Inventory modules, which hold material produced by the digger and provide material to the builders
-* Fuel modules, which holds flammable materials to feed the beast
-* Control block, used to trigger the machine and move it in a particular direction.
+A digging machine's components must be connected to the control block via a path leading
+through the faces of the blocks - diagonal connections across edges and corners don't count.
 
-Diggers mine out blocks and shunt them into the Digtron's inventory, or drop them on the ground if there isn't room in the inventory to store them.
+#### Crucial Digtron blocks
 
-Builder heads can be used to lay down a solid surface as the Digtron moves, useful for situations where a tunnel-borer intersects a cavern. Builder heads can be set to construct their target block "intermittently", allowing for regularly-spaced structures to be constructed. Common uses include building support arches at regular intervals in a tunnel, adding a torch on the wall at regular intervals, laying rails with regularly-spaced powered rails interspersed, and adding stairs to vertical shafts.
+* **Digger heads** excavate material in front of them when the machine is triggered.
+    * The mined blocks are shunt into the inventory module. Excess is dropped to ground.
+* **Builder heads** build a user-configured node in the direction they're facing.
+    * Useful for situations where a tunnel-borer intersects a cavern.
+* **Inventory modules** hold material produced by the digger and provide material to the builders.
+* **Fuel modules** hold flammable materials to feed the beast.
+* **Control blocks** trigger the machine and move it in a particular direction.
+    * The auto-controller triggers automatically for a custom number of cycles.
 
-The auto-controller block is able to trigger automatically for a user-selected number of cycles. A player can ride their Digtron as it goes.
+Builder heads can be set to construct their target block "intermittently", allowing
+for regularly-spaced structures to be constructed. Common uses include building support
+arches at regular intervals in a tunnel, adding a torch on the wall at regular
+intervals, laying rails with regularly-spaced powered rails interspersed, and adding
+stairs to vertical shafts.
 
-Other specialized Digtron blocks include:
+A player can ride their Digtron as it goes.
 
-* An "axle" block that allows an assembled Digtron to be rotated into new orientations without needing to be rebuilt block-by-block
-* A crate that can store an assembled Digtron and allow the player to transport it to a new location
-* A duplicator that can create a copy of an existing Digtron (if provided with enough spare parts)
-* An item ejector to clear Digtron's inventory of excavated materials and inject it into pipeworks tubes if that mod is installed.
-* A light that can be mounted on a Digtron to illuminate the workspace as it moves
+#### Other specialized Digtron blocks
+
+* **"Axle" block**: allows an assembled Digtron to be rotated into new orientations without needing to be rebuilt block-by-block
+* **Crate**: stores an assembled Digtron and allows the player to transport it to a new location
+* **Duplicator**: creates a copy of an existing Digtron (if provided with enough spare parts)
+* **Item ejector**: moves excavated materials from a Digtron's inventory into pipeworks tubes.
+* **Light**: can be mounted on a Digtron to illuminate the workspace as it moves
 * Structural components to make it look cool
 
-The Digtron mod depends on the default mod and [fakelib](https://content.minetest.net/packages/OgelGames/fakelib/), and includes optional support for several other mods:
+## License
 
-* [doc](https://forum.minetest.net/viewtopic.php?t=15912), an in-game documentation mod. Detailed documentation for all of the Digtron's individual blocks are included as well as pages of general concepts and design tips.
-* [pipeworks](https://forum.minetest.net/viewtopic.php?id=2155), a set of pneumatic tubes that allows inventory items to be extracted from or inserted into Digtron inventories.
-* [hopper](https://forum.minetest.net/viewtopic.php?&t=12379), a different mod for inserting into and extracting from Digtron inventories. Note that only [the most recent version of hopper is Digtron-capable,](https://github.com/minetest-mods/hopper) earlier versions lack a suitable API.
-* [awards](https://forum.minetest.net/viewtopic.php?&t=4870), a mod that adds achievements to the game. Over thirty Digtron-specific achievements are included.
-* [technic](https://forum.minetest.net/viewtopic.php?f=11&t=2538), which adds rechargeable batteries and power cables to the game that Digtron can use instead of fuel.
-* [TechAge](https://forum.minetest.net/viewtopic.php?f=9&t=24619), a mod that adds technology stages where the player advances from the water mill and steam engine into future technology. It includes a rechargeable Digtron Battery.
+* Code: MIT
+* Textures: CC-BY-SA 3.0
+* Sounds: CC BY 3.0 / CC 1.0 ([sounds/license.txt](sounds/license.txt))
+
+See also: [LICENSE.txt](LICENSE.txt).
+
+## Dependencies
+
+#### Mandatory
+
+* Luanti/Minetest >= 5.5.0
+* `default` mod (from Minetest Game or compatible games)
+* [fakelib](https://content.luanti.org/packages/OgelGames/fakelib/)
+
+#### Optional
+
+* [doc](https://forum.luanti.org/viewtopic.php?t=15912), an in-game documentation mod.
+  Detailed documentation for all of the Digtron's individual blocks are included as
+  well as pages of general concepts and design tips.
+   * Note: The mods `doc` and `doc_items` should be enabled for the best experience.
+* [pipeworks](https://forum.luanti.org/viewtopic.php?t=2155) for item transport automation.
+* [hopper](https://github.com/minetest-mods/hopper) for item transport automation.
+* [awards](https://forum.luanti.org/viewtopic.php?t=4870) to add over 30 Digtron-specific achievements (progression) to the game.
+* [technic](https://forum.luanti.org/viewtopic.php?t=2538) to power Digtron with electricity (including batteries!).
+* [TechAge](https://forum.luanti.org/viewtopic.php?t=24619), a mod that adds technology stages where the player advances from the water mill and steam engine into future technology. It includes a rechargeable Digtron Battery.
