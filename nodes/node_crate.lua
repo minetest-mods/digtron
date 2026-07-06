@@ -3,7 +3,8 @@ local S = digtron.S
 -- local MP = minetest.get_modpath(minetest.get_current_modname())
 -- local S = dofile(MP.."/intllib.lua")
 
-local modpath_awards = minetest.get_modpath("awards")
+local have_mod_awards = core.get_modpath("awards")
+local have_doc_mod    = core.get_modpath("doc")
 
 
 local player_permitted = function(pos, player)
@@ -60,7 +61,7 @@ local store_digtron = function(pos, clicker, loaded_node_name, protected)
 		local old_node = node_image.node
 		minetest.remove_node(old_pos)
 
-		if modpath_awards then
+		if have_mod_awards then
 			-- We're about to tell the awards mod that we're digging a node, but we
 			-- don't want it to count toward any actual awards. Pre-decrement.
 			local data = awards.player(clicker:get_player_name())
@@ -157,9 +158,8 @@ minetest.register_node("digtron:empty_locked_crate", {
 	end,
 })
 
-local modpath_doc = minetest.get_modpath("doc")
 local loaded_formspec_string
-if modpath_doc then
+if have_doc_mod then
 	loaded_formspec_string =
 	"size[4.1,1.5]" ..
 	default.gui_bg ..
@@ -209,8 +209,8 @@ local loaded_on_recieve = function(pos, fields, sender, protected)
 	end
 	meta:set_string("infotext", infotext)
 
-	if fields.help and minetest.get_modpath("doc") then --check for mod in case someone disabled it after this digger was built
-		minetest.after(0.5, doc.show_entry, sender:get_player_name(), "nodes", "digtron:loaded_crate", true)
+	if fields.help and have_doc_mod then
+		digtron.doc_show_entry(sender:get_player_name(), "nodes", "digtron:loaded_crate", true)
 	end
 
 	if not (fields.unpack or fields.show) then

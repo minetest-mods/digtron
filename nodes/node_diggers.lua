@@ -2,6 +2,7 @@
 local S = digtron.S
 -- local MP = minetest.get_modpath(minetest.get_current_modname())
 -- local S = dofile(MP.."/intllib.lua")
+local have_doc_mod = core.get_modpath("doc")
 
 -- Note: diggers go in group 3 and have an execute_dig method.
 
@@ -29,8 +30,6 @@ local dual_digger_nodebox = {
 	{-0.4375, -0.5, -0.3125, 0.4375, -0.4375, 0.3125}, -- Lower_Cutter_2
 }
 
-local modpath_doc = minetest.get_modpath("doc")
-
 local intermittent_formspec_string = default.gui_bg ..
 	default.gui_bg_img ..
 	default.gui_slots ..
@@ -42,7 +41,7 @@ local intermittent_formspec_string = default.gui_bg ..
 	"button_exit[2.2,0.5;1,0.1;set;" .. S("Save &@nShow") .. "]" ..
 	"tooltip[set;" .. S("Saves settings") .. "]"
 
-if modpath_doc then
+if have_doc_mod then
 	intermittent_formspec_string = "size[4.5,1]" .. intermittent_formspec_string ..
 		"button_exit[3.2,0.5;1,0.1;help;" .. S("Help") .. "]" ..
 		"tooltip[help;" .. S("Show documentation about this block") .. "]"
@@ -91,9 +90,9 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 		if offset then
 			meta:set_int("offset", math.floor(offset))
 		end
-		if fields.help and minetest.get_modpath("doc") then --check for mod in case someone disabled it after this digger was built
-			local node_name = minetest.get_node(pos).name
-			minetest.after(0.5, doc.show_entry, player:get_player_name(), "nodes", node_name, true)
+		if fields.help and have_doc_mod then --check for mod in case someone disabled it after this digger was built
+			local node_name = core.get_node(pos).name
+			digtron.doc_show_entry(player:get_player_name(), "nodes", node_name, true)
 		end
 		if fields.set then
 			digtron.show_offset_markers(pos, offset, period)
