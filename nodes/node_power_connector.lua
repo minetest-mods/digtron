@@ -2,6 +2,7 @@
 local S = digtron.S
 -- local MP = minetest.get_modpath(minetest.get_current_modname())
 -- local S = dofile(MP.."/intllib.lua")
+local have_technic_mod = core.get_modpath("technic")
 
 local size = 3/16
 
@@ -19,7 +20,7 @@ local get_formspec_string = function(current_val, current_max)
 end
 
 local connector_groups = {cracky = 3, oddly_breakable_by_hand=3, digtron = 8, technic_machine=1, technic_hv=1}
-if not minetest.get_modpath("technic") then
+if not have_technic_mod then
 	-- Technic is not installed, hide this away.
 	connector_groups.not_in_creative_inventory = 1
 end
@@ -100,6 +101,10 @@ minetest.register_node("digtron:power_connector", {
 	end,
 })
 
-if minetest.get_modpath("technic") then
-	technic.register_machine("HV", "digtron:power_connector", technic.receiver)
-end
+-- To avoid dependency chains, delay the machine registration. But allow post-processing
+-- by other mods by running this callback at the first chance.
+table.insert(core.registered_on_mods_loaded, 1, function()
+	if have_technic_mod then
+		technic.register_machine("HV", "digtron:power_connector", technic.receiver)
+	end
+end)

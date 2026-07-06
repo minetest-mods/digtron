@@ -2,6 +2,7 @@
 local S = digtron.S
 -- local MP = minetest.get_modpath(minetest.get_current_modname())
 -- local S = dofile(MP.."/intllib.lua")
+local have_technic_mod = core.get_modpath("technic")
 
 minetest.register_craftitem("digtron:digtron_core", {
 	description = S("Digtron Core"),
@@ -46,7 +47,7 @@ minetest.register_craft({
 			}
 })
 
-if minetest.get_modpath("technic") then
+if have_technic_mod then
 	minetest.register_craft({
 		output = "digtron:master_builder",
 		recipe = {
@@ -111,7 +112,7 @@ minetest.register_craft({
 			}
 })
 
-if minetest.get_modpath("technic") then
+if have_technic_mod then
 	-- no need for this recipe if technic is not installed, avoid cluttering crafting guides
 	minetest.register_craft({
 		output = "digtron:battery_holder",
