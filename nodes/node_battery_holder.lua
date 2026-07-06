@@ -2,7 +2,7 @@
 local S = digtron.S
 -- local MP = minetest.get_modpath(minetest.get_current_modname())
 -- local S = dofile(MP.."/intllib.lua")
-
+local have_technic_mod = core.get_modpath("technic")
 
 -- Battery storage. Controller node draws electrical power from here.
 -- Note that batttery boxes are digtron group 7.
@@ -24,7 +24,7 @@ local battery_holder_formspec = function()
 end
 
 local holder_groups = {cracky = 3,  oddly_breakable_by_hand = 3, digtron = 7, tubedevice = 1, tubedevice_receiver = 1}
-if not minetest.get_modpath("technic") then
+if not have_technic_mod then
 	-- if technic isn't installed there's no point in offering battery holders.
 	-- leave them registered, though, in case technic is being removed from an existing server.
 	holder_groups.not_in_creative_inventory = 1
@@ -66,8 +66,12 @@ local def = {
 
 	-- Allow all items with energy storage to be placed in the inventory
 	allow_metadata_inventory_put = function(pos, listname, _, stack, player)
+		if not have_technic_mod then
+			return 0
+		end
+
 		if listname == "batteries" then
-			if minetest.global_exists("technic") and technic.get_charge(stack) > 0 then
+			if technic.get_charge(stack) > 0 then
 				if digtron.check_protected_and_record(pos, player) then
 					return 0
 				end
@@ -99,8 +103,12 @@ local def = {
 			return inv:add_item("batteries", stack)
 		end,
 		can_insert = function(pos, _, stack)
+			if not have_technic_mod then
+				return false
+			end
+
 			-- Disregard empty batteries, the player should know better
-			if minetest.global_exists("technic") and technic.get_charge(stack) > 0 then
+			if technic.get_charge(stack) > 0 then
 				local meta = minetest.get_meta(pos)
 				local inv = meta:get_inventory()
 				return inv:room_for_item("batteries", stack)

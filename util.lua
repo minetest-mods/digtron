@@ -5,6 +5,8 @@ dofile( minetest.get_modpath( "digtron" ) .. "/util_execute_cycle.lua" ) -- sepa
 
 local node_inventory_table = {type="node"} -- a reusable parameter for get_inventory calls, set the pos parameter before using.
 
+local have_technic_mod = core.get_modpath("technic")
+
 -- Apparently node_sound_metal_defaults is a newer thing, I ran into games using an older version of the default mod without it.
 if default.node_sound_metal_defaults ~= nil then
 	digtron.metal_sounds = default.node_sound_metal_defaults()
@@ -279,7 +281,7 @@ digtron.tap_batteries = function(battery_positions, target, test)
 		end
 
 		for _, itemstack in pairs(invlist) do
-			if minetest.global_exists("technic") then
+			if have_technic_mod then
 				local power_available = math.floor(technic.get_charge(itemstack) / digtron.config.power_ratio)
 				if power_available ~= 0 then
 					local actual_burned = power_available -- we just take all we have from the battery, since they aren't stackable
