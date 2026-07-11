@@ -1,7 +1,4 @@
--- internationalization boilerplate
 local S = digtron.S
--- local MP = minetest.get_modpath(minetest.get_current_modname())
--- local S = dofile(MP.."/intllib.lua")
 local have_technic_mod = core.get_modpath("technic")
 
 minetest.register_craftitem("digtron:digtron_core", {

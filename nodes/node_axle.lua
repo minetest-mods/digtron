@@ -1,7 +1,4 @@
--- internationalization boilerplate
 local S = digtron.S
--- local MP = minetest.get_modpath(minetest.get_current_modname())
--- local S = dofile(MP.."/intllib.lua")
 
 minetest.register_node("digtron:axle", {
 	description = S("Digtron Rotation Axle"),

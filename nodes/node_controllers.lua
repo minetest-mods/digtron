@@ -1,7 +1,4 @@
--- internationalization boilerplate
--- local MP = minetest.get_modpath(minetest.get_current_modname())
 local S = digtron.S
--- local S = dofile(MP.."/intllib.lua")
 local has_doc_mod = core.get_modpath("doc")
 
 local controller_nodebox ={

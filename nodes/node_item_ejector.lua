@@ -1,7 +1,4 @@
--- internationalization boilerplate
 local S = digtron.S
--- local MP = minetest.get_modpath(minetest.get_current_modname())
--- local S = dofile(MP.."/intllib.lua")
 
 --Build up the formspec, somewhat complicated due to multiple mod options
 local pipeworks_path = core.get_modpath("pipeworks")

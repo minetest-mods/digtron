@@ -8,10 +8,7 @@ end
 
 ---------------------------------------------------------------------------
 
--- internationalization boilerplate
 local S = digtron.S
--- local MP = minetest.get_modpath(minetest.get_current_modname())
--- local S = dofile(MP.."/intllib.lua")
 
 awards.register_trigger("digtron_dig", {
 	type = "counted_key",

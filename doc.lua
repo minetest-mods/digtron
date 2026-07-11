@@ -29,11 +29,7 @@ local build_count = coal_fuel/digtron.config.build_cost
 
 local battery_ratio = (10000/digtron.config.power_ratio) / coal_fuel
 
--- internationalization boilerplate
 local S = digtron.S
--- local MP = minetest.get_modpath(minetest.get_current_modname())
--- local S = dofile(MP.."/intllib.lua")
-
 local pipeworks_enabled = minetest.get_modpath("pipeworks") ~= nil
 local hoppers_enabled = minetest.get_modpath("hopper") and hopper ~= nil and hopper.add_container ~= nil
 

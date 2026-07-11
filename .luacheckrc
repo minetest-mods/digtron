@@ -19,7 +19,6 @@ read_globals = {
 	"hopper",
 	"technic",
 	"doc",
-	"intllib",
 	"fakelib",
 	"wrench"
 }

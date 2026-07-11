@@ -1,7 +1,4 @@
--- internationalization boilerplate
 local S = digtron.S
--- local MP = minetest.get_modpath(minetest.get_current_modname())
--- local S = dofile(MP.."/intllib.lua")
 local have_doc_mod = core.get_modpath("doc")
 
 -- Note: diggers go in group 3 and have an execute_dig method.
