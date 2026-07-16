@@ -196,7 +196,7 @@ local function move_layout_digging(layout, pos, dir,
 	if digtron.config.damage_hp > 0 and layout.diggers ~= nil then
 		for _, location in pairs(layout.diggers) do
 			local dropped = {}
-			local func = get_nodedef_callback_at(nil, location.pos, "damage_creatures")
+			local func = get_nodedef_callback_at("digger", location.pos, "damage_creatures")
 			if func then
 				func(clicker, location.pos, controlling_axis, dropped)
 			end
