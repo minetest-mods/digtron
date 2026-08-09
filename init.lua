@@ -1,5 +1,7 @@
 digtron = {}
 
+digtron.feature_dropped_items_are_stacks = true
+
 digtron.S = minetest.get_translator("digtron")
 
 digtron.auto_controller_colorize = "#88000030"

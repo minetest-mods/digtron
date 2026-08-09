@@ -25,8 +25,8 @@ digtron.award_item_dug = function(items_dropped, player)
 	if #items_dropped == 0 or not player then
 		return
 	end
-	for _, item in pairs(items_dropped) do
-		awards.notify_digtron_dig(player, item)
+	for _, itemstack in pairs(items_dropped) do
+		awards.notify_digtron_dig(player, itemstack:get_name())
 	end
 end
 

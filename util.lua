@@ -48,6 +48,17 @@ digtron.get_nodedef = function(name)
 	return registered_nodes[name] or unknown_node_def_fallback
 end
 
+local function append_node_drop_stacks(name, list)
+	local drops = minetest.get_node_drops(name, "")
+
+	-- convert to ItemStack and append to target list
+	for _, item in pairs(drops) do
+		table.insert(list, ItemStack(item))
+	end
+
+	return list
+end
+
 digtron.mark_diggable = function(pos, nodes_dug, player)
 	-- mark the node as dug, if the player provided would have been able to dig it.
 	-- Don't *actually* dig the node yet, though, because if we dig a node with sand over it the sand will start falling
@@ -94,7 +105,8 @@ digtron.mark_diggable = function(pos, nodes_dug, player)
 			end
 		end
 
-		local drops = minetest.get_node_drops(target.name, "")
+		local drops = {}
+		append_node_drop_stacks(target.name, drops)
 
 		if targetdef.preserve_metadata ~= nil then
 			local targetmeta = minetest.get_meta(pos):to_table()
@@ -364,16 +376,13 @@ digtron.damage_creatures = function(player, source_pos, target_pos, amount, item
 				local lua_entity = obj:get_luaentity()
 				if lua_entity ~= nil then
 					if lua_entity.name == "__builtin:item" then
-						table.insert(items_dropped, lua_entity.itemstring)
+						table.insert(items_dropped, ItemStack(lua_entity.itemstring))
 						lua_entity.itemstring = ""
 						obj:remove()
 					elseif lua_entity.name == "__builtin:falling_node" then
 						-- Eat all falling nodes in front of the digtron
 						-- to avoid them eating away our digger heads
-						local drops = minetest.get_node_drops(lua_entity.node, "")
-						for _, item in pairs(drops) do
-							table.insert(items_dropped, item)
-						end
+						append_node_drop_stacks(lua_entity.node, items_dropped)
 						obj:remove()
 					else
 						if obj.add_velocity ~= nil then
@@ -395,7 +404,7 @@ digtron.damage_creatures = function(player, source_pos, target_pos, amount, item
 			if not obj:is_player() then
 				local lua_entity = obj:get_luaentity()
 				if lua_entity ~= nil and lua_entity.name == "__builtin:item" then
-					table.insert(items_dropped, lua_entity.itemstring)
+					table.insert(items_dropped, ItemStack(lua_entity.itemstring))
 					lua_entity.itemstring = ""
 					obj:remove()
 				end

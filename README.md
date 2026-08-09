@@ -9,6 +9,26 @@ This mod contains a set of blocks that can be used to construct highly customiza
 modular tunnel-boring machines, bridge-builders, road-pavers, wall-o-matics, and other
 such construction/destruction contraptions.
 
+## IMPORTANT NOTICE FOR MOD WRITERS
+
+Due to bugs in the implementation the internal `items_dropped` list appended to
+during a digtron cycle and passed to various node call backs and global digtron
+functions could potentially contain items in both `string` and `ItemStack` form,
+even though it was documented to contain item strings only.
+
+In order to fix the problems caused by this (without requiring bidirectional
+conversion multiple times), the implementation was changed to only add items as
+an `ItemStack`. Also `damage_creatures` callbacks are now called with an empty
+list and no longer have access to previously dug/dropped items.
+
+Compatibility code (logging deprecation warnings if exercised) has been added
+supporting mods that just add item names to the list of drops, but if a mod
+provides more complex functionality, it needs to be changed in order to continue
+working correctly. Even if a mod just adds item strings it is recommended to
+change it to add dropped items as `ItemStack` objects, too. To determine whether
+the running version of digtron contains this change, check
+`digtron.feature_dropped_items_are_stacks`.
+
 ## Basic functionality
 
 A digging machine's components must be connected to the control block via a path leading
