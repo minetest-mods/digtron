@@ -94,16 +94,7 @@ digtron.mark_diggable = function(pos, nodes_dug, player)
 			end
 		end
 
-		local drops = minetest.get_node_drops(target.name, "")
-
-		if targetdef.preserve_metadata ~= nil then
-			local targetmeta = minetest.get_meta(pos):to_table()
-			-- preserve_metadata may modify all its parameters, but
-			-- we only care about the modified drops, anyway
-			targetdef.preserve_metadata(pos, target, targetmeta.fields, drops)
-		end
-
-		return material_cost, drops
+		return material_cost, minetest.get_node_drops(target.name, "")
 	end
 	return 0
 end
