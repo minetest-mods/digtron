@@ -11,6 +11,7 @@ read_globals = {
 	"minetest",
 	"vector",
 	"ItemStack",
+	"dump",
 
 	-- Mods
 	"default",
