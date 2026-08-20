@@ -247,7 +247,7 @@ local rotate_pos = function(axis, direction, pos)
 	return pos
 end
 
-local rotate_node_image = function(node_image, origin, axis, direction, old_pos_pointset)
+local rotate_node_image = function(node_image, origin, axis, direction, old_pos_pointset, skip_build_items)
 	-- Facings
 	if node_image.paramtype2 == "wallmounted" then
 		node_image.node.param2 = wallmounted_rotate[axis][direction][node_image.node.param2]
@@ -255,10 +255,12 @@ local rotate_node_image = function(node_image, origin, axis, direction, old_pos_
 		node_image.node.param2 = facedir_rotate[axis][direction][node_image.node.param2]
 	end
 
-	if node_image.build_item_paramtype2 == "wallmounted" then
-		node_image.meta.fields.build_facing = wallmounted_rotate[axis][direction][tonumber(node_image.meta.fields.build_facing)]
-	elseif node_image.build_item_paramtype2 == "facedir" then
-		node_image.meta.fields.build_facing = facedir_rotate[axis][direction][tonumber(node_image.meta.fields.build_facing)]
+	if not skip_build_items then
+		if node_image.build_item_paramtype2 == "wallmounted" then
+			node_image.meta.fields.build_facing = wallmounted_rotate[axis][direction][tonumber(node_image.meta.fields.build_facing)]
+		elseif node_image.build_item_paramtype2 == "facedir" then
+			node_image.meta.fields.build_facing = facedir_rotate[axis][direction][tonumber(node_image.meta.fields.build_facing)]
+		end
 	end
 
 	node_image.meta.fields.waiting = nil -- If we're rotating a controller that's in the "waiting" state, clear it. Otherwise it may stick like that.
@@ -287,7 +289,7 @@ local FACEDIR_AXIS_DIRECTION_LUT = {
 	{axis="y", dir=1},
 }
 -- Rotates 90 degrees widdershins around the axis defined by facedir (which in this case is pointing out the front of the node, so it needs to be converted into an upward-pointing axis internally)
-function digtron.DigtronLayout.rotate_layout_image(self, facedir)
+function digtron.DigtronLayout.rotate_layout_image(self, facedir, skip_build_items)
 
 	if self == nil or self.all == nil or self.controller == nil or self.old_pos_pointset == nil then
 		-- this should not be possible, but if it is then abort.
@@ -305,7 +307,7 @@ function digtron.DigtronLayout.rotate_layout_image(self, facedir)
 	local params = FACEDIR_AXIS_DIRECTION_LUT[math.floor(facedir/4)]
 
 	for _, node_image in pairs(self.all) do
-		rotate_node_image(node_image, self.controller, params.axis, params.dir, self.old_pos_pointset)
+		rotate_node_image(node_image, self.controller, params.axis, params.dir, self.old_pos_pointset, skip_build_items)
 	end
 	return self
 end

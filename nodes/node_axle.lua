@@ -52,8 +52,11 @@ minetest.register_node("digtron:axle", {
 			return
 		end
 
+		-- don't rotate items in builder when aux is held
+		local skip_build_items = clicker and clicker:is_player() and clicker:get_player_control().aux1
+
 		local image = digtron.DigtronLayout.create(pos, clicker)
-		if image:rotate_layout_image(node.param2) == false then
+		if image:rotate_layout_image(node.param2, skip_build_items ) == false then
 			-- This should be impossible, but if self-validation fails abort.
 			return
 		end
