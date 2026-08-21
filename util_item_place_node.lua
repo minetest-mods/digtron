@@ -75,7 +75,7 @@ local function check_attached_node(p, n)
 	return true
 end
 
-digtron.item_place_node = function(itemstack, placer, place_to, param2)
+digtron.item_place_node = function(itemstack, placer, place_to, param2, dug_this_cycle)
 	local item_name = itemstack:get_name()
 	local def = itemstack:get_definition()
 	if (not def) or (param2 < 0) or (def.paramtype2 == "wallmounted" and param2 > 5) or (param2 > 23) then -- validate parameters
@@ -89,6 +89,14 @@ digtron.item_place_node = function(itemstack, placer, place_to, param2)
 
 	-- Handle node-specific on_place calls as best we can.
 	if def.on_place and def.on_place ~= minetest.nodedef_default.on_place and digtron.whitelisted_on_place(item_name) then
+		if dug_this_cycle then
+			-- on_place may depend on the node to be replaced being "air" or
+			-- buildable_to, but a dug node is only removed at the end of the cycle
+			-- if nothing else ends up replacing it.  Therefore explicitly remove
+			-- the node now before calling on_place.
+			minetest.remove_node(place_to)
+		end
+
 		if def.paramtype2 == "facedir" then
 			pointed_thing.under = vector.add(place_to, minetest.facedir_to_dir(param2))
 		elseif def.paramtype2 == "wallmounted" then

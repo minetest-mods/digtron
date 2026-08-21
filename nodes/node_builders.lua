@@ -414,9 +414,10 @@ minetest.register_node("digtron:builder", {
 			end
 
 			local oldnode = minetest.get_node(buildpos)
+			local dug_this_cycle = nodes_dug:get(buildpos.x, buildpos.y, buildpos.z) == true
 
 			if not digtron.config.uses_resources then
-				local _, success = digtron.item_place_node(item_stack, player, buildpos, build_facing)
+				local _, success = digtron.item_place_node(item_stack, player, buildpos, build_facing, dug_this_cycle)
 				if success == true then
 					minetest.log("action",
 						string.format("%s uses Digtron to build %s at (%d, %d, %d), displacing %s", player:get_player_name(), item_stack:get_name(), buildpos.x, buildpos.y, buildpos.z, oldnode.name))
@@ -432,7 +433,7 @@ minetest.register_node("digtron:builder", {
 				-- item not in inventory! Need to sound the angry buzzer to let the player know, so return a negative number.
 				return (built_count + 1) * -1
 			end
-			local _, success = digtron.item_place_node(ItemStack(item_stack), player, buildpos, build_facing)
+			local _, success = digtron.item_place_node(ItemStack(item_stack), player, buildpos, build_facing, dug_this_cycle)
 			if success == true then
 				minetest.log("action",
 					string.format("%s uses Digtron to build %s at (%d, %d, %d), displacing %s", player:get_player_name(), item_stack:get_name(), buildpos.x, buildpos.y, buildpos.z, oldnode.name))
