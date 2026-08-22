@@ -378,9 +378,9 @@ local node_callbacks = function(player)
 
 			for _, callback in ipairs(minetest.registered_on_dignodes) do
 				-- Copy pos and node because callback can modify them
-				local pos_copy = vector.copy(old_pos)
-				local oldnode_copy = {name=old_node.name, param1=old_node.param1, param2=old_node.param2}
-				callback(pos_copy, oldnode_copy, digtron.fake_player)
+				local old_pos_copy = vector.copy(old_pos)
+				local old_node_copy = {name=old_node.name, param1=old_node.param1, param2=old_node.param2}
+				callback(old_pos_copy, old_node_copy, digtron.fake_player)
 			end
 		end
 	end
@@ -400,10 +400,10 @@ local node_callbacks = function(player)
 
 			for _, callback in ipairs(minetest.registered_on_placenodes) do
 				-- Copy pos and node because callback can modify them
-				local pos_copy = vector.copy(new_pos)
-				local oldnode_copy = {name=old_node.name, param1=old_node.param1, param2=old_node.param2}
-				local newnode_copy = {name=new_node.name, param1=new_node.param1, param2=new_node.param2}
-				callback(pos_copy, newnode_copy, digtron.fake_player, oldnode_copy)
+				local new_pos_copy = vector.copy(new_pos)
+				local old_node_copy = {name=old_node.name, param1=old_node.param1, param2=old_node.param2}
+				local new_node_copy = {name=new_node.name, param1=new_node.param1, param2=new_node.param2}
+				callback(new_pos_copy, new_node_copy, digtron.fake_player, old_node_copy)
 			end
 		end
 	end
