@@ -431,6 +431,8 @@ end
 
 local air_node = {name="air"}
 function digtron.DigtronLayout.write_layout_image(self, player)
+	dug_nodes_count = 0
+	placed_nodes_count = 0
 	-- destroy the old digtron
 	local oldpos, _ = self.old_pos_pointset:pop()
 	while oldpos ~= nil do
@@ -471,8 +473,6 @@ function digtron.DigtronLayout.write_layout_image(self, player)
 	digtron.fake_player:set_pos(self.controller)
 	-- note that the actual player is still passed to the per-node after_place_node and after_dig_node, should they exist.
 	node_callbacks(player)
-	dug_nodes_count = 0
-	placed_nodes_count = 0
 	return true
 end
 
