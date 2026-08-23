@@ -177,7 +177,7 @@ digtron.doc.pusher_usagehelp = S("Aka the \"can you rebuild it six inches to the
 "Since movement alone does not require fuel, a pusher module has no internal furnace. Pushers also don't require traction, since their primary purpose is repositioning Digtrons let's say they have a built-in crane or something.")
 
 digtron.doc.axle_longdesc = S("A device that allows one to rotate their Digtron into new orientations")
-digtron.doc.axle_usagehelp = S("This magical module can rotate a Digtron array in place around itself. Right-clicking on it will rotate the Digtron 90 degrees in the direction the orange arrows on its sides indicate (widdershins around the Y axis by default, use the screwdriver to change this) assuming there's space for the Digtron in its new orientation. Builders and diggers will not trigger on rotation.")
+digtron.doc.axle_usagehelp = S("This magical module can rotate a Digtron array in place around itself. Right-clicking on it will rotate the Digtron 90 degrees in the direction the orange arrows on its sides indicate (widdershins around the Y axis by default, use the screwdriver to change this) assuming there's space for the Digtron in its new orientation. Builders and diggers will not trigger on rotation, but the \"facing\" setting of builders will be updated consequently, unless the \"Aux1\" key (default: \"E\") is held when Right-clicking the axle. ")
 
 ---------------------------------------------------------------------
 
