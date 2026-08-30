@@ -259,8 +259,8 @@ local function remove_nodes(nodes_pointset, clicker, particle_systems, do_check_
 			-- all of the digtron's nodes wind up in layout.nodes_dug, so this is an ideal place to stick
 			-- a check to make sand fall after the digtron has passed.
 			core.check_for_falling(vector.offset(node_to_dig, 0, 1, 0))
-			node_to_dig, whether_to_dig = nodes_pointset:pop()
 		end
+		node_to_dig, whether_to_dig = nodes_pointset:pop()
 	end
 end
 
