@@ -1,0 +1,13 @@
+services:
+ mtt:
+  image: ghcr.io/buckaroobanzay/mtt:latest
+  volumes:
+   - "./:/github/workspace"
+  environment:
+   INPUT_MODNAME: "digtron"
+   INPUT_TEST_MODE: "mod"
+   INPUT_MAPGEN: "v7"
+   INPUT_GIT_GAME_REPO: "https://github.com/minetest/minetest_game"
+   INPUT_GIT_DEPENDENCIES: |
+    https://github.com/Ogelgames/fakelib.git
+
