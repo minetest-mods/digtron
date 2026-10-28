@@ -21,7 +21,8 @@ read_globals = {
 	"technic",
 	"doc",
 	"fakelib",
-	"wrench"
+	"wrench",
+	"mtt"
 }
 
 files = {

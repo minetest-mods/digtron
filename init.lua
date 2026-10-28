@@ -134,3 +134,7 @@ if minetest.get_modpath("catacomb") and catacomb ~= nil and catacomb.chamber_pro
 		catacomb.passage_protected_nodes[node_id] = true
 	end
 end
+
+if minetest.get_modpath("mtt") and mtt.enabled then
+	dofile(digtron_modpath .. "/mtt.lua")
+end
