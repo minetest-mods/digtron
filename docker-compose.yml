@@ -9,5 +9,5 @@ services:
    INPUT_MAPGEN: "v7"
    INPUT_GIT_GAME_REPO: "https://github.com/minetest/minetest_game"
    INPUT_GIT_DEPENDENCIES: |
-    https://github.com/Ogelgames/fakelib.git
+    https://github.com/Ogelgames/fakelib
 
